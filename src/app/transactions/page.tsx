@@ -91,8 +91,17 @@ export default function TransactionsPage() {
     setActiveTab("add"); // Switch to add/edit tab
   };
 
-  const handleImportComplete = (newTransactions: Transaction[]) => {
-    setTransactions(prev => [...prev, ...newTransactions]);
+  const handleImportComplete = (newTransactions: Transaction[] | any) => {
+    if (Array.isArray(newTransactions)) {
+      setTransactions(prev => [...prev, ...newTransactions]);
+    } else {
+      console.error('Expected array of transactions but received:', newTransactions);
+      // If you have access to the transactions inside a different property:
+      // For example, if the API returns { transactions: Transaction[] }
+      if (newTransactions && newTransactions.transactions && Array.isArray(newTransactions.transactions)) {
+        setTransactions(prev => [...prev, ...newTransactions.transactions]);
+      }
+    }
     setActiveTab("transactions"); // Switch back to transactions tab after import
   };
 

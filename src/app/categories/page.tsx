@@ -6,10 +6,11 @@ import { fetchCategories, createCategory, deleteCategory, updateCategory, bulkCa
 import CategoryForm from "@/app/categories/components/CategoryForm";
 import CategoryList from "@/app/categories/components/CategoryList";
 import { Category } from "@/utils/types";
-import { Loader2, FolderIcon, PlusCircle, ListIcon, TagIcon, X } from "lucide-react";
+import { Loader2, FolderIcon, PlusCircle, ListIcon, TagIcon, X, InfoIcon } from "lucide-react";
 import CategorizationDashboard from "./components/CategorizationDashboard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import CategoryDetail from "./components/CategoryDetail";
 
 export default function CategoriesPage() {
   const { data: session } = useSession();
@@ -19,6 +20,7 @@ export default function CategoriesPage() {
   const [error, setError] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [activeTab, setActiveTab] = useState("list");
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
 
   useEffect(() => {
     if (!token) return;
@@ -132,6 +134,14 @@ export default function CategoriesPage() {
                 <TagIcon className="h-4 w-4" />
                 Categorization Dashboard
               </TabsTrigger>
+              <TabsTrigger 
+                value="details" 
+                className="flex items-center gap-1"
+                disabled={!selectedCategory}
+              >
+                <InfoIcon className="h-4 w-4" />
+                Category Details
+              </TabsTrigger>
             </TabsList>
             
             {editingCategory && (
@@ -176,6 +186,24 @@ export default function CategoriesPage() {
               categories={categories}
               onCategorize={handleBulkCategorize}
             />
+          </TabsContent>
+          
+          <TabsContent value="details">
+            {selectedCategory ? (
+              <CategoryDetail
+                category={selectedCategory}
+                onEditCategory={handleEditCategory}
+                onDeleteCategory={handleDeleteCategory}
+                onCategoryUpdated={(updatedCategory) => {
+                  setCategories(prev => 
+                    prev.map(cat => cat.id === updatedCategory.id ? updatedCategory : cat)
+                  );
+                  setSelectedCategory(updatedCategory);
+                }}
+              />
+            ) : (
+              <p className="text-gray-500">Select a category to view details</p>
+            )}
           </TabsContent>
         </Tabs>
         

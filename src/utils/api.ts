@@ -823,4 +823,38 @@ export async function removeKeywordFromCategory(token: string, categoryId: numbe
   return res.json();
 }
 
+export async function learnFromTransaction(token: string, categoryId: number, transactionId: number) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/${categoryId}/learn-from-transaction`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ transactionId }),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to learn from transaction");
+  }
+
+  return res.json();
+}
+
+export async function suggestCategoryForDescription(token: string, description: string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/suggest`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ description }),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to suggest category");
+  }
+
+  return res.json();
+}
+
   

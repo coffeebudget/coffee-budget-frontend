@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2 } from "lucide-react";
+import TransactionLearningPrompt from "./TransactionLearningPrompt";
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -28,6 +29,10 @@ export default function TransactionList({
 }: TransactionListProps) {
   const [error, setError] = useState<string | null>(null);
   const [loadingId, setLoadingId] = useState<number | null>(null);
+  const [recentlyCategorized, setRecentlyCategorized] = useState<{
+    transaction: Transaction;
+    category: Category;
+  } | null>(null);
 
   const handleDelete = async (id: number) => {
     if (!confirm("Are you sure you want to delete this transaction?")) return;
@@ -61,12 +66,38 @@ export default function TransactionList({
     return tags.filter(tag => tagIds.includes(tag.id));
   };
 
+  const handleCategoryChange = async (transactionId: number, categoryId: number) => {
+    // Your existing code to update the category
+    
+    // After successful categorization:
+    const updatedTransaction = transactions.find(t => t.id === transactionId);
+    const selectedCategory = categories.find(c => c.id === categoryId);
+    
+    if (updatedTransaction && selectedCategory) {
+      setRecentlyCategorized({
+        transaction: updatedTransaction,
+        category: selectedCategory
+      });
+    }
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle>Your Transactions</CardTitle>
       </CardHeader>
       <CardContent>
+        {recentlyCategorized && (
+          <TransactionLearningPrompt
+            transaction={recentlyCategorized.transaction}
+            category={recentlyCategorized.category}
+            onDismiss={() => setRecentlyCategorized(null)}
+            onLearned={(updatedCategory) => {
+              // Update the category in your categories list if needed
+              setRecentlyCategorized(null);
+            }}
+          />
+        )}
         {transactions.length === 0 ? (
           <p className="text-gray-500 text-center py-4">No transactions found. Add your first transaction using the form.</p>
         ) : (

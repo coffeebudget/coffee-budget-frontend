@@ -7,7 +7,8 @@ import {
   fetchBankAccounts,
   fetchCreditCards,
 } from "@/utils/api";
-import { BankAccount, CreditCard, Transaction } from "@/utils/types";
+import { BankAccount, CreditCard, Transaction, Category } from "@/utils/types";
+import ImportSummary from "@/app/transactions/components/ImportSummary";
 
 type ImportResponse = {
   importedCount: number;
@@ -26,6 +27,7 @@ type ColumnMapping = {
 
 interface ImportTransactionsFormProps {
   onImportComplete: (transactions: Transaction[]) => void;
+  categories: Category[];
 }
 
 const DATE_FORMATS = [
@@ -40,6 +42,7 @@ const DATE_FORMATS = [
 
 export default function ImportTransactionsForm({
   onImportComplete,
+  categories,
 }: ImportTransactionsFormProps) {
   const { data: session } = useSession();
   const token = session?.user?.accessToken || "";
@@ -72,6 +75,9 @@ export default function ImportTransactionsForm({
   const [selectedCreditCard, setSelectedCreditCard] = useState<number | null>(
     null
   );
+
+  const [showSummary, setShowSummary] = useState(false);
+  const [importedCount, setImportedCount] = useState(0);
 
   useEffect(() => {
     if (!token) return;
@@ -161,6 +167,8 @@ export default function ImportTransactionsForm({
         const result = await importTransactions(token, payload);      
   
         setImportResult(result);
+        setImportedCount(result.importedCount);
+        setShowSummary(true);
         onImportComplete(result.transactions);
         setCsvFile(null);
         setCsvHeaders([]);
@@ -378,6 +386,14 @@ export default function ImportTransactionsForm({
 
         {error && <p className="text-red-500 mt-2">{error}</p>}
       </form>
+
+      {showSummary && (
+        <ImportSummary 
+          importedCount={importedCount}
+          categories={categories}
+          onClose={() => setShowSummary(false)}
+        />
+      )}
     </div>
   );
 }

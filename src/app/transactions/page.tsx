@@ -189,7 +189,10 @@ export default function TransactionsPage() {
           
           <TabsContent value="import" className="mt-0">
             <Card className="w-full max-w-3xl mx-auto">
-              <ImportTransactionsForm onImportComplete={handleImportComplete} />
+              <ImportTransactionsForm 
+                onImportComplete={handleImportComplete} 
+                categories={categories}
+              />
             </Card>
           </TabsContent>
         </Tabs>

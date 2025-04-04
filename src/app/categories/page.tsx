@@ -2,15 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { fetchCategories, createCategory, deleteCategory, updateCategory, bulkCategorizeByKeyword } from "@/utils/api";
+import { fetchCategories, createCategory, deleteCategory, updateCategory, bulkCategorizeByKeyword, resetCategoriesToDefaults } from "@/utils/api";
 import CategoryForm from "@/app/categories/components/CategoryForm";
 import CategoryList from "@/app/categories/components/CategoryList";
 import { Category } from "@/utils/types";
-import { Loader2, FolderIcon, PlusCircle, ListIcon, TagIcon, X, InfoIcon } from "lucide-react";
+import { Loader2, FolderIcon, PlusCircle, ListIcon, TagIcon, X, InfoIcon, RefreshCw } from "lucide-react";
 import CategorizationDashboard from "./components/CategorizationDashboard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import CategoryDetail from "./components/CategoryDetail";
+import { toast } from "@/hooks/use-toast";
 
 export default function CategoriesPage() {
   const { data: session } = useSession();
@@ -96,6 +97,33 @@ export default function CategoriesPage() {
     }
   };
 
+  const handleResetToDefaults = async () => {
+    if (!confirm("This will reset all categories to defaults. Any custom categories will be preserved. Continue?")) {
+      return;
+    }
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const defaultCategories = await resetCategoriesToDefaults(token);
+      setCategories(defaultCategories);
+      toast({
+        title: "Categories Reset",
+        description: "Default categories have been restored.",
+        variant: "default",
+      });
+
+      const data = await fetchCategories(token);
+      setCategories(data);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to reset categories to defaults");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!session) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
@@ -134,15 +162,18 @@ export default function CategoriesPage() {
                 <TagIcon className="h-4 w-4" />
                 Categorization Dashboard
               </TabsTrigger>
-              <TabsTrigger 
-                value="details" 
-                className="flex items-center gap-1"
-                disabled={!selectedCategory}
-              >
-                <InfoIcon className="h-4 w-4" />
-                Category Details
-              </TabsTrigger>
             </TabsList>
+
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleResetToDefaults}
+              disabled={loading}
+              className="flex items-center gap-1"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Reset to Defaults
+            </Button>
             
             {editingCategory && (
               <Button 
@@ -166,8 +197,8 @@ export default function CategoriesPage() {
             ) : (
               <CategoryList
                 categories={categories}
-                onDeleteCategory={handleDeleteCategory}
-                onEditCategory={handleEditCategory}
+                onDelete={handleDeleteCategory}
+                onEdit={handleEditCategory}
               />
             )}
           </TabsContent>

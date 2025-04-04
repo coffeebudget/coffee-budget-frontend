@@ -857,4 +857,23 @@ export async function suggestCategoryForDescription(token: string, description: 
   return res.json();
 }
 
+export async function resetCategoriesToDefaults(token: string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/reset-to-defaults`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to reset categories to defaults");
+  }
+
+  const data = await res.json();
+  
+  // Ensure we return an array
+  return Array.isArray(data) ? data : [];
+}
+
   

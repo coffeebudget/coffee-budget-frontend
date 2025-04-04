@@ -116,7 +116,7 @@ export default function TransactionList({
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {transactions.map((transaction) => (
-                  <tr key={transaction.id} className="hover:bg-gray-50">
+                  <tr key={`transaction-${transaction.id}-${transaction.executionDate}`} className="hover:bg-gray-50">
                     <td className="px-4 py-4 text-sm font-medium">
                       {transaction.executionDate ? formatDate(transaction.executionDate) : 'N/A'}
                     </td>

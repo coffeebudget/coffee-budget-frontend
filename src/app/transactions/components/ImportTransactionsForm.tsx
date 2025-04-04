@@ -42,7 +42,7 @@ const DATE_FORMATS = [
 
 export default function ImportTransactionsForm({
   onImportComplete,
-  categories,
+  categories
 }: ImportTransactionsFormProps) {
   const { data: session } = useSession();
   const token = session?.user?.accessToken || "";
@@ -164,12 +164,38 @@ export default function ImportTransactionsForm({
           payload.dateFormat = dateFormat;
         }
       
-        const result = await importTransactions(token, payload);      
+        const response = await importTransactions(token, payload);      
   
-        setImportResult(result);
-        setImportedCount(result.importedCount);
+        console.log("Import API response:", response);
+        
+        if (Array.isArray(response)) {
+          setImportedCount(response.length);
+          setImportResult({
+            importedCount: response.length,
+            duplicatesCount: 0,
+            errors: [],
+          });
+          console.log("Passing transactions to parent:", response);
+          onImportComplete(response);
+        } else {
+          setImportResult({
+            importedCount: response.importedCount || 0,
+            duplicatesCount: response.duplicatesCount || 0,
+            errors: response.errors || [],
+          });
+          
+          setImportedCount(response.importedCount || 0);
+          
+          if (response.transactions && Array.isArray(response.transactions)) {
+            console.log("Passing transactions to parent:", response.transactions);
+            onImportComplete(response.transactions);
+          } else {
+            console.warn("No transactions array in response:", response);
+            onImportComplete([]);
+          }
+        }
+        
         setShowSummary(true);
-        onImportComplete(result.transactions);
         setCsvFile(null);
         setCsvHeaders([]);
         setColumnMappings({
@@ -188,7 +214,9 @@ export default function ImportTransactionsForm({
         reader.readAsArrayBuffer(csvFile);
       }
     } catch (err) {
+      console.error("Import error:", err);
       setError(err instanceof Error ? err.message : "Failed to import transactions");
+      onImportComplete([]);
     } finally {
       setIsLoading(false);
     }

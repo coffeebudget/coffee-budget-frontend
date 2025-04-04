@@ -156,7 +156,7 @@ export default function ImportSummary({ importedCount, categories, onClose }: Im
                       </thead>
                       <tbody className="divide-y divide-gray-200">
                         {uncategorizedTransactions.map(transaction => (
-                          <tr key={transaction.id || 'unknown'} className="hover:bg-gray-50">
+                          <tr key={`uncategorized-${transaction.id || Math.random()}-${transaction.executionDate}`} className="hover:bg-gray-50">
                             <td className="px-4 py-2 text-sm">
                               {new Date(transaction.executionDate).toLocaleDateString()}
                             </td>

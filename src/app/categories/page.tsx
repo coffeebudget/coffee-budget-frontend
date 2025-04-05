@@ -88,12 +88,14 @@ export default function CategoriesPage() {
 
   const handleBulkCategorize = async (keyword: string, categoryId: number) => {
     try {
+      console.log(`Page: Bulk categorizing keyword "${keyword}" with category ID ${categoryId}`);
       const data = await bulkCategorizeByKeyword(token, keyword, categoryId);
+      console.log("Bulk categorize response:", data);
       return data.count;
     } catch (err) {
-      console.error(err);
-      setError("Failed to bulk categorize transactions");
-      throw err;
+      console.error("Bulk categorize error in page component:", err);
+      setError(err instanceof Error ? err.message : "Failed to bulk categorize transactions");
+      throw err; // Re-throw to let the calling component handle it
     }
   };
 

@@ -759,6 +759,8 @@ export async function fetchCommonKeywords(token: string) {
 }
 
 export async function bulkCategorizeByKeyword(token: string, keyword: string, categoryId: number) {
+  console.log("Bulk categorize request:", { keyword, categoryId }); // Debug log
+  
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/bulk-categorize`, {
     method: "POST",
     headers: {
@@ -769,7 +771,15 @@ export async function bulkCategorizeByKeyword(token: string, keyword: string, ca
   });
 
   if (!res.ok) {
-    throw new Error("Failed to bulk categorize transactions");
+    // Get more detailed error information
+    try {
+      const errorData = await res.json();
+      console.error("Bulk categorize error response:", errorData);
+      throw new Error(errorData.message || `Failed to bulk categorize transactions: ${res.status} ${res.statusText}`);
+    } catch (parseError) {
+      console.error("Error parsing error response:", parseError);
+      throw new Error(`Failed to bulk categorize transactions: ${res.status} ${res.statusText}`);
+    }
   }
 
   return res.json();

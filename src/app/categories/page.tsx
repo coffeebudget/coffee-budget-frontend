@@ -206,10 +206,11 @@ export default function CategoriesPage() {
           </TabsContent>
           
           <TabsContent value="add" className="mt-0">
-            <div className="max-w-md mx-auto">
+            <div className="max-w-2xl mx-auto">
               <CategoryForm 
                 onCategoryChange={handleCategoryChange} 
-                categoryToEdit={editingCategory} 
+                categoryToEdit={editingCategory}
+                onCancel={handleCancelEdit} 
               />
             </div>
           </TabsContent>
@@ -219,24 +220,6 @@ export default function CategoriesPage() {
               categories={categories}
               onCategorize={handleBulkCategorize}
             />
-          </TabsContent>
-          
-          <TabsContent value="details">
-            {selectedCategory ? (
-              <CategoryDetail
-                category={selectedCategory}
-                onEditCategory={handleEditCategory}
-                onDeleteCategory={handleDeleteCategory}
-                onCategoryUpdated={(updatedCategory) => {
-                  setCategories(prev => 
-                    prev.map(cat => cat.id === updatedCategory.id ? updatedCategory : cat)
-                  );
-                  setSelectedCategory(updatedCategory);
-                }}
-              />
-            ) : (
-              <p className="text-gray-500">Select a category to view details</p>
-            )}
           </TabsContent>
         </Tabs>
         

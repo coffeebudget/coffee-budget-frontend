@@ -42,24 +42,35 @@ export default function CategoriesPage() {
     loadCategories();
   }, [token]);
 
-  const handleCategoryChange = async (category: Category) => {
+  const handleCategoryChange = async (category: Category, isNew: boolean) => {
+    console.log("handleCategoryChange called in parent", { category, isNew });
     try {
-      if (category.id === 0) {
-        // This is a cancel operation from the form
-        setEditingCategory(null);
-        return;
-      }
+      // The id=0 check was incorrectly treating new categories as cancel operations
+      // For new categories, we need to make the API call regardless of the ID
       
-      if (editingCategory) {
-        const updatedCategory = await updateCategory(token, editingCategory.id, category);
+      if (!isNew) {
+        console.log("Updating category:", category);
+        const updatedCategory = await updateCategory(token, category.id, {
+          name: category.name,
+          keywords: category.keywords,
+          excludeFromAnalytics: category.excludeFromAnalytics
+        });
+        console.log("Update successful, received:", updatedCategory);
         setCategories((prev) => prev.map((cat) => (cat.id === updatedCategory.id ? updatedCategory : cat)));
       } else {
-        const newCategory = await createCategory(token, category);
+        console.log("Creating new category:", category);
+        const newCategory = await createCategory(token, {
+          name: category.name,
+          keywords: category.keywords,
+          excludeFromAnalytics: category.excludeFromAnalytics
+        });
+        console.log("Creation successful, received:", newCategory);
         setCategories((prev) => [...prev, newCategory]);
       }
       setEditingCategory(null);
       setActiveTab("list"); // Switch back to list tab after adding/editing
     } catch (err: any) {
+      console.error("API error:", err);
       setError(err.message || "Failed to save category");
     }
   };

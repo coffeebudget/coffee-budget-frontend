@@ -7,10 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, X, Save } from "lucide-react";
+import { Loader2, Plus, X, Save, HelpCircle } from "lucide-react";
 import { Category } from "@/utils/types";
 import { addKeywordToCategory, removeKeywordFromCategory } from "@/utils/api";
 import KeywordSuggestions from "./KeywordSuggestions";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface CategoryFormProps {
   onCategoryChange: (category: Category, isNew: boolean) => Promise<void>;
@@ -33,21 +35,25 @@ export default function CategoryForm({
   const [error, setError] = useState<string | null>(null);
   const [removingKeyword, setRemovingKeyword] = useState<string | null>(null);
   const [addingKeyword, setAddingKeyword] = useState<string | null>(null);
+  const [excludeFromAnalytics, setExcludeFromAnalytics] = useState(false);
 
   // Initialize form with category data if editing
   useEffect(() => {
     if (categoryToEdit) {
       setName(categoryToEdit.name || "");
       setKeywords(categoryToEdit.keywords || []);
+      setExcludeFromAnalytics(categoryToEdit.excludeFromAnalytics || false);
     } else {
       // Reset form for new category
       setName("");
       setKeywords([]);
+      setExcludeFromAnalytics(false);
     }
   }, [categoryToEdit]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Form submitted", { name, keywords, excludeFromAnalytics });
     setLoading(true);
     setError(null);
 
@@ -56,18 +62,22 @@ export default function CategoryForm({
         id: categoryToEdit?.id || 0,
         name,
         keywords,
+        excludeFromAnalytics
       };
 
+      console.log("Calling onCategoryChange with", categoryData, !categoryToEdit);
       await onCategoryChange(categoryData, !categoryToEdit);
+      console.log("onCategoryChange completed successfully");
       
       if (!categoryToEdit) {
         // Reset form after creating a new category
         setName("");
         setKeywords([]);
         setNewKeyword("");
+        setExcludeFromAnalytics(false);
       }
     } catch (err) {
-      console.error(err);
+      console.error("Error in handleSubmit:", err);
       setError("Failed to save category");
     } finally {
       setLoading(false);
@@ -165,7 +175,7 @@ export default function CategoryForm({
       </CardHeader>
       
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form id="category-form" onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="name">Category Name</Label>
             <Input
@@ -242,6 +252,32 @@ export default function CategoryForm({
             </div>
           </div>
           
+          <div className="flex items-center space-x-2">
+            <TooltipProvider>
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="exclude-analytics" 
+                  checked={excludeFromAnalytics}
+                  onCheckedChange={(checked) => setExcludeFromAnalytics(checked === true)}
+                />
+                <div className="flex items-center gap-1">
+                  <Label htmlFor="exclude-analytics">Exclude from expense analytics</Label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-5 w-5 p-0 rounded-full">
+                        <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                        <span className="sr-only">Info</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>When checked, transactions in this category will not be included in expense analytics and reports.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
+            </TooltipProvider>
+          </div>
+          
           {error && <p className="text-red-500 text-sm">{error}</p>}
         </form>
         
@@ -270,7 +306,14 @@ export default function CategoryForm({
           </Button>
         )}
         <Button 
-          onClick={handleSubmit}
+          type="submit"
+          form="category-form"
+          onClick={(e) => {
+            console.log("Submit button clicked");
+            if (!loading && name.trim()) {
+              handleSubmit(e as unknown as React.FormEvent);
+            }
+          }}
           disabled={loading || !name.trim()}
           className="ml-auto"
         >

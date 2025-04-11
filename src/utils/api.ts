@@ -184,7 +184,7 @@ export async function fetchCategories(token: string) {
   return handleResponse(res);
 }
 
-export async function createCategory(token: string, category: { name: string, keywords?: string[] }) {
+export async function createCategory(token: string, category: { name: string, keywords?: string[], excludeFromAnalytics?: boolean }) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
     method: "POST",
     headers: {
@@ -196,7 +196,7 @@ export async function createCategory(token: string, category: { name: string, ke
   return handleResponse(res);
 }
 
-export async function updateCategory(token: string, id: number, category: { name?: string, keywords?: string[] }) {
+export async function updateCategory(token: string, id: number, category: { name?: string, keywords?: string[], excludeFromAnalytics?: boolean }) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/${id}`, {
     method: "PATCH",
     headers: {

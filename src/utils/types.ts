@@ -3,7 +3,8 @@ export type Category = {
     id: number; // Ensure this is defined as required
     name: string;
     keywords: string[];
-  };
+    excludeFromAnalytics?: boolean; // Add this field to exclude categories from expense analytics
+};
 
 export type BankAccount = {
   id?: number; // Make id optional

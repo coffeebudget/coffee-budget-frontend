@@ -2,6 +2,18 @@
 
 import { useState } from "react";
 import { RecurringTransaction } from "@/utils/types";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Edit, Trash2, AlertCircle, Loader2 } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 
 interface RecurringTransactionListProps {
   transactions: RecurringTransaction[];
@@ -16,14 +28,22 @@ export default function RecurringTransactionList({
 }: RecurringTransactionListProps) {
   const [error, setError] = useState<string | null>(null);
   const [loadingId, setLoadingId] = useState<number | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+
+  const handleDeleteClick = (id: number) => {
+    if (confirmDelete === id) {
+      handleDelete(id);
+    } else {
+      setConfirmDelete(id);
+    }
+  };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this recurring transaction?")) return;
-    
     setLoadingId(id);
     setError(null);
     try {
       await onDeleteTransaction(id);
+      setConfirmDelete(null);
     } catch (err) {
       setError("Error deleting recurring transaction");
     } finally {
@@ -49,73 +69,119 @@ export default function RecurringTransactionList({
     return isNaN(numAmount) ? '0.00' : numAmount.toFixed(2);
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'SCHEDULED': return "default";
+      case 'PAUSED': return "secondary";
+      case 'COMPLETED': return "secondary";
+      case 'CANCELLED': return "destructive";
+      default: return "secondary";
+    }
+  };
+
+  if (transactions.length === 0) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col items-center justify-center p-8 text-center">
+            <AlertCircle className="h-12 w-12 text-gray-300 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-1">No Recurring Transactions</h3>
+            <p className="text-gray-500 mb-4">You haven't added any recurring transactions yet.</p>
+            <p className="text-sm text-gray-500">
+              Click "Add Transaction" to create your first recurring transaction.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <div className="w-full mt-8 px-4">
-      <div className="bg-white shadow-md rounded-lg overflow-x-auto">
-        <table className="w-full table-fixed">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="w-1/12 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-              <th className="w-2/12 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-              <th className="w-1/12 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-              <th className="w-1/12 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-              <th className="w-1/12 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-              <th className="w-1/12 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-              <th className="w-2/12 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Frequency</th>
-              <th className="w-1/12 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Start Date</th>
-              <th className="w-1/12 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">End Date</th>
-              <th className="w-1/12 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Occurrences</th>
-              <th className="w-1/12 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tags</th>
-              <th className="w-1/12 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {transactions.map((transaction) => (
-              <tr key={transaction.id}>
-                <td className="px-3 py-4 text-sm">{transaction.name}</td>
-                <td className="px-3 py-4 text-sm">{transaction.description}</td>
-                <td className="px-3 py-4 text-sm">${formatAmount(transaction.amount)}</td>
-                <td className="px-3 py-4 text-sm capitalize">{transaction.type}</td>
-                <td className="px-3 py-4 text-sm">
-                  <span className={`px-2 py-1 rounded text-xs ${
-                    transaction.status === 'SCHEDULED' ? 'bg-green-100 text-green-800' :
-                    transaction.status === 'PAUSED' ? 'bg-yellow-100 text-yellow-800' :
-                    transaction.status === 'COMPLETED' ? 'bg-blue-100 text-blue-800' :
-                    'bg-red-100 text-red-800'
-                  }`}>
-                    {transaction.status}
-                  </span>
-                </td>
-                <td className="px-3 py-4 text-sm">{transaction.category?.name || 'N/A'}</td>
-                <td className="px-3 py-4 text-sm">
-                  {formatFrequency(transaction.frequencyEveryN, transaction.frequencyType)}
-                </td>
-                <td className="px-3 py-4 text-sm">{formatDate(transaction.startDate)}</td>
-                <td className="px-3 py-4 text-sm">{transaction.endDate ? formatDate(transaction.endDate) : '-'}</td>
-                <td className="px-3 py-4 text-sm">{transaction.occurrences || '-'}</td>
-                <td className="px-3 py-4 text-sm">{transaction.tags?.map(tag => tag.name).join(", ") || "None"}</td>
-                <td className="px-3 py-4 text-sm">
-                  <button
-                    onClick={() => handleEdit(transaction)}
-                    disabled={loadingId === transaction.id}
-                    className="text-indigo-600 hover:text-indigo-900 mr-2 disabled:opacity-50"
-                  >
-                    {loadingId === transaction.id ? 'Loading...' : 'Edit'}
-                  </button>
-                  <button
-                    onClick={() => handleDelete(transaction.id!)}
-                    disabled={loadingId === transaction.id}
-                    className="text-red-600 hover:text-red-900 disabled:opacity-50"
-                  >
-                    {loadingId === transaction.id ? 'Deleting...' : 'Delete'}
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {error && <p className="text-red-500 mt-2">{error}</p>}
-    </div>
+    <Card>
+      <CardContent className="pt-6">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Frequency</TableHead>
+                <TableHead>Start Date</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead className="w-[100px]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {transactions.map((transaction) => (
+                <TableRow key={transaction.id}>
+                  <TableCell className="font-medium">
+                    <div>
+                      {transaction.name}
+                      {transaction.description && (
+                        <p className="text-xs text-muted-foreground">{transaction.description}</p>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={transaction.type === "expense" ? "destructive" : "default"}>
+                      ${formatAmount(transaction.amount)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusColor(transaction.status)}>
+                      {transaction.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {formatFrequency(transaction.frequencyEveryN, transaction.frequencyType)}
+                  </TableCell>
+                  <TableCell>{formatDate(transaction.startDate)}</TableCell>
+                  <TableCell>
+                    {transaction.category?.name || <span className="text-muted-foreground text-sm">None</span>}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => handleEdit(transaction)} 
+                        disabled={loadingId === transaction.id}
+                        title="Edit Transaction"
+                      >
+                        {loadingId === transaction.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Edit className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button 
+                        variant={confirmDelete === transaction.id ? "destructive" : "ghost"} 
+                        size="icon" 
+                        onClick={() => handleDeleteClick(transaction.id!)}
+                        disabled={loadingId === transaction.id}
+                        title={confirmDelete === transaction.id ? "Confirm Delete" : "Delete Transaction"}
+                      >
+                        {loadingId === transaction.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+        
+        {error && (
+          <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
+            {error}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 } 

@@ -5,15 +5,24 @@ import { RecurringTransaction, Category, Tag, BankAccount, CreditCard } from "@/
 import { fetchCategories, fetchTags, fetchBankAccounts, fetchCreditCards } from "@/utils/api";
 import { useSession } from "next-auth/react";
 import TagSelector from '@/components/TagSelector';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2, Save, Calendar } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type AddRecurringTransactionFormProps = {
   onAddTransaction: (transaction: RecurringTransaction, applyToPast: boolean) => void;
   initialData?: RecurringTransaction | null;
+  onCancel?: () => void;
 };
 
 export default function AddRecurringTransactionForm({ 
   onAddTransaction, 
   initialData = null,
+  onCancel,
 }: AddRecurringTransactionFormProps) {
   const { data: session } = useSession();
   const token = session?.user?.accessToken || "";
@@ -52,10 +61,7 @@ export default function AddRecurringTransactionForm({
     initialData?.bankAccount ? "bank" : initialData?.creditCard ? "card" : null
   );
   const [applyToPast, setApplyToPast] = useState(false);
-
-  useEffect(() => {
-    console.log('Initial Data:', initialData);
-  }, [initialData]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (initialData) {
@@ -103,30 +109,40 @@ export default function AddRecurringTransactionForm({
     loadData();
   }, [token]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const transaction: RecurringTransaction = {
-      id: initialData?.id,
-      name,
-      description,
-      amount: parseFloat(amount),
-      status,
-      type,
-      frequencyEveryN,
-      frequencyType,
-      occurrences: occurrences ? parseInt(occurrences) : undefined,
-      startDate: new Date(startDate).toISOString(),
-      endDate: endDate ? new Date(endDate).toISOString() : undefined,
-      categoryId: categoryId || undefined,
-      tagIds: selectedTags.length > 0 ? selectedTags : undefined,
-      bankAccountId: selectionType === "bank" ? selectedBankAccount || undefined : undefined,
-      creditCardId: selectionType === "card" ? selectedCreditCard || undefined : undefined,
-    };
-
-    onAddTransaction(transaction, applyToPast);
-    if (!initialData) {
-      resetForm();
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const transaction: RecurringTransaction = {
+        id: initialData?.id,
+        name,
+        description,
+        amount: parseFloat(amount),
+        status,
+        type,
+        frequencyEveryN,
+        frequencyType,
+        occurrences: occurrences ? parseInt(occurrences) : undefined,
+        startDate: new Date(startDate).toISOString(),
+        endDate: endDate ? new Date(endDate).toISOString() : undefined,
+        categoryId: categoryId || undefined,
+        tagIds: selectedTags.length > 0 ? selectedTags : undefined,
+        bankAccountId: selectionType === "bank" ? selectedBankAccount || undefined : undefined,
+        creditCardId: selectionType === "card" ? selectedCreditCard || undefined : undefined,
+      };
+  
+      await onAddTransaction(transaction, applyToPast);
+      if (!initialData) {
+        resetForm();
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setError("An error occurred while saving the transaction");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -150,238 +166,304 @@ export default function AddRecurringTransactionForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mb-4 w-full max-w-xl bg-white shadow-md rounded-lg p-4">
-      <h2 className="text-lg font-semibold mb-4">
-        {initialData ? "Edit Recurring Transaction" : "Add Recurring Transaction"}
-      </h2>
-      <div className="space-y-4">
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-2" htmlFor="name">Name</label>
-          <input
-            type="text"
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-2" htmlFor="description">Description</label>
-          <input
-            type="text"
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-2" htmlFor="amount">Amount</label>
-          <input
-            type="number"
-            id="amount"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-2" htmlFor="status">Status</label>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as 'SCHEDULED' | 'PAUSED' | 'COMPLETED' | 'CANCELLED')}
-            className="w-full p-2 border rounded"
-          >
-            <option value="SCHEDULED">Scheduled</option>
-            <option value="PAUSED">Paused</option>
-            <option value="COMPLETED">Completed</option>
-            <option value="CANCELLED">Cancelled</option>
-          </select>
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-2" htmlFor="type">Type</label>
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value as 'expense' | 'income' | 'credit')}
-            className="w-full p-2 border rounded"
-        >
-            <option value="expense">Expense</option>
-            <option value="income">Income</option>
-            <option value="credit">Credit</option>
-          </select>
-        </div>
-
-        <div className="flex gap-2">
-          <label className="block text-gray-700 mb-2" htmlFor="frequencyEveryN">Frequency</label>
-          <input
-            type="number"
-            min="1"
-            value={frequencyEveryN}
-            onChange={(e) => setFrequencyEveryN(parseInt(e.target.value))}
-            className="w-1/3 p-2 border rounded"
-            required
-          />
-          <select
-            value={frequencyType}
-            onChange={(e) => setFrequencyType(e.target.value as 'daily' | 'weekly' | 'monthly' | 'yearly')}
-            className="w-2/3 p-2 border rounded"
-          >
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-            <option value="yearly">Yearly</option>
-          </select>
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-2" htmlFor="occurrences">Number of occurrences (optional)</label>
-          <input
-            type="number"
-            id="occurrences"
-            value={occurrences}
-            onChange={(e) => setOccurrences(e.target.value)}
-            className="w-full p-2 border rounded"
-            min="1"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-2" htmlFor="startDate">Start Date</label>
-          <input
-            type="date"
-            id="startDate"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="w-full p-2 border rounded"
-            required
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-2" htmlFor="endDate">End Date</label>
-          <input
-            type="date"
-            id="endDate"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="w-full p-2 border rounded"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-2" htmlFor="categoryId">Category</label>
-          <select
-            value={categoryId || ''}
-            onChange={(e) => setCategoryId(e.target.value ? parseInt(e.target.value) : null)}
-            className="w-full p-2 border rounded"
-        >
-          <option value="">Select Category</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="space-y-2">
-          <label className="block text-gray-700 mb-2" htmlFor="tags">Tags</label>
-          <TagSelector
-            tags={tags}
-            selectedTags={selectedTags}
-            onChange={setSelectedTags}
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-2" htmlFor="paymentMethod">Payment Method</label>
-          <div className="flex gap-4 mb-2">
-            <label className="inline-flex items-center">
-              <input
-                type="radio"
-                checked={selectionType === "bank"}
-                onChange={() => {
-                  setSelectionType("bank");
-                  setSelectedCreditCard(null);
-                }}
-                className="form-radio"
+    <>
+      <CardHeader>
+        <CardTitle>
+          {initialData ? "Edit Recurring Transaction" : "Add New Recurring Transaction"}
+        </CardTitle>
+      </CardHeader>
+      
+      <CardContent className="pt-4">
+        <form id="recurring-form" onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2 col-span-2">
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                placeholder="Enter transaction name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
               />
-              <span className="ml-2">Bank Account</span>
-            </label>
-            <label className="inline-flex items-center">
-              <input
-                type="radio"
-                checked={selectionType === "card"}
-                onChange={() => {
-                  setSelectionType("card");
-                  setSelectedBankAccount(null);
-                }}
-                className="form-radio"
+            </div>
+            
+            <div className="space-y-2 col-span-2">
+              <Label htmlFor="description">Description</Label>
+              <Input
+                id="description"
+                placeholder="Enter transaction description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                required
               />
-              <span className="ml-2">Credit Card</span>
-            </label>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="amount">Amount</Label>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="type">Type</Label>
+              <Select 
+                value={type} 
+                onValueChange={(value) => setType(value as 'expense' | 'income' | 'credit')}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="expense">Expense</SelectItem>
+                  <SelectItem value="income">Income</SelectItem>
+                  <SelectItem value="credit">Credit</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="status">Status</Label>
+              <Select 
+                value={status} 
+                onValueChange={(value) => setStatus(value as 'SCHEDULED' | 'PAUSED' | 'COMPLETED' | 'CANCELLED')}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="SCHEDULED">Scheduled</SelectItem>
+                  <SelectItem value="PAUSED">Paused</SelectItem>
+                  <SelectItem value="COMPLETED">Completed</SelectItem>
+                  <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="categoryId">Category</Label>
+              <Select 
+                value={categoryId?.toString() || 'none'} 
+                onValueChange={(value) => setCategoryId(value === 'none' ? null : parseInt(value))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id?.toString() || `category-${category.name}`}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2 col-span-2">
+              <Label>Frequency</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="number"
+                  min="1"
+                  value={frequencyEveryN}
+                  onChange={(e) => setFrequencyEveryN(parseInt(e.target.value))}
+                  className="w-1/3"
+                  required
+                />
+                <div className="w-2/3">
+                  <Select 
+                    value={frequencyType} 
+                    onValueChange={(value: string) => setFrequencyType(value as 'daily' | 'weekly' | 'monthly' | 'yearly')}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select frequency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="daily">Daily</SelectItem>
+                      <SelectItem value="weekly">Weekly</SelectItem>
+                      <SelectItem value="monthly">Monthly</SelectItem>
+                      <SelectItem value="yearly">Yearly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="occurrences">Occurrences (optional)</Label>
+              <Input
+                id="occurrences"
+                type="number"
+                min="1"
+                placeholder="No. of times to repeat"
+                value={occurrences}
+                onChange={(e) => setOccurrences(e.target.value)}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="startDate">Start Date</Label>
+              <div className="relative">
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  required
+                />
+                <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="endDate">End Date (optional)</Label>
+              <div className="relative">
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+                <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              </div>
+            </div>
+            
+            <div className="space-y-2 col-span-2">
+              <Label htmlFor="tags">Tags</Label>
+              <TagSelector
+                tags={tags}
+                selectedTags={selectedTags}
+                onChange={setSelectedTags}
+              />
+            </div>
+            
+            <div className="space-y-2 col-span-2">
+              <Label>Payment Method</Label>
+              <div className="flex gap-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="bank"
+                    name="paymentMethod"
+                    value="bank"
+                    checked={selectionType === "bank"}
+                    onChange={() => {
+                      setSelectionType("bank");
+                      setSelectedCreditCard(null);
+                    }}
+                    className="h-4 w-4"
+                  />
+                  <Label htmlFor="bank" className="font-normal">Bank Account</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="card"
+                    name="paymentMethod"
+                    value="card"
+                    checked={selectionType === "card"}
+                    onChange={() => {
+                      setSelectionType("card");
+                      setSelectedBankAccount(null);
+                    }}
+                    className="h-4 w-4"
+                  />
+                  <Label htmlFor="card" className="font-normal">Credit Card</Label>
+                </div>
+              </div>
+              
+              {selectionType === "bank" && (
+                <div className="mt-2">
+                  <Select 
+                    value={selectedBankAccount?.toString() || 'none'} 
+                    onValueChange={(value) => setSelectedBankAccount(value === 'none' ? null : parseInt(value))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select bank account" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {bankAccounts.map((account) => (
+                        <SelectItem key={account.id} value={account.id?.toString() || `account-${account.name}`}>
+                          {account.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
+              {selectionType === "card" && (
+                <div className="mt-2">
+                  <Select 
+                    value={selectedCreditCard?.toString() || 'none'} 
+                    onValueChange={(value) => setSelectedCreditCard(value === 'none' ? null : parseInt(value))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select credit card" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {creditCards.map((card) => (
+                        <SelectItem key={card.id} value={card.id?.toString() || `card-${card.name}`}>
+                          {card.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+            
+            {initialData && (
+              <div className="col-span-2 flex items-center space-x-2">
+                <Checkbox 
+                  id="applyToPast" 
+                  checked={applyToPast}
+                  onCheckedChange={(checked) => setApplyToPast(checked === true)} 
+                />
+                <Label htmlFor="applyToPast" className="text-sm font-normal">
+                  Apply changes to past transactions
+                </Label>
+              </div>
+            )}
           </div>
-
-          {selectionType === "bank" && (
-            <select
-              value={selectedBankAccount || ''}
-              onChange={(e) => setSelectedBankAccount(e.target.value ? parseInt(e.target.value) : null)}
-              className="w-full p-2 border rounded"
-              required
-            >
-              <option value="">Select Bank Account</option>
-              {bankAccounts.map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.name}
-                </option>
-              ))}
-            </select>
-          )}
-
-          {selectionType === "card" && (
-            <select
-              value={selectedCreditCard || ''}
-              onChange={(e) => setSelectedCreditCard(e.target.value ? parseInt(e.target.value) : null)}
-              className="w-full p-2 border rounded"
-              required
-            >
-              <option value="">Select Credit Card</option>
-              {creditCards.map((card) => (
-                <option key={card.id} value={card.id}>
-                  {card.name}
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
-
-        {initialData && (
-          <div className="mb-4">
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={applyToPast}
-                onChange={(e) => setApplyToPast(e.target.checked)}
-                className="form-checkbox"
-              />
-              <span>Apply changes to past transactions</span>
-            </label>
-          </div>
+          
+          {error && <p className="text-destructive text-sm mt-2">{error}</p>}
+        </form>
+      </CardContent>
+      
+      <CardFooter className="flex justify-between">
+        {onCancel && (
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
         )}
-
-        <button type="submit" className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">
-          {initialData ? "Update Recurring Transaction" : "Add Recurring Transaction"}
-        </button>
-      </div>
-
-      {error && <p className="text-red-500 mt-2">{error}</p>}
-    </form>
+        <Button 
+          type="submit"
+          form="recurring-form"
+          disabled={loading || !name.trim() || !amount || !startDate}
+          className={onCancel ? "ml-auto" : "w-full"}
+        >
+          {loading ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Save className="h-4 w-4 mr-2" />
+          )}
+          {initialData ? "Update Transaction" : "Add Transaction"}
+        </Button>
+      </CardFooter>
+    </>
   );
 } 

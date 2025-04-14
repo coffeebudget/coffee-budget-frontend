@@ -53,7 +53,8 @@ export default function CategoriesPage() {
         const updatedCategory = await updateCategory(token, category.id, {
           name: category.name,
           keywords: category.keywords,
-          excludeFromAnalytics: category.excludeFromAnalytics
+          excludeFromExpenseAnalytics: category.excludeFromExpenseAnalytics,
+          analyticsExclusionReason: category.analyticsExclusionReason
         });
         console.log("Update successful, received:", updatedCategory);
         setCategories((prev) => prev.map((cat) => (cat.id === updatedCategory.id ? updatedCategory : cat)));
@@ -62,7 +63,8 @@ export default function CategoriesPage() {
         const newCategory = await createCategory(token, {
           name: category.name,
           keywords: category.keywords,
-          excludeFromAnalytics: category.excludeFromAnalytics
+          excludeFromExpenseAnalytics: category.excludeFromExpenseAnalytics,
+          analyticsExclusionReason: category.analyticsExclusionReason
         });
         console.log("Creation successful, received:", newCategory);
         setCategories((prev) => [...prev, newCategory]);

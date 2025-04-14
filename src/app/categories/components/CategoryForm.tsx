@@ -35,25 +35,28 @@ export default function CategoryForm({
   const [error, setError] = useState<string | null>(null);
   const [removingKeyword, setRemovingKeyword] = useState<string | null>(null);
   const [addingKeyword, setAddingKeyword] = useState<string | null>(null);
-  const [excludeFromAnalytics, setExcludeFromAnalytics] = useState(false);
+  const [excludeFromExpenseAnalytics, setExcludeFromExpenseAnalytics] = useState(false);
+  const [analyticsExclusionReason, setAnalyticsExclusionReason] = useState("");
 
   // Initialize form with category data if editing
   useEffect(() => {
     if (categoryToEdit) {
       setName(categoryToEdit.name || "");
       setKeywords(categoryToEdit.keywords || []);
-      setExcludeFromAnalytics(categoryToEdit.excludeFromAnalytics || false);
+      setExcludeFromExpenseAnalytics(categoryToEdit.excludeFromExpenseAnalytics || false);
+      setAnalyticsExclusionReason(categoryToEdit.analyticsExclusionReason || "");
     } else {
       // Reset form for new category
       setName("");
       setKeywords([]);
-      setExcludeFromAnalytics(false);
+      setExcludeFromExpenseAnalytics(false);
+      setAnalyticsExclusionReason("");
     }
   }, [categoryToEdit]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted", { name, keywords, excludeFromAnalytics });
+    console.log("Form submitted", { name, keywords, excludeFromExpenseAnalytics, analyticsExclusionReason });
     setLoading(true);
     setError(null);
 
@@ -62,7 +65,8 @@ export default function CategoryForm({
         id: categoryToEdit?.id || 0,
         name,
         keywords,
-        excludeFromAnalytics
+        excludeFromExpenseAnalytics,
+        analyticsExclusionReason: excludeFromExpenseAnalytics ? analyticsExclusionReason : undefined
       };
 
       console.log("Calling onCategoryChange with", categoryData, !categoryToEdit);
@@ -74,7 +78,8 @@ export default function CategoryForm({
         setName("");
         setKeywords([]);
         setNewKeyword("");
-        setExcludeFromAnalytics(false);
+        setExcludeFromExpenseAnalytics(false);
+        setAnalyticsExclusionReason("");
       }
     } catch (err) {
       console.error("Error in handleSubmit:", err);
@@ -257,8 +262,8 @@ export default function CategoryForm({
               <div className="flex items-center space-x-2">
                 <Checkbox 
                   id="exclude-analytics" 
-                  checked={excludeFromAnalytics}
-                  onCheckedChange={(checked) => setExcludeFromAnalytics(checked === true)}
+                  checked={excludeFromExpenseAnalytics}
+                  onCheckedChange={(checked) => setExcludeFromExpenseAnalytics(checked === true)}
                 />
                 <div className="flex items-center gap-1">
                   <Label htmlFor="exclude-analytics">Exclude from expense analytics</Label>
@@ -277,6 +282,18 @@ export default function CategoryForm({
               </div>
             </TooltipProvider>
           </div>
+          
+          {excludeFromExpenseAnalytics && (
+            <div className="space-y-2">
+              <Label htmlFor="exclusion-reason">Reason for exclusion (optional)</Label>
+              <Input
+                id="exclusion-reason"
+                value={analyticsExclusionReason}
+                onChange={(e) => setAnalyticsExclusionReason(e.target.value)}
+                placeholder="e.g., Personal transfers, not actual expenses"
+              />
+            </div>
+          )}
           
           {error && <p className="text-red-500 text-sm">{error}</p>}
         </form>

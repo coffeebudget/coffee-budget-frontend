@@ -5,8 +5,16 @@ import { Transaction, Category, Tag, BankAccount, CreditCard } from "@/utils/typ
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, AlertCircle, Loader2 } from "lucide-react";
 import TransactionLearningPrompt from "./TransactionLearningPrompt";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -29,18 +37,26 @@ export default function TransactionList({
 }: TransactionListProps) {
   const [error, setError] = useState<string | null>(null);
   const [loadingId, setLoadingId] = useState<number | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
   const [recentlyCategorized, setRecentlyCategorized] = useState<{
     transaction: Transaction;
     category: Category;
   } | null>(null);
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this transaction?")) return;
+  const handleDeleteClick = (id: number) => {
+    if (confirmDelete === id) {
+      handleDelete(id);
+    } else {
+      setConfirmDelete(id);
+    }
+  };
 
+  const handleDelete = async (id: number) => {
     setLoadingId(id);
     setError(null);
     try {
       await onDeleteTransaction(id);
+      setConfirmDelete(null);
     } catch (err) {
       setError("Error deleting transaction");
     } finally {
@@ -81,8 +97,25 @@ export default function TransactionList({
     }
   };
 
+  if (transactions.length === 0) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col items-center justify-center p-8 text-center">
+            <AlertCircle className="h-12 w-12 text-gray-300 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-1">No Transactions</h3>
+            <p className="text-gray-500 mb-4">You haven't added any transactions yet.</p>
+            <p className="text-sm text-gray-500">
+              Click "Add Transaction" to create your first transaction.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="w-full">
+    <Card>
       <CardHeader>
         <CardTitle>Your Transactions</CardTitle>
       </CardHeader>
@@ -98,98 +131,103 @@ export default function TransactionList({
             }}
           />
         )}
-        {transactions.length === 0 ? (
-          <p className="text-gray-500 text-center py-4">No transactions found. Add your first transaction using the form.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-50 text-left">
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase" style={{ width: '15%' }}>Date</th>
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase" style={{ width: '25%' }}>Description</th>
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase" style={{ width: '10%' }}>Amount</th>
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase" style={{ width: '10%' }}>Status</th>
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase" style={{ width: '15%' }}>Category</th>
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase" style={{ width: '15%' }}>Tags</th>
-                  <th className="px-4 py-3 text-xs font-medium text-gray-500 uppercase" style={{ width: '10%' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {transactions.map((transaction) => (
-                  <tr key={`transaction-${transaction.id}-${transaction.executionDate}`} className="hover:bg-gray-50">
-                    <td className="px-4 py-4 text-sm font-medium">
-                      {transaction.executionDate ? formatDate(transaction.executionDate) : 'N/A'}
-                    </td>
-                    <td className="px-4 py-4 text-sm">
-                      <div className="break-words">
-                        {transaction.description}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 text-sm font-medium" style={{ color: transaction.type === 'expense' ? '#ef4444' : '#10b981' }}>
+        
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Tags</TableHead>
+                <TableHead className="w-[100px]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {transactions.map((transaction) => (
+                <TableRow key={`transaction-${transaction.id}-${transaction.executionDate}`}>
+                  <TableCell className="font-medium">
+                    {transaction.executionDate ? formatDate(transaction.executionDate) : 'N/A'}
+                  </TableCell>
+                  <TableCell>
+                    <div className="break-words">
+                      {transaction.description}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={transaction.type === 'expense' ? 'destructive' : 'default'}>
                       ${formatAmount(transaction.amount)}
-                    </td>
-                    <td className="px-4 py-4 text-sm">
-                      <Badge variant={
-                        transaction.status === 'executed' ? 'default' :
-                        transaction.status === 'pending' ? 'secondary' :
-                        transaction.status === 'cancelled' ? 'destructive' : 'outline'
-                      }>
-                        {transaction.status || 'N/A'}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-4 text-sm">
-                      {transaction.categoryId ? (
-                        <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-100">
-                          {categories.find(c => c.id === transaction.categoryId)?.name || 'Unknown'}
-                        </Badge>
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={
+                      transaction.status === 'executed' ? 'default' :
+                      transaction.status === 'pending' ? 'secondary' :
+                      transaction.status === 'cancelled' ? 'destructive' : 'outline'
+                    }>
+                      {transaction.status || 'N/A'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {transaction.categoryId ? (
+                      <span className="text-sm">
+                        {categories.find(c => c.id === transaction.categoryId)?.name || 'Unknown'}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground text-sm">Uncategorized</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {transaction.tagIds && transaction.tagIds.length > 0 ? (
+                        getTagsForTransaction(transaction.tagIds).map(tag => (
+                          <Badge key={tag.id} variant="secondary" className="text-xs">
+                            {tag.name}
+                          </Badge>
+                        ))
                       ) : (
-                        <span className="text-gray-400">Uncategorized</span>
+                        <span className="text-muted-foreground text-sm">No tags</span>
                       )}
-                    </td>
-                    <td className="px-4 py-4 text-sm">
-                      <div className="flex flex-wrap gap-1">
-                        {transaction.tagIds && transaction.tagIds.length > 0 ? (
-                          getTagsForTransaction(transaction.tagIds).map(tag => (
-                            <Badge key={tag.id} variant="secondary" className="bg-purple-50 text-purple-700 hover:bg-purple-100">
-                              {tag.name}
-                            </Badge>
-                          ))
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => onEditTransaction(transaction)}
+                        disabled={loadingId === transaction.id}
+                        title="Edit Transaction"
+                      >
+                        {loadingId === transaction.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                          <span className="text-gray-400">No tags</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 text-sm">
-                      <div className="flex space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => onEditTransaction(transaction)}
-                          disabled={loadingId === transaction.id}
-                        >
                           <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                          onClick={() => handleDelete(typeof transaction.id === 'string' ? parseInt(transaction.id) : transaction.id || 0)}
-                          disabled={loadingId === transaction.id}
-                        >
-                          {loadingId === transaction.id ? (
-                            <span className="animate-pulse">...</span>
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                        )}
+                      </Button>
+                      <Button
+                        variant={confirmDelete === transaction.id ? "destructive" : "ghost"} 
+                        size="icon"
+                        onClick={() => handleDeleteClick(typeof transaction.id === 'string' ? parseInt(transaction.id) : transaction.id || 0)}
+                        disabled={loadingId === transaction.id}
+                        title={confirmDelete === transaction.id ? "Confirm Delete" : "Delete Transaction"}
+                      >
+                        {loadingId === transaction.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+        
         {error && (
           <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
             {error}

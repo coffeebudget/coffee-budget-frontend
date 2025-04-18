@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Transaction, BankAccount, CreditCard, Category, Tag } from "@/utils/types";
-import { fetchBankAccounts, fetchCreditCards, fetchCategories, fetchTags } from "@/utils/api";
 import TagSelector from "@/components/TagSelector";
 import { CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,52 +26,56 @@ export default function AddTransactionForm({ onAddTransaction, initialData = nul
   const { data: session } = useSession();
   const token = session?.user?.accessToken || "";
 
+  // Explicitly determine the initial selection type based on initial bank account and credit card
+  const determineInitialSelectionType = (): "bank" | "card" | null => {
+    if (initialData?.bankAccount?.id !== undefined) return "bank";
+    if (initialData?.creditCard?.id !== undefined) return "card";
+    return null;
+  };
+
   const [description, setDescription] = useState(initialData?.description || "");
   const [amount, setAmount] = useState<string>(initialData?.amount?.toString() || "");
   const [executionDate, setExecutionDate] = useState(initialData?.executionDate ? new Date(initialData.executionDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
-  const [category, setCategory] = useState<number | null>(initialData?.categoryId || null);
+  const [category, setCategory] = useState<number | null>(
+    initialData?.categoryId !== undefined ? initialData.categoryId : null
+  );
   const [selectedTags, setSelectedTags] = useState<number[]>(initialData?.tags?.map(t => t.id) || []);
-  const [selectedBankAccount, setSelectedBankAccount] = useState<number | null>(null);
-  const [selectedCreditCard, setSelectedCreditCard] = useState<number | null>(null);
-  const [selectionType, setSelectionType] = useState<"bank" | "card" | null>(null);
+  const [selectedBankAccount, setSelectedBankAccount] = useState<number | null>(
+    initialData?.bankAccount?.id !== undefined ? initialData.bankAccount.id : null
+  );
+  const [selectedCreditCard, setSelectedCreditCard] = useState<number | null>(
+    initialData?.creditCard?.id !== undefined ? initialData.creditCard.id : null
+  );
+  const [selectionType, setSelectionType] = useState<"bank" | "card" | null>(determineInitialSelectionType());
   const [error, setError] = useState<string | null>(null);
   const [type, setType] = useState<'expense' | 'income'>(initialData?.type || 'expense');
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(initialData?.status || 'pending');
 
   useEffect(() => {
-    if (!token) return;
-
-    async function loadData() {
-      try {
-        const [bankAccountsData, creditCardsData, categoriesData, tagsData] = await Promise.all([
-          fetchBankAccounts(token),
-          fetchCreditCards(token),
-          fetchCategories(token),
-          fetchTags(token),
-        ]);
-        setSelectedBankAccount(bankAccountsData);
-        setSelectedCreditCard(creditCardsData);
-        setCategory(categoriesData);
-        setSelectedTags(tagsData);
-      } catch (err) {
-        console.error(err);
-        setError("Failed to load data");
-      }
-    }
-    loadData();
-  }, [token]);
-
-  useEffect(() => {
     if (initialData) {
+      // Update all form fields from initialData
       setDescription(initialData.description);
       setAmount(initialData.amount.toString());
       setExecutionDate(initialData.executionDate ? new Date(initialData.executionDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
-      setCategory(initialData.categoryId);
+      setCategory(initialData.categoryId || (initialData.category?.id || null));
       setSelectedTags(initialData.tags?.map(t => t.id) || []);
-      setSelectedBankAccount(initialData.bankAccountId || null);
-      setSelectedCreditCard(initialData.creditCardId || null);
-      setSelectionType(initialData.bankAccountId ? "bank" : initialData.creditCardId ? "card" : null);
+      
+      // Update payment method state based on nested objects
+      if (initialData.bankAccount?.id) {
+        setSelectionType("bank");
+        setSelectedBankAccount(initialData.bankAccount.id);
+        setSelectedCreditCard(null);
+      } else if (initialData.creditCard?.id) {
+        setSelectionType("card");
+        setSelectedCreditCard(initialData.creditCard.id);
+        setSelectedBankAccount(null);
+      } else {
+        setSelectionType(null);
+        setSelectedBankAccount(null);
+        setSelectedCreditCard(null);
+      }
+      
       setType(initialData.type);
       setStatus(initialData.status || 'pending');
     } else {
@@ -93,10 +96,10 @@ export default function AddTransactionForm({ onAddTransaction, initialData = nul
         type: type,
         status: status,
         executionDate: executionDate,
-        categoryId: category ? Number(category) : null,
+        categoryId: category !== undefined && category !== null ? Number(category) : null,
         tagIds: selectedTags.length > 0 ? selectedTags : undefined,
-        bankAccountId: selectedBankAccount ? Number(selectedBankAccount) : null,
-        creditCardId: selectedCreditCard ? Number(selectedCreditCard) : null,
+        bankAccountId: selectedBankAccount !== undefined && selectedBankAccount !== null ? Number(selectedBankAccount) : null,
+        creditCardId: selectedCreditCard !== undefined && selectedCreditCard !== null ? Number(selectedCreditCard) : null,
         ...(initialData?.id ? { id: initialData.id } : {})
       };
       
@@ -209,7 +212,7 @@ export default function AddTransactionForm({ onAddTransaction, initialData = nul
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
               <Select 
-                value={category?.toString() || 'none'} 
+                value={category !== null && category !== undefined ? category.toString() : 'none'} 
                 onValueChange={(value) => setCategory(value === 'none' ? null : parseInt(value))}
               >
                 <SelectTrigger>
@@ -217,7 +220,7 @@ export default function AddTransactionForm({ onAddTransaction, initialData = nul
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">None</SelectItem>
-                  {categories.map((cat) => (
+                  {categories && categories.length > 0 && categories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id.toString()}>
                       {cat.name}
                     </SelectItem>
@@ -270,10 +273,11 @@ export default function AddTransactionForm({ onAddTransaction, initialData = nul
                 </div>
               </div>
               
+              
               {selectionType === "bank" && (
                 <div className="mt-2">
                   <Select 
-                    value={selectedBankAccount?.toString() || 'none'} 
+                    value={selectedBankAccount !== null && selectedBankAccount !== undefined ? selectedBankAccount.toString() : 'none'} 
                     onValueChange={(value) => setSelectedBankAccount(value === 'none' ? null : parseInt(value))}
                   >
                     <SelectTrigger>
@@ -281,8 +285,8 @@ export default function AddTransactionForm({ onAddTransaction, initialData = nul
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">None</SelectItem>
-                      {bankAccounts.map((account) => (
-                        <SelectItem key={account.id} value={account.id?.toString() || `account-${account.name}`}>
+                      {bankAccounts && bankAccounts.length > 0 && bankAccounts.map((account) => (
+                        <SelectItem key={account.id} value={(account.id || 0).toString()}>
                           {account.name}
                         </SelectItem>
                       ))}
@@ -294,7 +298,7 @@ export default function AddTransactionForm({ onAddTransaction, initialData = nul
               {selectionType === "card" && (
                 <div className="mt-2">
                   <Select 
-                    value={selectedCreditCard?.toString() || 'none'} 
+                    value={selectedCreditCard !== null && selectedCreditCard !== undefined ? selectedCreditCard.toString() : 'none'} 
                     onValueChange={(value) => setSelectedCreditCard(value === 'none' ? null : parseInt(value))}
                   >
                     <SelectTrigger>
@@ -302,8 +306,8 @@ export default function AddTransactionForm({ onAddTransaction, initialData = nul
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">None</SelectItem>
-                      {creditCards.map((card) => (
-                        <SelectItem key={card.id} value={card.id?.toString() || `card-${card.name}`}>
+                      {creditCards && creditCards.length > 0 && creditCards.map((card) => (
+                        <SelectItem key={card.id} value={(card.id || 0).toString()}>
                           {card.name}
                         </SelectItem>
                       ))}

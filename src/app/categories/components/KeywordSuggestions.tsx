@@ -7,22 +7,22 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Plus, Loader2 } from "lucide-react";
-import { getSuggestedKeywordsForCategory, addKeywordToCategory } from "@/utils/api";
+import { getSuggestedKeywordsForCategory } from "@/utils/api";
 import { Category } from "@/utils/types";
 
 interface KeywordSuggestionsProps {
   category: Category;
-  onKeywordAdded: (updatedCategory: Category) => void;
+  onKeywordSelected: (keyword: string) => void;
 }
 
-export default function KeywordSuggestions({ category, onKeywordAdded }: KeywordSuggestionsProps) {
+export default function KeywordSuggestions({ category, onKeywordSelected }: KeywordSuggestionsProps) {
   const { data: session } = useSession();
   const token = session?.user?.accessToken || "";
   
   const [suggestedKeywords, setSuggestedKeywords] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [addingKeyword, setAddingKeyword] = useState<string | null>(null);
+  const [selectingKeyword, setSelectingKeyword] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token || !category) return;
@@ -48,21 +48,19 @@ export default function KeywordSuggestions({ category, onKeywordAdded }: Keyword
     fetchSuggestions();
   }, [token, category]);
 
-  const handleAddKeyword = async (keyword: string) => {
-    if (!token) return;
-    
-    setAddingKeyword(keyword);
+  const handleSelectKeyword = async (keyword: string) => {
+    setSelectingKeyword(keyword);
     try {
-      const updatedCategory = await addKeywordToCategory(token, category.id, keyword);
-      onKeywordAdded(updatedCategory);
+      // Instead of directly adding the keyword, notify the parent to show preview
+      onKeywordSelected(keyword);
       
-      // Remove the added keyword from suggestions
+      // Remove the selected keyword from suggestions after it's been processed
       setSuggestedKeywords(prev => prev.filter(k => k !== keyword));
     } catch (err) {
       console.error(err);
-      setError(`Failed to add keyword "${keyword}"`);
+      setError(`Failed to select keyword "${keyword}"`);
     } finally {
-      setAddingKeyword(null);
+      setSelectingKeyword(null);
     }
   };
 
@@ -95,10 +93,10 @@ export default function KeywordSuggestions({ category, onKeywordAdded }: Keyword
                   size="sm"
                   variant="ghost"
                   className="h-5 w-5 p-0 ml-1"
-                  onClick={() => handleAddKeyword(keyword)}
-                  disabled={addingKeyword === keyword}
+                  onClick={() => handleSelectKeyword(keyword)}
+                  disabled={selectingKeyword === keyword}
                 >
-                  {addingKeyword === keyword ? (
+                  {selectingKeyword === keyword ? (
                     <Loader2 className="h-3 w-3 animate-spin" />
                   ) : (
                     <Plus className="h-3 w-3" />

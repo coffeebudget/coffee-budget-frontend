@@ -12,6 +12,8 @@ import { removeKeywordFromCategory } from "@/utils/api";
 import KeywordSuggestions from "./KeywordSuggestions";
 import KeywordRefinementPrompt from "./KeywordRefinementPrompt";
 import { getSuggestedKeywordsForCategory } from "@/utils/api";
+import { previewKeywordImpact, applyKeywordToCategory } from "@/utils/api";
+import KeywordImpactPreview from "./KeywordImpactPreview";
 
 interface CategoryDetailProps {
   category: Category;
@@ -33,6 +35,12 @@ export default function CategoryDetail({
   const [error, setError] = useState<string | null>(null);
   const [suggestedKeywords, setSuggestedKeywords] = useState<string[]>([]);
   const [showRefinementPrompt, setShowRefinementPrompt] = useState(false);
+  
+  // Add state for preview functionality
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewKeyword, setPreviewKeyword] = useState("");
+  const [keywordImpact, setKeywordImpact] = useState<any>(null);
+  const [loadingPreview, setLoadingPreview] = useState(false);
 
   useEffect(() => {
     if (!token || !category) return;
@@ -76,6 +84,71 @@ export default function CategoryDetail({
     } finally {
       setRemovingKeyword(null);
     }
+  };
+
+  const loadKeywordImpact = async (keyword: string) => {
+    if (!category?.id || !token) return;
+    
+    setLoadingPreview(true);
+    setError(null);
+    setKeywordImpact(null); // Reset the keywordImpact first
+    
+    try {
+      const impact = await previewKeywordImpact(token, category.id, keyword);
+      
+      // If we have sample transactions but no totalImpactedCount, use the sample length
+      const totalImpactedCount = impact?.totalImpactedCount || 
+        (impact?.sampleTransactions?.length || 0);
+      
+      // Ensure impact has the expected structure
+      const safeImpact = {
+        totalImpactedCount: totalImpactedCount,
+        uncategorizedCount: impact?.uncategorizedCount || 0,
+        categorizedCount: impact?.categorizedCount || 0,
+        affectedCategories: impact?.affectedCategories || [],
+        sampleTransactions: impact?.sampleTransactions || []
+      };
+      setKeywordImpact(safeImpact);
+      setShowPreview(true);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load keyword impact");
+    } finally {
+      setLoadingPreview(false);
+    }
+  };
+
+  const handleApplyKeyword = async (applyTo: "none" | "uncategorized" | "all" | number[]) => {
+    if (!category?.id || !token || !previewKeyword) return;
+    
+    try {
+      const updatedCategory = await applyKeywordToCategory(token, category.id, previewKeyword, applyTo);
+      
+      // Update the category via parent component
+      onCategoryUpdated(updatedCategory);
+      
+      // Remove the keyword from suggestions
+      setSuggestedKeywords(prev => 
+        prev.filter(keyword => keyword !== previewKeyword)
+      );
+      
+      setShowPreview(false);
+      setPreviewKeyword("");
+      setKeywordImpact(null);
+      
+      if (suggestedKeywords.length <= 1) {
+        setShowRefinementPrompt(false);
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Failed to apply keyword changes");
+    }
+  };
+
+  const handleClosePreview = () => {
+    setShowPreview(false);
+    setPreviewKeyword("");
+    setKeywordImpact(null);
   };
 
   return (
@@ -141,7 +214,12 @@ export default function CategoryDetail({
       
       <KeywordSuggestions 
         category={category} 
-        onKeywordAdded={onCategoryUpdated} 
+        onKeywordSelected={(keyword) => {
+          // Set the keyword for preview
+          setPreviewKeyword(keyword);
+          // Load the impact for preview
+          loadKeywordImpact(keyword);
+        }} 
       />
 
       {showRefinementPrompt && suggestedKeywords.length > 0 && (
@@ -149,19 +227,26 @@ export default function CategoryDetail({
           category={category}
           suggestedKeywords={suggestedKeywords}
           onDismiss={() => setShowRefinementPrompt(false)}
-          onKeywordAdded={(updatedCategory) => {
-            onCategoryUpdated(updatedCategory);
-            // Remove the added keyword from suggestions
-            setSuggestedKeywords(prev => 
-              prev.filter(keyword => !updatedCategory.keywords.includes(keyword))
-            );
-            
-            if (suggestedKeywords.length <= 1) {
-              setShowRefinementPrompt(false);
-            }
+          onKeywordSelected={(keyword) => {
+            // Set the keyword for preview
+            setPreviewKeyword(keyword);
+            // Load the impact for preview
+            loadKeywordImpact(keyword);
           }}
         />
       )}
+      
+      {/* Keyword impact preview dialog */}
+      <KeywordImpactPreview
+        isOpen={showPreview}
+        onClose={handleClosePreview}
+        keyword={previewKeyword}
+        categoryName={category.name || ""}
+        categoryId={category.id}
+        keywordImpact={keywordImpact}
+        isLoading={loadingPreview}
+        onApply={handleApplyKeyword}
+      />
     </div>
   );
 }

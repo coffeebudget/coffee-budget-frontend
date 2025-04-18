@@ -382,9 +382,11 @@ export default function CategoryForm({
           <div className="mt-6">
             <KeywordSuggestions 
               category={categoryToEdit} 
-              onKeywordAdded={(updatedCategory) => {
-                setKeywords(updatedCategory.keywords || []);
-                onCategoryChange(updatedCategory, false);
+              onKeywordSelected={(keyword) => {
+                // Set the keyword for preview
+                setPreviewKeyword(keyword);
+                // Load the impact for preview
+                loadKeywordImpact(keyword);
               }} 
             />
           </div>

@@ -7,42 +7,38 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Sparkles, Plus, Check } from "lucide-react";
 import { Category } from "@/utils/types";
-import { addKeywordToCategory } from "@/utils/api";
 
 interface KeywordRefinementPromptProps {
   category: Category;
   suggestedKeywords: string[];
   onDismiss: () => void;
-  onKeywordAdded: (updatedCategory: Category) => void;
+  onKeywordSelected: (keyword: string) => void;
 }
 
 export default function KeywordRefinementPrompt({ 
   category, 
   suggestedKeywords,
   onDismiss,
-  onKeywordAdded
+  onKeywordSelected
 }: KeywordRefinementPromptProps) {
   const { data: session } = useSession();
   const token = session?.user?.accessToken || "";
   
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [addingKeyword, setAddingKeyword] = useState<string | null>(null);
+  const [selectingKeyword, setSelectingKeyword] = useState<string | null>(null);
   
-  const handleAddKeyword = async (keyword: string) => {
-    if (!token) return;
-    
-    setAddingKeyword(keyword);
+  const handleSelectKeyword = async (keyword: string) => {
+    setSelectingKeyword(keyword);
     setError(null);
     
     try {
-      const updatedCategory = await addKeywordToCategory(token, category.id, keyword);
-      onKeywordAdded(updatedCategory);
+      // Instead of directly adding, pass to parent for preview
+      onKeywordSelected(keyword);
     } catch (err) {
       console.error(err);
-      setError(`Failed to add keyword "${keyword}"`);
+      setError(`Failed to select keyword "${keyword}"`);
     } finally {
-      setAddingKeyword(null);
+      setSelectingKeyword(null);
     }
   };
   
@@ -71,10 +67,10 @@ export default function KeywordRefinementPrompt({
                 size="sm"
                 variant="ghost"
                 className="h-5 w-5 p-0 ml-1 text-purple-600 hover:text-purple-800 hover:bg-purple-100"
-                onClick={() => handleAddKeyword(keyword)}
-                disabled={addingKeyword === keyword}
+                onClick={() => handleSelectKeyword(keyword)}
+                disabled={selectingKeyword === keyword}
               >
-                {addingKeyword === keyword ? (
+                {selectingKeyword === keyword ? (
                   <Loader2 className="h-3 w-3 animate-spin" />
                 ) : (
                   <Plus className="h-3 w-3" />
@@ -94,20 +90,6 @@ export default function KeywordRefinementPrompt({
           className="text-purple-700"
         >
           Dismiss
-        </Button>
-        <Button 
-          variant="default" 
-          size="sm" 
-          onClick={() => {
-            suggestedKeywords.forEach(async keyword => {
-              await handleAddKeyword(keyword);
-            });
-          }}
-          disabled={loading}
-          className="bg-purple-600 hover:bg-purple-700 ml-2"
-        >
-          <Check className="h-4 w-4 mr-1" />
-          Add All Keywords
         </Button>
       </CardFooter>
     </Card>

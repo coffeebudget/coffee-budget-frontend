@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Transaction, BankAccount, CreditCard, Category, Tag } from "@/utils/types";
+import { createTag } from "@/utils/api";
 import TagSelector from "@/components/TagSelector";
 import { CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -128,6 +129,18 @@ export default function AddTransactionForm({ onAddTransaction, initialData = nul
     setStatus('pending');
   };
 
+  // Add this function to handle tag creation
+  const handleCreateTag = async (tagName: string): Promise<Tag> => {
+    try {
+      const newTag = await createTag(token, { name: tagName });
+      return newTag;
+    } catch (error) {
+      console.error("Error creating tag:", error);
+      setError("Failed to create tag. Please try again.");
+      throw error;
+    }
+  };
+
   return (
     <>
       <CardHeader>
@@ -235,6 +248,7 @@ export default function AddTransactionForm({ onAddTransaction, initialData = nul
                 tags={tags}
                 selectedTags={selectedTags}
                 onChange={setSelectedTags}
+                onCreateTag={handleCreateTag}
               />
             </div>
             

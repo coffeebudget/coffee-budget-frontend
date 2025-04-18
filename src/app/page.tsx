@@ -4,12 +4,20 @@ import { useSession } from "next-auth/react";
 import AuthButton from "@/components/AuthButton";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, PieChart, Receipt, CreditCard, RefreshCcw, Sparkles, Tag } from "lucide-react";
+import { ArrowRight, Receipt, Tag, RefreshCcw, Sparkles, Coffee } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
+import { useState, useEffect } from "react";
 
 export default function Home() {
   const { data: session } = useSession();
   const isLoggedIn = !!session?.user;
+  const [logoLoaded, setLogoLoaded] = useState(true);
+
+  // Handle logo loading error
+  const handleLogoError = () => {
+    setLogoLoaded(false);
+  };
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
@@ -17,20 +25,38 @@ export default function Home() {
         {/* Hero Section */}
         <div className="flex flex-col lg:flex-row items-center gap-8 py-10">
           <div className="flex-1 space-y-6">
-            <div>
-              <h1 className="text-4xl md:text-5xl font-bold text-gray-900">
-                Coffee Budget
-              </h1>
-              <p className="text-xl text-muted-foreground mt-2">
-                Your personal finance management made simple
-              </p>
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-4">
+              <div className="relative w-20 h-20 md:w-24 md:h-24 flex-shrink-0 flex items-center justify-center">
+                {logoLoaded ? (
+                  <Image 
+                    src="/coffee-cup-logo.png" 
+                    alt="Coffee Budget Logo" 
+                    width={100} 
+                    height={100}
+                    className="object-contain"
+                    onError={handleLogoError}
+                    unoptimized
+                  />
+                ) : (
+                  <Coffee className="h-16 w-16 text-blue-900" />
+                )}
+              </div>
+              <div>
+                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 text-center md:text-left">
+                  Coffee Budget
+                </h1>
+                <p className="text-xl text-muted-foreground mt-2 text-center md:text-left italic">
+                  "Managing your personal finances will be as simple as drinking a coffee"
+                </p>
+              </div>
             </div>
             
             <p className="text-lg text-gray-600">
-              Track your expenses, categorize transactions, and gain insights into your spending habits.
+              Track your expenses, categorize transactions, and gain insights into your spending habits 
+              with our intuitive and user-friendly finance management tool.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4 items-center justify-center md:justify-start">
               {isLoggedIn ? (
                 <Button size="lg" asChild>
                   <Link href="/dashboard">
@@ -38,13 +64,11 @@ export default function Home() {
                   </Link>
                 </Button>
               ) : (
-                <div className="flex gap-4">
-                  <div className="bg-blue-600 hover:bg-blue-700 transition-colors rounded-md">
-                    <AuthButton />
-                  </div>
+                <div className="flex flex-col sm:flex-row gap-4 items-center">
+                  <AuthButton />
                   <Button variant="outline" size="lg" asChild>
-                    <Link href="/about">
-                      Learn More
+                    <Link href="/transactions">
+                      Explore Features
                     </Link>
                   </Button>
                 </div>
@@ -54,9 +78,22 @@ export default function Home() {
           
           <div className="flex-1 flex justify-center">
             <div className="bg-blue-50 p-6 rounded-xl border border-blue-200 max-w-md">
-              <PieChart className="h-32 w-32 text-blue-500 mx-auto mb-4" />
+              <div className="mx-auto mb-4 relative w-32 h-32 flex items-center justify-center">
+                {logoLoaded ? (
+                  <Image 
+                    src="/coffee-cup-logo.png" 
+                    alt="Coffee Budget Logo" 
+                    fill
+                    className="object-contain"
+                    onError={handleLogoError}
+                    unoptimized
+                  />
+                ) : (
+                  <Coffee className="h-24 w-24 text-blue-900" />
+                )}
+              </div>
               <p className="text-blue-800 text-center italic">
-                "Visualize your finances and make informed decisions"
+                "Your finances, brewed to perfection"
               </p>
             </div>
           </div>

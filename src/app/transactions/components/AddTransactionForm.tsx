@@ -37,9 +37,19 @@ export default function AddTransactionForm({ onAddTransaction, initialData = nul
   const [description, setDescription] = useState(initialData?.description || "");
   const [amount, setAmount] = useState<string>(initialData?.amount?.toString() || "");
   const [executionDate, setExecutionDate] = useState(initialData?.executionDate ? new Date(initialData.executionDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
-  const [category, setCategory] = useState<number | null>(
-    initialData?.categoryId !== undefined ? initialData.categoryId : null
-  );
+  const [category, setCategory] = useState<number | null>(() => {
+    if (initialData) {
+      // Try to get categoryId directly
+      if (initialData.categoryId !== undefined && initialData.categoryId !== null) {
+        return initialData.categoryId;
+      }
+      // Fall back to category.id if available
+      if (initialData.category?.id !== undefined && initialData.category?.id !== null) {
+        return initialData.category.id;
+      }
+    }
+    return null;
+  });
   const [selectedTags, setSelectedTags] = useState<number[]>(initialData?.tags?.map(t => t.id) || []);
   const [selectedBankAccount, setSelectedBankAccount] = useState<number | null>(
     initialData?.bankAccount?.id !== undefined ? initialData.bankAccount.id : null
@@ -59,8 +69,12 @@ export default function AddTransactionForm({ onAddTransaction, initialData = nul
       setDescription(initialData.description);
       setAmount(initialData.amount.toString());
       setExecutionDate(initialData.executionDate ? new Date(initialData.executionDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
-      setCategory(initialData.categoryId || (initialData.category?.id || null));
-      setSelectedTags(initialData.tags?.map(t => t.id) || []);
+      
+      // Handle category data properly - check both categoryId and category.id
+      const effectiveCategoryId = initialData.categoryId || (initialData.category?.id || null);
+      setCategory(effectiveCategoryId);
+      
+      setSelectedTags(initialData.tags?.map(t => t.id) || initialData.tagIds || []);
       
       // Update payment method state based on nested objects
       if (initialData.bankAccount?.id) {
@@ -182,7 +196,7 @@ export default function AddTransactionForm({ onAddTransaction, initialData = nul
                 value={type} 
                 onValueChange={(value) => setType(value as 'expense' | 'income')}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-background text-foreground">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -198,7 +212,7 @@ export default function AddTransactionForm({ onAddTransaction, initialData = nul
                 value={status} 
                 onValueChange={(value) => setStatus(value as 'pending' | 'executed')}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-background text-foreground">
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -225,11 +239,26 @@ export default function AddTransactionForm({ onAddTransaction, initialData = nul
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
               <Select 
-                value={category !== null && category !== undefined ? category.toString() : 'none'} 
+                value={(() => {
+                  // First check if the category ID exists in the categories array
+                  if (category !== null && category !== undefined) {
+                    const categoryExists = categories.some(c => c.id.toString() === category.toString());
+                    return categoryExists ? category.toString() : 'none';
+                  }
+                  return 'none';
+                })()} 
                 onValueChange={(value) => setCategory(value === 'none' ? null : parseInt(value))}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
+                <SelectTrigger className="bg-background text-foreground">
+                  <SelectValue placeholder="Select category">
+                    {category !== null && category !== undefined 
+                      ? (() => {
+                          // For display purposes, try to find the category name
+                          const selectedCategory = categories.find(c => c.id.toString() === category.toString());
+                          return selectedCategory ? selectedCategory.name : "Select category";
+                        })() 
+                      : "Select category"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">None</SelectItem>
@@ -294,7 +323,7 @@ export default function AddTransactionForm({ onAddTransaction, initialData = nul
                     value={selectedBankAccount !== null && selectedBankAccount !== undefined ? selectedBankAccount.toString() : 'none'} 
                     onValueChange={(value) => setSelectedBankAccount(value === 'none' ? null : parseInt(value))}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-background text-foreground">
                       <SelectValue placeholder="Select bank account" />
                     </SelectTrigger>
                     <SelectContent>
@@ -315,7 +344,7 @@ export default function AddTransactionForm({ onAddTransaction, initialData = nul
                     value={selectedCreditCard !== null && selectedCreditCard !== undefined ? selectedCreditCard.toString() : 'none'} 
                     onValueChange={(value) => setSelectedCreditCard(value === 'none' ? null : parseInt(value))}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-background text-foreground">
                       <SelectValue placeholder="Select credit card" />
                     </SelectTrigger>
                     <SelectContent>

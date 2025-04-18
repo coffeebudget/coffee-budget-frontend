@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -72,6 +72,14 @@ export default function KeywordImpactPreview({
     }).format(new Date(dateString));
   };
 
+  const hasSampleTransactions = keywordImpact?.sampleTransactions && 
+    keywordImpact.sampleTransactions.length > 0;
+
+  const effectiveImpactCount = 
+    (keywordImpact?.totalImpactedCount || 0) > 0 
+      ? keywordImpact?.totalImpactedCount 
+      : (hasSampleTransactions ? keywordImpact?.sampleTransactions?.length : 0);
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
@@ -90,7 +98,9 @@ export default function KeywordImpactPreview({
             <div className="space-y-4">
               <div className="bg-blue-50 p-4 rounded-md">
                 <p className="text-sm text-blue-800">
-                  This keyword will affect <strong>{keywordImpact.totalImpactedCount || 0}</strong> transactions
+                  This keyword will affect <strong>
+                    {effectiveImpactCount}
+                  </strong> transactions
                   {(keywordImpact.uncategorizedCount || 0) > 0 && ` (${keywordImpact.uncategorizedCount} uncategorized)`}.
                 </p>
               </div>
@@ -166,11 +176,11 @@ export default function KeywordImpactPreview({
                     </div>
                   )}
                   
-                  {(keywordImpact.totalImpactedCount || 0) > 0 && (
+                  {(effectiveImpactCount || 0) > 0 && (
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="all" id="all" />
                       <Label htmlFor="all">
-                        Recategorize all matching transactions ({keywordImpact.totalImpactedCount})
+                        Recategorize all matching transactions ({effectiveImpactCount})
                       </Label>
                     </div>
                   )}

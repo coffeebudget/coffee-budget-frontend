@@ -131,9 +131,14 @@ export default function CategoryForm({
     
     try {
       const impact = await previewKeywordImpact(token, categoryToEdit.id, keyword);
+      
+      // If we have sample transactions but no totalImpactedCount, use the sample length
+      const totalImpactedCount = impact?.totalImpactedCount || 
+        (impact?.sampleTransactions?.length || 0);
+      
       // Ensure impact has the expected structure
       const safeImpact = {
-        totalImpactedCount: impact?.totalImpactedCount || 0,
+        totalImpactedCount: totalImpactedCount,
         uncategorizedCount: impact?.uncategorizedCount || 0,
         categorizedCount: impact?.categorizedCount || 0,
         affectedCategories: impact?.affectedCategories || [],

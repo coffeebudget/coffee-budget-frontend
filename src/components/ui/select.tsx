@@ -82,6 +82,7 @@ const SelectContent = React.forwardRef<
       )}
       position={position}
       {...props}
+      data-popover-open="true"
     >
       <SelectScrollUpButton />
       <SelectPrimitive.Viewport

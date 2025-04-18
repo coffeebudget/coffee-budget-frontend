@@ -147,7 +147,7 @@ export default function TransactionList({
             </TableHeader>
             <TableBody>
               {transactions.map((transaction) => (
-                <TableRow key={`transaction-${transaction.id}-${transaction.executionDate}`}>
+                <TableRow key={`transaction-${Number(transaction.id)}`}>
                   <TableCell className="font-medium">
                     {transaction.executionDate ? formatDate(transaction.executionDate) : 'N/A'}
                   </TableCell>
@@ -171,9 +171,11 @@ export default function TransactionList({
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {transaction.categoryId ? (
+                    {(transaction.categoryId || transaction.category?.id) ? (
                       <span className="text-sm">
-                        {categories.find(c => c.id === transaction.categoryId)?.name || 'Unknown'}
+                        {transaction.category?.name || 
+                         categories.find(c => c.id === (transaction.categoryId || transaction.category?.id))?.name || 
+                         'Unknown'}
                       </span>
                     ) : (
                       <span className="text-muted-foreground text-sm">Uncategorized</span>
@@ -181,12 +183,19 @@ export default function TransactionList({
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {transaction.tagIds && transaction.tagIds.length > 0 ? (
-                        getTagsForTransaction(transaction.tagIds).map(tag => (
-                          <Badge key={tag.id} variant="secondary" className="text-xs">
-                            {tag.name}
-                          </Badge>
-                        ))
+                      {(transaction.tagIds && transaction.tagIds.length > 0) || (transaction.tags && transaction.tags.length > 0) ? (
+                        transaction.tags ? 
+                          transaction.tags.map(tag => (
+                            <Badge key={tag.id} variant="secondary" className="text-xs">
+                              {tag.name}
+                            </Badge>
+                          ))
+                        :
+                          getTagsForTransaction(transaction.tagIds).map(tag => (
+                            <Badge key={tag.id} variant="secondary" className="text-xs">
+                              {tag.name}
+                            </Badge>
+                          ))
                       ) : (
                         <span className="text-muted-foreground text-sm">No tags</span>
                       )}
@@ -210,7 +219,7 @@ export default function TransactionList({
                       <Button
                         variant={confirmDelete === transaction.id ? "destructive" : "ghost"} 
                         size="icon"
-                        onClick={() => handleDeleteClick(typeof transaction.id === 'string' ? parseInt(transaction.id) : transaction.id || 0)}
+                        onClick={() => handleDeleteClick(Number(transaction.id))}
                         disabled={loadingId === transaction.id}
                         title={confirmDelete === transaction.id ? "Confirm Delete" : "Delete Transaction"}
                       >

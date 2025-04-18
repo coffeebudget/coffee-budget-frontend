@@ -9,8 +9,14 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Plus, X, Save, HelpCircle } from "lucide-react";
 import { Category } from "@/utils/types";
-import { addKeywordToCategory, removeKeywordFromCategory } from "@/utils/api";
+import { 
+  addKeywordToCategory, 
+  removeKeywordFromCategory, 
+  previewKeywordImpact,
+  applyKeywordToCategory
+} from "@/utils/api";
 import KeywordSuggestions from "./KeywordSuggestions";
+import KeywordImpactPreview from "./KeywordImpactPreview";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -37,6 +43,12 @@ export default function CategoryForm({
   const [addingKeyword, setAddingKeyword] = useState<string | null>(null);
   const [excludeFromExpenseAnalytics, setExcludeFromExpenseAnalytics] = useState(false);
   const [analyticsExclusionReason, setAnalyticsExclusionReason] = useState("");
+  
+  // New state for keyword impact preview
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewKeyword, setPreviewKeyword] = useState("");
+  const [keywordImpact, setKeywordImpact] = useState<any>(null);
+  const [loadingPreview, setLoadingPreview] = useState(false);
 
   // Initialize form with category data if editing
   useEffect(() => {
@@ -98,9 +110,81 @@ export default function CategoryForm({
       return;
     }
     
-    setKeywords([...keywords, newKeyword.trim()]);
-    setNewKeyword("");
+    if (categoryToEdit?.id) {
+      // For existing categories, show impact preview
+      setPreviewKeyword(newKeyword.trim());
+      loadKeywordImpact(newKeyword.trim());
+    } else {
+      // For new categories, just add to state
+      setKeywords([...keywords, newKeyword.trim()]);
+      setNewKeyword("");
+      setError(null);
+    }
+  };
+
+  const loadKeywordImpact = async (keyword: string) => {
+    if (!categoryToEdit?.id || !token) return;
+    
+    setLoadingPreview(true);
     setError(null);
+    setKeywordImpact(null); // Reset the keywordImpact first
+    
+    try {
+      const impact = await previewKeywordImpact(token, categoryToEdit.id, keyword);
+      // Ensure impact has the expected structure
+      const safeImpact = {
+        totalImpactedCount: impact?.totalImpactedCount || 0,
+        uncategorizedCount: impact?.uncategorizedCount || 0,
+        categorizedCount: impact?.categorizedCount || 0,
+        affectedCategories: impact?.affectedCategories || [],
+        sampleTransactions: impact?.sampleTransactions || []
+      };
+      setKeywordImpact(safeImpact);
+      setShowPreview(true);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load keyword impact");
+      // Fall back to direct add if preview fails
+      setKeywords([...keywords, keyword.trim()]);
+      setNewKeyword("");
+    } finally {
+      setLoadingPreview(false);
+    }
+  };
+
+  const handleApplyKeyword = async (applyTo: "none" | "uncategorized" | "all" | number[]) => {
+    if (!categoryToEdit?.id || !token || !previewKeyword) return;
+    
+    try {
+      await applyKeywordToCategory(token, categoryToEdit.id, previewKeyword, applyTo);
+      
+      // Add keyword to local state
+      if (!keywords.includes(previewKeyword)) {
+        const updatedKeywords = [...keywords, previewKeyword];
+        setKeywords(updatedKeywords);
+        
+        // Update the category in parent component
+        const updatedCategory = {
+          ...categoryToEdit,
+          keywords: updatedKeywords
+        };
+        await onCategoryChange(updatedCategory, false);
+      }
+      
+      setNewKeyword("");
+      setShowPreview(false);
+      setPreviewKeyword("");
+      setKeywordImpact(null);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to apply keyword changes");
+    }
+  };
+
+  const handleClosePreview = () => {
+    setShowPreview(false);
+    setPreviewKeyword("");
+    setKeywordImpact(null);
   };
 
   const handleRemoveKeyword = async (keyword: string) => {
@@ -202,28 +286,18 @@ export default function CategoryForm({
                 placeholder="Add keywords to auto-categorize transactions"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
-                    e.preventDefault();
-                    if (categoryToEdit) {
-                      handleAddExternalKeyword(newKeyword);
-                    } else {
-                      handleAddKeyword();
-                    }
+                    e.preventDefault(); // Prevent form submission
+                    handleAddKeyword();
                   }
                 }}
               />
               <Button 
                 type="button" 
-                onClick={() => {
-                  if (categoryToEdit) {
-                    handleAddExternalKeyword(newKeyword);
-                  } else {
-                    handleAddKeyword();
-                  }
-                }}
+                onClick={handleAddKeyword}
                 variant="outline"
-                disabled={!newKeyword.trim() || Boolean(categoryToEdit && addingKeyword === newKeyword)}
+                disabled={!newKeyword.trim() || loadingPreview}
               >
-                {categoryToEdit && addingKeyword === newKeyword ? (
+                {loadingPreview ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Plus className="h-4 w-4" />
@@ -310,6 +384,20 @@ export default function CategoryForm({
             />
           </div>
         )}
+        
+        {/* Keyword impact preview dialog */}
+        {categoryToEdit && (
+          <KeywordImpactPreview
+            isOpen={showPreview}
+            onClose={handleClosePreview}
+            keyword={previewKeyword}
+            categoryName={categoryToEdit.name || ""}
+            categoryId={categoryToEdit.id}
+            keywordImpact={keywordImpact}
+            isLoading={loadingPreview}
+            onApply={handleApplyKeyword}
+          />
+        )}
       </CardContent>
       
       <CardFooter className="flex justify-between">
@@ -325,12 +413,6 @@ export default function CategoryForm({
         <Button 
           type="submit"
           form="category-form"
-          onClick={(e) => {
-            console.log("Submit button clicked");
-            if (!loading && name.trim()) {
-              handleSubmit(e as unknown as React.FormEvent);
-            }
-          }}
           disabled={loading || !name.trim()}
           className="ml-auto"
         >

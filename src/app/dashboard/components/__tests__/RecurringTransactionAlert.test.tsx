@@ -1,8 +1,16 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom/extend-expect';
 import RecurringTransactionAlert from '../RecurringTransactionAlert';
 import * as api from '@/utils/api';
 import { SessionProvider } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import assert from 'assert';
+
+// Mock next/navigation
+jest.mock('next/navigation', () => ({
+  useRouter: jest.fn(),
+}));
 
 // Mock imports need to be before using the mock data
 import { mockUnconfirmedPatterns, mockLinkedTransactions } from '@/mocks/recurringPatternsMock';
@@ -58,53 +66,44 @@ const Wrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 describe('RecurringTransactionAlert', () => {
+  // Setup router mock
+  const mockPush = jest.fn();
+  
   beforeEach(() => {
     jest.clearAllMocks();
+    (useRouter as jest.Mock).mockReturnValue({
+      push: mockPush,
+    });
   });
 
   test('renders alert when unconfirmed patterns exist', async () => {
     render(<RecurringTransactionAlert />, { wrapper: Wrapper });
     
     await waitFor(() => {
-      expect(screen.getByText('Recurring Transactions Detected')).toBeInTheDocument();
+      assert(screen.getByText('Recurring Transactions Detected'));
     });
+    
+    assert(screen.getByText('We\'ve detected 1 potential recurring transaction patterns. Would you like to review them?'));
+    assert(screen.getByText('Review Patterns'));
   });
 
-  test('opens modal when review button is clicked', async () => {
+  test('has the correct link to review patterns page', async () => {
     render(<RecurringTransactionAlert />, { wrapper: Wrapper });
     
     await waitFor(() => {
-      expect(screen.getByText('Review Patterns')).toBeInTheDocument();
+      assert(screen.getByText('Review Patterns'));
     });
     
-    fireEvent.click(screen.getByText('Review Patterns'));
-    
-    await waitFor(() => {
-      expect(screen.getByText('Recurring Transaction Pattern')).toBeInTheDocument();
-    });
-    
-    expect(screen.getByText('Monthly Rent')).toBeInTheDocument();
+    const link = screen.getByText('Review Patterns');
+    assert.strictEqual(link.getAttribute('href'), '/recurring-transactions/review-patterns');
   });
 
-  test('confirms pattern when confirm button is clicked', async () => {
-    const spy = jest.spyOn(api, 'confirmPattern');
-    
+  test('api is called to fetch unconfirmed patterns on mount', async () => {
     render(<RecurringTransactionAlert />, { wrapper: Wrapper });
     
     await waitFor(() => {
-      expect(screen.getByText('Review Patterns')).toBeInTheDocument();
-    });
-    
-    fireEvent.click(screen.getByText('Review Patterns'));
-    
-    await waitFor(() => {
-      expect(screen.getByText('Confirm Pattern')).toBeInTheDocument();
-    });
-    
-    fireEvent.click(screen.getByText('Confirm Pattern'));
-    
-    await waitFor(() => {
-      expect(spy).toHaveBeenCalled();
+      assert.strictEqual((api.fetchUnconfirmedPatterns as jest.Mock).mock.calls.length, 1);
+      assert.strictEqual((api.fetchUnconfirmedPatterns as jest.Mock).mock.calls[0][0], 'mock-token');
     });
   });
 }); 

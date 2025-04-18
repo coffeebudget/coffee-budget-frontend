@@ -1,69 +1,49 @@
 describe('Recurring Transaction Alert', () => {
   beforeEach(() => {
-    // Mock the API responses
+    // Stub API responses
     cy.intercept('GET', '**/recurring-transactions/unconfirmed-patterns', {
       statusCode: 200,
-      body: [
-        {
-          id: 1,
-          name: "Monthly Rent",
-          amount: 1200,
-          frequencyType: "monthly",
-          frequencyEveryN: 1,
-          startDate: "2023-01-01T00:00:00.000Z"
-        }
-      ]
+      body: [{ id: 1 }, { id: 2 }] // Mock 2 unconfirmed patterns
     }).as('getPatterns');
     
-    cy.intercept('GET', '**/recurring-transactions/*/linked-transactions', {
+    cy.intercept('GET', '**/api/auth/session', {
       statusCode: 200,
-      body: [
-        {
-          id: 101,
-          description: "Rent Payment January",
-          executionDate: "2023-01-01T00:00:00.000Z",
-          amount: 1200
+      body: {
+        user: {
+          accessToken: 'mock-token'
         }
-      ]
-    }).as('getTransactions');
+      }
+    }).as('getSession');
     
-    // Mock the session
-    cy.session('authenticated', () => {
-      // Set up authentication
-    });
-    
-    // Visit the dashboard page
+    // Visit dashboard page
     cy.visit('/dashboard');
   });
-  
+
   it('should display the alert when unconfirmed patterns exist', () => {
-    cy.wait('@getPatterns');
+    // Wait for the component to be loaded
+    cy.get('[data-testid="recurring-transaction-alert"]').should('exist');
     cy.contains('Recurring Transactions Detected').should('be.visible');
+    cy.contains('We\'ve detected 2 potential recurring transaction patterns').should('be.visible');
   });
-  
-  it('should open the modal when review button is clicked', () => {
-    cy.wait('@getPatterns');
-    cy.contains('Review Patterns').click();
-    cy.wait('@getTransactions');
-    cy.contains('Recurring Transaction Pattern').should('be.visible');
-    cy.contains('Monthly Rent').should('be.visible');
+
+  it('should have a link to review patterns page', () => {
+    cy.get('[data-testid="recurring-transaction-alert"]')
+      .find('a')
+      .should('have.attr', 'href', '/recurring-transactions/review-patterns')
+      .and('contain', 'Review Patterns');
   });
-  
-  it('should confirm a pattern when confirm button is clicked', () => {
-    cy.intercept('POST', '**/recurring-transactions/*/confirm-pattern', {
-      statusCode: 200,
-      body: { success: true }
-    }).as('confirmPattern');
+
+  it('should navigate to the review patterns page when the link is clicked', () => {
+    // Stub the navigation to prevent actual page change in test
+    cy.window().then((win) => {
+      cy.stub(win, 'location').as('windowLocation');
+    });
     
-    cy.wait('@getPatterns');
-    cy.contains('Review Patterns').click();
-    cy.wait('@getTransactions');
-    cy.contains('Confirm Pattern').click();
-    cy.wait('@confirmPattern');
-    
-    // Test what happens after confirmation, such as a success message or UI update
-    cy.contains('Pattern confirmed successfully').should('be.visible');
+    cy.get('[data-testid="recurring-transaction-alert"]')
+      .find('a')
+      .click();
+      
+    // Verify navigation would happen to the correct URL
+    cy.location('pathname').should('include', '/recurring-transactions/review-patterns');
   });
-  
-  // Add more tests for other functionality
 }); 

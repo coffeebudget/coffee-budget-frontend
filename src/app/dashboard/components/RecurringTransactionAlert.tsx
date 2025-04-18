@@ -33,7 +33,7 @@ export default function RecurringTransactionAlert() {
   if (unconfirmedPatterns.length === 0) return null;
 
   return (
-    <div className="mb-6">
+    <div className="mb-6" data-testid="recurring-transaction-alert">
       <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
         <div className="flex items-start">
           <div className="flex-shrink-0">

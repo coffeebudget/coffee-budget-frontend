@@ -886,4 +886,34 @@ export async function resetCategoriesToDefaults(token: string) {
   return Array.isArray(data) ? data : [];
 }
 
+// Add these new API functions
+
+export async function previewKeywordImpact(token: string, categoryId: number, keyword: string) {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/${categoryId}/preview-keyword-impact?keyword=${encodeURIComponent(keyword)}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+  
+  return handleResponse(response);
+}
+
+export async function applyKeywordToCategory(token: string, categoryId: number, keyword: string, applyTo: "none" | "uncategorized" | "all" | number[]) {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/${categoryId}/apply-keyword`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      keyword,
+      applyTo
+    }),
+  });
+  
+  return handleResponse(response);
+}
+
   

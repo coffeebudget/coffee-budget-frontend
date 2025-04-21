@@ -51,7 +51,7 @@ export default function Menu() {
         </Link>
 
         {/* Desktop Nav */}
-        <div className="hidden md:flex items-center">
+        <div className="hidden desktop:flex items-center">
           <NavigationMenu>
             <NavigationMenuList className="flex gap-4">
               {links.map(({ href, label }) => (
@@ -98,7 +98,7 @@ export default function Menu() {
         </div>
 
         {/* Mobile Menu (hamburger) */}
-        <div className="md:hidden">
+        <div className="desktop:hidden">
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon">

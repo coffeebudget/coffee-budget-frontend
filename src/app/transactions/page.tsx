@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchTransactions, deleteTransaction, updateTransaction, fetchCategories, fetchTags, fetchBankAccounts, fetchCreditCards, createTransaction } from "@/utils/api";
+import { fetchFilteredTransactions, deleteTransaction, updateTransaction, fetchCategories, fetchTags, fetchBankAccounts, fetchCreditCards, createTransaction } from "@/utils/api";
 import { useSession } from "next-auth/react";
 import AddTransactionForm from "@/app/transactions/components/AddTransactionForm";
 import TransactionList from "@/app/transactions/components/TransactionList";
+import TransactionFilters from "@/components/common/TransactionFilters";
 import { Transaction, Category, Tag, BankAccount, CreditCard } from "@/utils/types";
 import ImportTransactionsForm from "@/app/transactions/components/ImportTransactionsForm";
 import { Loader2, ReceiptIcon, PlusCircle, Upload, X } from "lucide-react";
@@ -16,6 +17,10 @@ export default function TransactionsPage() {
   const { data: session } = useSession();
   const token = session?.user?.accessToken || "";
 
+  // Get date for 10 days ago
+  const tenDaysAgo = new Date();
+  tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
+  
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +30,20 @@ export default function TransactionsPage() {
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
   const [activeTab, setActiveTab] = useState("transactions");
+  
+  // Filters state
+  const [filters, setFilters] = useState({
+    startDate: tenDaysAgo.toISOString().split('T')[0], // 10 days ago
+    endDate: new Date().toISOString().split('T')[0], // Today
+    categoryIds: [] as number[],
+    tagIds: [] as number[],
+    minAmount: undefined as number | undefined,
+    maxAmount: undefined as number | undefined,
+    type: undefined as 'expense' | 'income' | undefined,
+    searchTerm: '',
+    orderBy: 'executionDate' as 'executionDate' | 'amount' | 'description',
+    orderDirection: 'desc' as 'asc' | 'desc',
+  });
 
   const loadData = async () => {
     if (!token) return;
@@ -33,7 +52,7 @@ export default function TransactionsPage() {
     setError(null);
     try {
       const [transactionsData, categoriesData, tagsData, bankAccountsData, creditCardsData] = await Promise.all([
-        fetchTransactions(token),
+        fetchFilteredTransactions(token, filters),
         fetchCategories(token),
         fetchTags(token),
         fetchBankAccounts(token),
@@ -55,6 +74,14 @@ export default function TransactionsPage() {
   useEffect(() => {
     loadData();
   }, [token]);
+
+  const handleFilterChange = (newFilters: any) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
+  };
+
+  const applyFilters = () => {
+    loadData();
+  };
 
   const handleAddOrUpdateTransaction = async (transaction: Transaction) => {
     try {
@@ -164,6 +191,16 @@ export default function TransactionsPage() {
           </div>
           
           <TabsContent value="transactions" className="mt-0">
+            {/* Transaction Filters */}
+            <TransactionFilters
+              filters={filters}
+              categories={categories}
+              tags={tags}
+              onFilterChange={handleFilterChange}
+              onApplyFilters={applyFilters}
+              showOrderOptions={true}
+            />
+            
             {loading ? (
               <div className="flex items-center justify-center h-32">
                 <Loader2 className="h-8 w-8 animate-spin text-blue-500" />

@@ -527,6 +527,8 @@ export async function fetchFilteredTransactions(
     maxAmount?: number;
     type?: 'expense' | 'income';
     searchTerm?: string;
+    orderBy?: 'executionDate' | 'amount' | 'description';
+    orderDirection?: 'asc' | 'desc';
   }
 ) {
   const params = new URLSearchParams();
@@ -539,6 +541,8 @@ export async function fetchFilteredTransactions(
   if (filters.maxAmount) params.append('maxAmount', filters.maxAmount.toString());
   if (filters.type) params.append('type', filters.type);
   if (filters.searchTerm) params.append('searchTerm', filters.searchTerm);
+  if (filters.orderBy) params.append('orderBy', filters.orderBy);
+  if (filters.orderDirection) params.append('orderDirection', filters.orderDirection);
 
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/dashboard/transactions?${params.toString()}`,

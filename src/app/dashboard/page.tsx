@@ -13,7 +13,7 @@ import {
   fetchCashFlowForecast
 } from "@/utils/api";
 import { Category, Tag, Transaction } from "@/utils/types";
-import DashboardFilters from "./components/DashboardFilters";
+import TransactionFilters from "@/components/common/TransactionFilters";
 import ExpenseDistributionChart from "./components/ExpenseDistributionChart";
 import MonthlySummaryChart from "./components/MonthlySummaryChart";
 import StatisticsCards from "./components/StatisticsCards";
@@ -284,12 +284,14 @@ export default function DashboardPage() {
           </div>
 
           
-          <DashboardFilters 
+          <TransactionFilters 
             filters={filters}
             categories={categories}
             tags={tags}
             onFilterChange={handleFilterChange}
             onApplyFilters={applyFilters}
+            title="Filter Dashboard Data"
+            variant="dashboard"
           />
           
           <div className="bg-white p-4 rounded-lg shadow mb-6">

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ChevronDown, ChevronUp, Filter } from "lucide-react";
+import { ChevronDown, ChevronUp, Filter, AlertCircle } from "lucide-react";
 
 type TransactionFiltersProps = {
   filters: {
@@ -18,6 +18,7 @@ type TransactionFiltersProps = {
     searchTerm: string;
     orderBy?: 'executionDate' | 'amount' | 'description';
     orderDirection?: 'asc' | 'desc';
+    uncategorizedOnly?: boolean;
   };
   categories: Category[];
   tags: Tag[];
@@ -57,6 +58,14 @@ export default function TransactionFilters({
     onFilterChange({ [fieldName]: options });
   };
 
+  const toggleUncategorizedOnly = () => {
+    onFilterChange({ 
+      uncategorizedOnly: !filters.uncategorizedOnly,
+      // If switching to uncategorized, clear any existing category selections
+      categoryIds: !filters.uncategorizedOnly ? [] : filters.categoryIds
+    });
+  };
+
   // Different styling based on variant
   const cardClassName = variant === 'dashboard' 
     ? "bg-white shadow mb-6 " + className
@@ -85,6 +94,18 @@ export default function TransactionFilters({
         </div>
       </CardHeader>
       <CardContent>
+        {/* Quick filter for uncategorized transactions */}
+        <div className="mb-4">
+          <Button
+            variant={filters.uncategorizedOnly ? "default" : "outline"}
+            className="w-full flex items-center justify-center gap-2"
+            onClick={toggleUncategorizedOnly}
+          >
+            <AlertCircle className="h-4 w-4" />
+            {filters.uncategorizedOnly ? "Showing Only Uncategorized" : "Show Uncategorized Transactions"}
+          </Button>
+        </div>
+        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
           <div>
             <Label htmlFor="startDate">Start Date</Label>
@@ -229,6 +250,7 @@ export default function TransactionFilters({
                   value={filters.categoryIds.map(String)}
                   onChange={(e) => handleMultiSelectChange(e, 'categoryIds')}
                   className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={filters.uncategorizedOnly}
                 >
                   {categories.map((category) => (
                     <option key={category.id} value={category.id}>
@@ -236,7 +258,11 @@ export default function TransactionFilters({
                     </option>
                   ))}
                 </select>
-                <p className="text-xs text-muted-foreground mt-1">Hold Ctrl/Cmd to select multiple</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {filters.uncategorizedOnly 
+                    ? "Disabled while 'Show Uncategorized' is active" 
+                    : "Hold Ctrl/Cmd to select multiple"}
+                </p>
               </div>
 
               <div>

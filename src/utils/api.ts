@@ -529,6 +529,7 @@ export async function fetchFilteredTransactions(
     searchTerm?: string;
     orderBy?: 'executionDate' | 'amount' | 'description';
     orderDirection?: 'asc' | 'desc';
+    uncategorizedOnly?: boolean;
   }
 ) {
   const params = new URLSearchParams();
@@ -543,6 +544,7 @@ export async function fetchFilteredTransactions(
   if (filters.searchTerm) params.append('searchTerm', filters.searchTerm);
   if (filters.orderBy) params.append('orderBy', filters.orderBy);
   if (filters.orderDirection) params.append('orderDirection', filters.orderDirection);
+  if (filters.uncategorizedOnly) params.append('uncategorizedOnly', 'true');
 
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/dashboard/transactions?${params.toString()}`,

@@ -17,9 +17,9 @@ export default function TransactionsPage() {
   const { data: session } = useSession();
   const token = session?.user?.accessToken || "";
 
-  // Get date for 10 days ago
-  const tenDaysAgo = new Date();
-  tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
+  // Get date for 30 days ago
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
@@ -33,7 +33,7 @@ export default function TransactionsPage() {
   
   // Filters state
   const [filters, setFilters] = useState({
-    startDate: tenDaysAgo.toISOString().split('T')[0], // 10 days ago
+    startDate: thirtyDaysAgo.toISOString().split('T')[0], // 30 days ago
     endDate: new Date().toISOString().split('T')[0], // Today
     categoryIds: [] as number[],
     tagIds: [] as number[],
@@ -43,6 +43,7 @@ export default function TransactionsPage() {
     searchTerm: '',
     orderBy: 'executionDate' as 'executionDate' | 'amount' | 'description',
     orderDirection: 'desc' as 'asc' | 'desc',
+    uncategorizedOnly: false,
   });
 
   const loadData = async () => {

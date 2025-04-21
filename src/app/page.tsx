@@ -1,10 +1,9 @@
 "use client";
 
-import { useSession } from "next-auth/react";
-import AuthButton from "@/components/AuthButton";
+import { useSession, signIn } from "next-auth/react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Receipt, Tag, RefreshCcw, Sparkles, Coffee } from "lucide-react";
+import { ArrowRight, Receipt, Tag, RefreshCcw, Sparkles, Coffee, LogIn } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
@@ -65,7 +64,14 @@ export default function Home() {
                 </Button>
               ) : (
                 <div className="flex flex-col sm:flex-row gap-4 items-center">
-                  <AuthButton />
+                  <Button 
+                    size="lg" 
+                    onClick={() => signIn("auth0")}
+                    className="flex items-center gap-2"
+                  >
+                    <LogIn className="h-5 w-5" />
+                    Sign In
+                  </Button>
                   <Button variant="outline" size="lg" asChild>
                     <Link href="/transactions">
                       Explore Features

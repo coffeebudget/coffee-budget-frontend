@@ -100,8 +100,8 @@ export default function ImportTransactionsForm({
   });
   const [dateFormat, setDateFormat] = useState(DATE_FORMATS[0].value);
   const [bankFormat, setBankFormat] = useState<
-    "" | "webank" | "fineco" | "bnl_txt" | "bnl_xls"
-  >("");
+    "standard" | "webank" | "fineco" | "bnl_txt" | "bnl_xls"
+  >("standard");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [importResult, setImportResult] = useState<ImportResponse | null>(null);
@@ -146,11 +146,14 @@ export default function ImportTransactionsForm({
     if (file) {
       setCsvFile(file);
 
-      if (!bankFormat) {
+      if (bankFormat === "standard") {
         const reader = new FileReader();
         reader.onload = (event) => {
           const text = event.target?.result as string;
-          const headers = text.split("\n")[0].split(",").map((h) => h.trim());
+          const headers = text.split("\n")[0].split(",")
+            .map((h) => h.trim())
+            .map((h, i) => h || `Column ${i+1}`)
+            .filter(Boolean);
           setCsvHeaders(headers);
         };
         reader.readAsText(file);
@@ -199,7 +202,7 @@ export default function ImportTransactionsForm({
           creditCardId: selectionType === "card" ? selectedCreditCard : undefined,
         };
       
-        if (bankFormat) {
+        if (bankFormat !== "standard") {
           payload.bankFormat = bankFormat;
         } else {
           // Process columnMappings to remove 'none' values
@@ -329,7 +332,7 @@ export default function ImportTransactionsForm({
 
             <div className="space-y-2">
               <Label htmlFor="bank-format">Bank Format (auto-detect)</Label>
-              <Select value={bankFormat} onValueChange={(value) => setBankFormat(value as typeof bankFormat)}>
+              <Select value={bankFormat || "standard"} onValueChange={(value) => setBankFormat(value as typeof bankFormat)}>
                 <SelectTrigger>
                   <SelectValue placeholder="-- Standard CSV (manual mapping) --" />
                 </SelectTrigger>
@@ -343,7 +346,7 @@ export default function ImportTransactionsForm({
               </Select>
             </div>
 
-            {!bankFormat && csvFile && (
+            {bankFormat === "standard" && csvFile && (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="date-format">Date Format</Label>
@@ -376,11 +379,14 @@ export default function ImportTransactionsForm({
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">None</SelectItem>
-                            {csvHeaders.map((header) => (
-                              <SelectItem key={header} value={header}>
-                                {header}
-                              </SelectItem>
-                            ))}
+                            {csvHeaders
+                              .filter(header => header && header.trim() !== '')
+                              .map((header) => (
+                                <SelectItem key={header} value={header}>
+                                  {header}
+                                </SelectItem>
+                              ))
+                            }
                           </SelectContent>
                         </Select>
                       </div>
@@ -437,7 +443,10 @@ export default function ImportTransactionsForm({
                         <SelectContent>
                           <SelectItem value="none">None</SelectItem>
                           {bankAccounts.map((account) => (
-                            <SelectItem key={account.id || `account-${account.name}`} value={account.id?.toString() || `account-${account.name}`}>
+                            <SelectItem 
+                              key={account.id || `account-${account.name}`} 
+                              value={account.id ? account.id.toString() : `account-${account.name}`}
+                            >
                               {account.name}
                             </SelectItem>
                           ))}
@@ -475,7 +484,10 @@ export default function ImportTransactionsForm({
                         <SelectContent>
                           <SelectItem value="none">None</SelectItem>
                           {creditCards.map((card) => (
-                            <SelectItem key={card.id || `card-${card.name}`} value={card.id?.toString() || `card-${card.name}`}>
+                            <SelectItem 
+                              key={card.id || `card-${card.name}`} 
+                              value={card.id ? card.id.toString() : `card-${card.name}`}
+                            >
                               {card.name}
                             </SelectItem>
                           ))}

@@ -15,6 +15,7 @@ import {
   previewKeywordImpact,
   applyKeywordToCategory
 } from "@/utils/api";
+import { showSuccessToast, showErrorToast } from "@/utils/toast-utils";
 import KeywordSuggestions from "./KeywordSuggestions";
 import KeywordImpactPreview from "./KeywordImpactPreview";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -85,6 +86,8 @@ export default function CategoryForm({
       await onCategoryChange(categoryData, !categoryToEdit);
       console.log("onCategoryChange completed successfully");
       
+      showSuccessToast(categoryToEdit ? `Category "${name}" updated successfully` : `Category "${name}" created successfully`);
+      
       if (!categoryToEdit) {
         // Reset form after creating a new category
         setName("");
@@ -96,6 +99,7 @@ export default function CategoryForm({
     } catch (err) {
       console.error("Error in handleSubmit:", err);
       setError("Failed to save category");
+      showErrorToast(`Failed to ${categoryToEdit ? 'update' : 'create'} category`);
     } finally {
       setLoading(false);
     }
@@ -176,6 +180,8 @@ export default function CategoryForm({
         await onCategoryChange(updatedCategory, false);
       }
       
+      showSuccessToast(`Keyword "${previewKeyword}" added and applied successfully`);
+      
       setNewKeyword("");
       setShowPreview(false);
       setPreviewKeyword("");
@@ -183,6 +189,7 @@ export default function CategoryForm({
     } catch (err) {
       console.error(err);
       setError("Failed to apply keyword changes");
+      showErrorToast("Failed to apply keyword changes");
     }
   };
 
@@ -204,59 +211,29 @@ export default function CategoryForm({
     setError(null);
     
     try {
-      await removeKeywordFromCategory(token, categoryToEdit.id, keyword);
-      setKeywords(keywords.filter(k => k !== keyword));
-      
-      // Update the category in parent component
-      if (categoryToEdit) {
-        const updatedCategory = {
-          ...categoryToEdit,
-          keywords: keywords.filter(k => k !== keyword)
-        };
-        await onCategoryChange(updatedCategory, false);
-      }
+      const updatedCategory = await removeKeywordFromCategory(token, categoryToEdit.id, keyword);
+      setKeywords(updatedCategory.keywords || []);
+      showSuccessToast(`Keyword "${keyword}" removed from category`);
     } catch (err) {
       console.error(err);
-      setError("Failed to remove keyword");
+      setError(`Failed to remove keyword "${keyword}"`);
+      showErrorToast(`Failed to remove keyword "${keyword}"`);
     } finally {
       setRemovingKeyword(null);
     }
   };
 
   const handleAddExternalKeyword = async (keyword: string) => {
-    if (!categoryToEdit?.id) {
-      // For new categories, just add to state
-      if (!keywords.includes(keyword.trim())) {
-        setKeywords([...keywords, keyword.trim()]);
-        setNewKeyword("");
-      }
-      return;
-    }
-    
-    // For existing categories, call API
-    setAddingKeyword(keyword);
-    setError(null);
+    if (!categoryToEdit?.id) return;
     
     try {
-      await addKeywordToCategory(token, categoryToEdit.id, keyword);
-      
-      // Only add if not already in the list
-      if (!keywords.includes(keyword)) {
-        const updatedKeywords = [...keywords, keyword];
-        setKeywords(updatedKeywords);
-        
-        // Update the category in parent component
-        const updatedCategory = {
-          ...categoryToEdit,
-          keywords: updatedKeywords
-        };
-        await onCategoryChange(updatedCategory, false);
-      }
+      // Add the keyword through preview/apply flow
+      setPreviewKeyword(keyword);
+      loadKeywordImpact(keyword);
     } catch (err) {
       console.error(err);
-      setError("Failed to add keyword");
-    } finally {
-      setAddingKeyword(null);
+      setError(`Failed to add keyword "${keyword}"`);
+      showErrorToast(`Failed to add keyword "${keyword}"`);
     }
   };
 

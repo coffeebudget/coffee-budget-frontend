@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Transaction, BankAccount, CreditCard, Category, Tag } from "@/utils/types";
-import { createTag } from "@/utils/api";
+import { createTag, addKeywordToCategory, bulkCategorizeByKeyword } from "@/utils/api";
+import { showSuccessToast, showErrorToast } from "@/utils/toast-utils";
 import TagSelector from "@/components/TagSelector";
 import { CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -62,6 +63,7 @@ export default function AddTransactionForm({ onAddTransaction, initialData = nul
   const [type, setType] = useState<'expense' | 'income'>(initialData?.type || 'expense');
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(initialData?.status || 'pending');
+  const [useDescriptionAsKeyword, setUseDescriptionAsKeyword] = useState(false);
 
   useEffect(() => {
     if (initialData) {
@@ -119,12 +121,35 @@ export default function AddTransactionForm({ onAddTransaction, initialData = nul
       };
       
       await onAddTransaction(transactionData);
+      
+      // Apply keyword if checkbox is selected
+      if (useDescriptionAsKeyword && category !== null && description.trim().length > 0) {
+        try {
+          // Extract the main keyword from the description (first word or entire phrase)
+          const keyword = description.split(' ')[0]; // Or any other logic to extract the keyword
+          
+          // Add the keyword to the category
+          await addKeywordToCategory(token, Number(category), keyword);
+          
+          // Trigger bulk categorization
+          await bulkCategorizeByKeyword(token, keyword, Number(category));
+          
+          showSuccessToast(`Added "${keyword}" as a keyword for this category and recategorized similar transactions`);
+        } catch (keywordErr) {
+          console.error('Error applying keyword:', keywordErr);
+          showErrorToast('Failed to add keyword to category');
+        }
+      }
+      
+      showSuccessToast(initialData ? 'Transaction updated successfully' : 'Transaction added successfully');
+      
       if (!initialData) {
         resetForm();
       }
     } catch (err) {
       console.error(err);
       setError("Failed to save transaction");
+      showErrorToast("Failed to save transaction");
     } finally {
       setLoading(false);
     }
@@ -238,38 +263,39 @@ export default function AddTransactionForm({ onAddTransaction, initialData = nul
             
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
-              <Select 
-                value={(() => {
-                  // First check if the category ID exists in the categories array
-                  if (category !== null && category !== undefined) {
-                    const categoryExists = categories.some(c => c.id.toString() === category.toString());
-                    return categoryExists ? category.toString() : 'none';
-                  }
-                  return 'none';
-                })()} 
-                onValueChange={(value) => setCategory(value === 'none' ? null : parseInt(value))}
+              <Select
+                value={category?.toString() || ""}
+                onValueChange={(value) => setCategory(value ? parseInt(value) : null)}
               >
                 <SelectTrigger className="bg-background text-foreground">
-                  <SelectValue placeholder="Select category">
-                    {category !== null && category !== undefined 
-                      ? (() => {
-                          // For display purposes, try to find the category name
-                          const selectedCategory = categories.find(c => c.id.toString() === category.toString());
-                          return selectedCategory ? selectedCategory.name : "Select category";
-                        })() 
-                      : "Select category"}
-                  </SelectValue>
+                  <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {categories && categories.length > 0 && categories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id.toString()}>
-                      {cat.name}
+                  <SelectItem value="">Uncategorized</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id.toString()}>
+                      {category.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+            
+            {category && (
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="useDescriptionAsKeyword" 
+                  checked={useDescriptionAsKeyword}
+                  onCheckedChange={(checked) => setUseDescriptionAsKeyword(checked as boolean)}
+                />
+                <Label 
+                  htmlFor="useDescriptionAsKeyword" 
+                  className="text-sm font-normal cursor-pointer"
+                >
+                  Use description as keyword for selected category
+                </Label>
+              </div>
+            )}
             
             <div className="space-y-2 col-span-2">
               <Label htmlFor="tags">Tags</Label>

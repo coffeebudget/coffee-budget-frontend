@@ -33,6 +33,10 @@ export type Transaction = {
   bankAccount?: BankAccount;
   creditCard?: CreditCard;
   status?: 'pending' | 'executed';
+  // For smart categorization
+  suggestedCategory?: number;
+  suggestedCategoryName?: string;
+  suggestedKeywords?: string[];
 };
 
 export type CreditCard = {

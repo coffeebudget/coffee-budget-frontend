@@ -16,7 +16,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { showSuccessToast, showErrorToast } from "@/utils/toast-utils";
 
 // Create simple Alert components
 interface AlertProps {
@@ -230,7 +229,6 @@ export default function ImportTransactionsForm({
           });
           console.log("Passing transactions to parent:", response);
           onImportComplete(response);
-          showSuccessToast(`Successfully imported ${response.length} transactions.${response.length > 0 ? ` (${response.length} transactions imported)` : ''}`);
         } else {
           setImportResult({
             importedCount: response.importedCount || 0,
@@ -243,11 +241,9 @@ export default function ImportTransactionsForm({
           if (response.transactions && Array.isArray(response.transactions)) {
             console.log("Passing transactions to parent:", response.transactions);
             onImportComplete(response.transactions);
-            showSuccessToast(`Successfully imported ${response.transactions.length} transactions.${response.transactions.length > 0 ? ` (${response.transactions.length} transactions imported)` : ''}`);
           } else {
             console.warn("No transactions array in response:", response);
             onImportComplete([]);
-            showErrorToast("No transactions found in the response");
           }
         }
         
@@ -269,10 +265,9 @@ export default function ImportTransactionsForm({
       } else {
         reader.readAsArrayBuffer(csvFile);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Import error:", err);
-      setError(err.message || "Failed to import transactions");
-      showErrorToast(err.message || "Failed to import transactions");
+      setError(err instanceof Error ? err.message : "Failed to import transactions");
       onImportComplete([]);
     } finally {
       setIsLoading(false);

@@ -202,22 +202,26 @@ export default function TransactionList({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex space-x-1">
+                    <div className="flex items-center gap-2">
                       <Button
-                        variant="ghost"
+                        variant="ghost" 
                         size="icon"
                         onClick={() => onEditTransaction(transaction)}
-                        title="Edit Transaction"
                         disabled={loadingId === transaction.id}
+                        title="Edit Transaction"
                       >
-                        <Edit className="h-4 w-4" />
+                        {loadingId === transaction.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Edit className="h-4 w-4" />
+                        )}
                       </Button>
                       <Button
-                        variant={confirmDelete === transaction.id ? "destructive" : "ghost"}
+                        variant={confirmDelete === transaction.id ? "destructive" : "ghost"} 
                         size="icon"
-                        onClick={() => handleDeleteClick(transaction.id!)}
-                        title={confirmDelete === transaction.id ? "Confirm Delete" : "Delete Transaction"}
+                        onClick={() => handleDeleteClick(Number(transaction.id))}
                         disabled={loadingId === transaction.id}
+                        title={confirmDelete === transaction.id ? "Confirm Delete" : "Delete Transaction"}
                       >
                         {loadingId === transaction.id ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
@@ -234,7 +238,7 @@ export default function TransactionList({
         </div>
         
         {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-md mt-4">
+          <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
             {error}
           </div>
         )}

@@ -12,9 +12,6 @@ import { Loader2, ReceiptIcon, PlusCircle, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import KeywordSuggestionPopup from "./components/KeywordSuggestionPopup";
-import { showSuccessToast, showErrorToast } from "@/utils/toast-utils";
-import TransactionDrawer from "./components/TransactionDrawer";
 
 export default function TransactionsPage() {
   const { data: session } = useSession();
@@ -33,16 +30,6 @@ export default function TransactionsPage() {
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
   const [activeTab, setActiveTab] = useState("transactions");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [keywordSuggestionData, setKeywordSuggestionData] = useState<{
-    transaction: Transaction;
-    category: Category;
-    suggestedKeywords: string[];
-  } | null>(null);
-  
-  // New state for transaction drawer
-  const [showTransactionDrawer, setShowTransactionDrawer] = useState(false);
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   
   // Filters state
   const [filters, setFilters] = useState({
@@ -97,60 +84,22 @@ export default function TransactionsPage() {
     loadData();
   };
 
-  const handleAddTransaction = () => {
-    setSelectedTransaction(null);
-    setShowTransactionDrawer(true);
-  };
-
-  const handleEditTransaction = (transaction: Transaction) => {
-    setSelectedTransaction(transaction);
-    setShowTransactionDrawer(true);
-  };
-
-  const handleSaveTransaction = async (transactionData: Transaction) => {
-    // Check if we're editing or creating a new transaction
-    const isEditing = !!transactionData.id;
-    
+  const handleAddOrUpdateTransaction = async (transaction: Transaction) => {
     try {
-      setIsSubmitting(true);
-      
-      let updatedTransaction;
-      
-      if (isEditing) {
+      if (currentTransaction) {
         // Update existing transaction
-        updatedTransaction = await updateTransaction(token, transactionData.id!, transactionData);
-        // Remove the old transaction from the list
-        setTransactions(transactions.filter(t => t.id !== transactionData.id));
+        const updatedTransaction = await updateTransaction(token, currentTransaction.id!, transaction);
+        setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? updatedTransaction : t));
       } else {
         // Create new transaction
-        updatedTransaction = await createTransaction(transactionData, token);
+        const newTransaction = await createTransaction(transaction as any, token);
+        setTransactions(prev => [...prev, newTransaction]);
       }
-      
-      // Add the new/updated transaction to the list at the beginning
-      setTransactions([updatedTransaction, ...transactions]);
-      setShowTransactionDrawer(false);
-      
-      // Check if API returned suggested keywords
-      if (updatedTransaction.suggestedKeywords && 
-          updatedTransaction.suggestedKeywords.length > 0 && 
-          updatedTransaction.categoryId) {
-        // Find the category
-        const category = categories.find(c => c.id === updatedTransaction.categoryId);
-        if (category) {
-          setKeywordSuggestionData({
-            transaction: updatedTransaction,
-            category,
-            suggestedKeywords: updatedTransaction.suggestedKeywords
-          });
-        }
-      }
-      
-      showSuccessToast(isEditing ? 'Transaction updated successfully' : 'Transaction added successfully');
-    } catch (error) {
-      console.error("Failed to save transaction:", error);
-      showErrorToast("Failed to save transaction");
-    } finally {
-      setIsSubmitting(false);
+      setCurrentTransaction(null);
+      setActiveTab("transactions"); // Switch back to transactions tab after adding/editing
+    } catch (err) {
+      console.error(err);
+      setError("Failed to save transaction");
     }
   };
 
@@ -165,6 +114,11 @@ export default function TransactionsPage() {
     }
   };
 
+  const handleEditTransaction = (transaction: Transaction) => {
+    setCurrentTransaction(transaction);
+    setActiveTab("add"); // Switch to add/edit tab
+  };
+
   const handleImportComplete = (newTransactions: Transaction[] | any) => {
     if (Array.isArray(newTransactions)) {
       setTransactions(prev => [...prev, ...newTransactions]);
@@ -177,6 +131,11 @@ export default function TransactionsPage() {
       }
     }
     setActiveTab("transactions"); // Switch back to transactions tab after import
+  };
+
+  const handleCancelEdit = () => {
+    setCurrentTransaction(null);
+    setActiveTab("transactions");
   };
 
   if (!session) {
@@ -211,7 +170,7 @@ export default function TransactionsPage() {
               </TabsTrigger>
               <TabsTrigger value="add" className="flex items-center gap-1">
                 <PlusCircle className="h-4 w-4" />
-                {selectedTransaction ? "Edit Transaction" : "Add Transaction"}
+                {currentTransaction ? "Edit Transaction" : "Add Transaction"}
               </TabsTrigger>
               <TabsTrigger value="import" className="flex items-center gap-1">
                 <Upload className="h-4 w-4" />
@@ -219,14 +178,11 @@ export default function TransactionsPage() {
               </TabsTrigger>
             </TabsList>
             
-            {selectedTransaction && (
+            {currentTransaction && (
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => {
-                  setSelectedTransaction(null);
-                  setShowTransactionDrawer(false);
-                }}
+                onClick={handleCancelEdit}
                 className="flex items-center gap-1"
               >
                 <X className="h-4 w-4" />
@@ -266,15 +222,14 @@ export default function TransactionsPage() {
           
           <TabsContent value="add" className="mt-0">
             <Card className="w-full max-w-3xl mx-auto">
-              <TransactionDrawer
-                isOpen={showTransactionDrawer}
-                onClose={() => setShowTransactionDrawer(false)}
-                transaction={selectedTransaction}
+              <AddTransactionForm 
+                onAddTransaction={handleAddOrUpdateTransaction} 
+                initialData={currentTransaction}
                 categories={categories}
                 tags={tags}
                 bankAccounts={bankAccounts}
                 creditCards={creditCards}
-                onUpdateTransaction={handleSaveTransaction}
+                onCancel={handleCancelEdit}
               />
             </Card>
           </TabsContent>
@@ -295,16 +250,6 @@ export default function TransactionsPage() {
           </div>
         )}
       </div>
-      
-      {keywordSuggestionData && (
-        <KeywordSuggestionPopup 
-          isOpen={!!keywordSuggestionData}
-          onClose={() => setKeywordSuggestionData(null)}
-          transaction={keywordSuggestionData.transaction}
-          category={keywordSuggestionData.category}
-          suggestedKeywords={keywordSuggestionData.suggestedKeywords}
-        />
-      )}
     </div>
   );
 }

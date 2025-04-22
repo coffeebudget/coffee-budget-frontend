@@ -12,10 +12,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import CategoryDetail from "./components/CategoryDetail";
 import { toast } from "@/hooks/use-toast";
-import UncategorizedTransactionsList from "./components/UncategorizedTransactionsList";
-import { Card, CardContent } from "@/components/ui/card";
-import { Plus, RefreshCcw } from "lucide-react";
-import SmartTrainingDashboard from "./components/SmartTrainingDashboard";
 
 export default function CategoriesPage() {
   const { data: session } = useSession();
@@ -143,28 +139,6 @@ export default function CategoriesPage() {
     }
   };
 
-  const handleCategoryUpdated = async (updatedCategory: Category) => {
-    setCategories(prevCategories => 
-      prevCategories.map(c => c.id === updatedCategory.id ? updatedCategory : c)
-    );
-    
-    if (selectedCategory && selectedCategory.id === updatedCategory.id) {
-      setSelectedCategory(updatedCategory);
-    }
-  };
-  
-  const refreshCategories = async () => {
-    try {
-      const fetchedCategories = await fetchCategories(token);
-      setCategories(fetchedCategories);
-      return fetchedCategories;
-    } catch (err) {
-      console.error(err);
-      setError("Failed to refresh categories");
-      return null;
-    }
-  };
-
   if (!session) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
@@ -174,77 +148,100 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="container py-6 space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-2xl font-bold">Categories</h1>
-        <div className="flex flex-wrap gap-2">
-          <Button onClick={() => setActiveTab("add")} className="flex items-center gap-2">
-            <Plus size={16} />
-            Add Category
-          </Button>
-          <Button onClick={handleResetToDefaults} variant="outline" className="flex items-center gap-2">
-            <RefreshCcw size={16} />
-            Reset to Defaults
-          </Button>
+    <div className="min-h-screen bg-gray-100 p-4">
+      {/* Page Header */}
+      <div className="max-w-7xl mx-auto mb-8">
+        <div className="flex items-center gap-2 mb-2">
+          <FolderIcon className="h-8 w-8 text-blue-500" />
+          <h1 className="text-3xl font-bold text-gray-800">Categories</h1>
         </div>
+        <p className="text-gray-600 max-w-3xl">
+          Create and manage categories to organize your transactions and track your spending patterns.
+        </p>
       </div>
       
-      <Tabs defaultValue="list">
-        <TabsList>
-          <TabsTrigger value="list">Categories</TabsTrigger>
-          <TabsTrigger value="uncategorized">Uncategorized</TabsTrigger>
-          <TabsTrigger value="insights">Insights</TabsTrigger>
-        </TabsList>
+      {/* Main Content with Tabs */}
+      <div className="max-w-7xl mx-auto">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <div className="flex justify-between items-center mb-4">
+            <TabsList>
+              <TabsTrigger value="list" className="flex items-center gap-1">
+                <ListIcon className="h-4 w-4" />
+                Categories
+              </TabsTrigger>
+              <TabsTrigger value="add" className="flex items-center gap-1">
+                <PlusCircle className="h-4 w-4" />
+                {editingCategory ? "Edit Category" : "Add Category"}
+              </TabsTrigger>
+              <TabsTrigger value="dashboard" className="flex items-center gap-1">
+                <TagIcon className="h-4 w-4" />
+                Categorization Dashboard
+              </TabsTrigger>
+            </TabsList>
+
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleResetToDefaults}
+              disabled={loading}
+              className="flex items-center gap-1"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Reset to Defaults
+            </Button>
+            
+            {editingCategory && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleCancelEdit}
+                className="flex items-center gap-1"
+              >
+                <X className="h-4 w-4" />
+                Cancel Edit
+              </Button>
+            )}
+          </div>
+          
+          <TabsContent value="list" className="mt-0">
+            {loading ? (
+              <div className="flex items-center justify-center h-32">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                <span className="ml-2 text-gray-600">Loading categories...</span>
+              </div>
+            ) : (
+              <CategoryList
+                categories={categories}
+                onDelete={handleDeleteCategory}
+                onEdit={handleEditCategory}
+              />
+            )}
+          </TabsContent>
+          
+          <TabsContent value="add" className="mt-0">
+            <div className="max-w-2xl mx-auto">
+              <CategoryForm 
+                onCategoryChange={handleCategoryChange} 
+                categoryToEdit={editingCategory}
+                onCancel={handleCancelEdit} 
+              />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="dashboard" className="mt-0">
+            <CategorizationDashboard 
+              categories={categories}
+              onCategorize={handleBulkCategorize}
+            />
+          </TabsContent>
+        </Tabs>
         
-        <TabsContent value="list" className="space-y-6 pt-4">
-          {loading ? (
-            <Card className="w-full">
-              <CardContent className="pt-6">
-                <div className="flex justify-center py-6">
-                  <Loader2 className="w-8 h-8 animate-spin" />
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <>
-              {selectedCategory ? (
-                <CategoryDetail 
-                  category={selectedCategory} 
-                  onEditCategory={handleEditCategory}
-                  onDeleteCategory={handleDeleteCategory}
-                  onCategoryUpdated={handleCategoryUpdated}
-                />
-              ) : (
-                <CategoryList 
-                  categories={categories} 
-                  onEdit={handleEditCategory}
-                  onDelete={handleDeleteCategory}
-                />
-              )}
-            </>
-          )}
-        </TabsContent>
-        
-        <TabsContent value="uncategorized" className="space-y-6 pt-4">
-          <UncategorizedTransactionsList 
-            categories={categories}
-            onUpdateCategories={refreshCategories}
-          />
-        </TabsContent>
-        
-        <TabsContent value="insights" className="space-y-6 pt-4">
-          <SmartTrainingDashboard 
-            categories={categories}
-            onUpdateCategories={refreshCategories}
-          />
-        </TabsContent>
-      </Tabs>
-      
-      {error && (
-        <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
-          {error}
-        </div>
-      )}
+        {error && (
+          <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
+            {error}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

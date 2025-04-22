@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     
     // Call backend API to get similar transactions
     const response = await fetch(
-      `${process.env.API_URL}/transactions/similar`,
+      `${process.env.NEXT_PUBLIC_API_URL}/transactions/similar`,
       {
         method: "POST",
         headers: {

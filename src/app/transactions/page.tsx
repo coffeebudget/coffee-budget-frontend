@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchFilteredTransactions, deleteTransaction, updateTransaction, fetchCategories, fetchTags, fetchBankAccounts, fetchCreditCards, createTransaction } from "@/utils/api";
+import { fetchCategories, fetchTags, fetchBankAccounts, fetchCreditCards } from "@/utils/api";
+import { fetchFilteredTransactions, createTransaction, deleteTransaction, updateTransaction } from "@/utils/api-client";
 import { useSession } from "next-auth/react";
 import AddTransactionForm from "@/app/transactions/components/AddTransactionForm";
 import TransactionList from "@/app/transactions/components/TransactionList";
@@ -12,6 +13,9 @@ import { Loader2, ReceiptIcon, PlusCircle, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import KeywordSuggestionPopup from "./components/KeywordSuggestionPopup";
+import { showSuccessToast, showErrorToast } from "@/utils/toast-utils";
+import TransactionDrawer from "./components/TransactionDrawer";
 
 export default function TransactionsPage() {
   const { data: session } = useSession();
@@ -53,7 +57,7 @@ export default function TransactionsPage() {
     setError(null);
     try {
       const [transactionsData, categoriesData, tagsData, bankAccountsData, creditCardsData] = await Promise.all([
-        fetchFilteredTransactions(token, filters),
+        fetchFilteredTransactions(filters),
         fetchCategories(token),
         fetchTags(token),
         fetchBankAccounts(token),
@@ -88,11 +92,11 @@ export default function TransactionsPage() {
     try {
       if (currentTransaction) {
         // Update existing transaction
-        const updatedTransaction = await updateTransaction(token, currentTransaction.id!, transaction);
+        const updatedTransaction = await updateTransaction(currentTransaction.id!, transaction);
         setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? updatedTransaction : t));
       } else {
         // Create new transaction
-        const newTransaction = await createTransaction(transaction as any, token);
+        const newTransaction = await createTransaction(transaction as any);
         setTransactions(prev => [...prev, newTransaction]);
       }
       setCurrentTransaction(null);
@@ -105,7 +109,7 @@ export default function TransactionsPage() {
 
   const handleDeleteTransaction = async (id: number) => {
     try {
-      await deleteTransaction(id, token);
+      await deleteTransaction(id);
       setTransactions(prev => prev.filter(t => t.id !== id));
     } catch (err) {
       console.error(err);

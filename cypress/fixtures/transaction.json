@@ -1,0 +1,16 @@
+{
+  "createTransaction": {
+    "description": "Test Transaction",
+    "amount": 50.75,
+    "type": "expense",
+    "status": "pending",
+    "executionDate": "2023-05-15"
+  },
+  "updateTransaction": {
+    "description": "Updated Test Transaction",
+    "amount": 75.50,
+    "type": "expense",
+    "status": "executed",
+    "executionDate": "2023-05-16"
+  }
+} 

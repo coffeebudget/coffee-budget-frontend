@@ -14,9 +14,15 @@ interface ImportSummaryProps {
   importedCount: number;
   categories: Category[];
   onClose: () => void;
+  onViewTransactions?: () => void;
 }
 
-export default function ImportSummary({ importedCount, categories, onClose }: ImportSummaryProps) {
+export default function ImportSummary({ 
+  importedCount, 
+  categories, 
+  onClose,
+  onViewTransactions 
+}: ImportSummaryProps) {
   const { data: session } = useSession();
   const token = session?.user?.accessToken || "";
   
@@ -230,7 +236,12 @@ export default function ImportSummary({ importedCount, categories, onClose }: Im
           )}
         </div>
       </CardContent>
-      <CardFooter className="flex justify-end">
+      <CardFooter className="flex justify-end gap-2">
+        {onViewTransactions && (
+          <Button onClick={onViewTransactions} variant="outline">
+            View Transactions
+          </Button>
+        )}
         <Button onClick={onClose}>
           Close Summary
         </Button>

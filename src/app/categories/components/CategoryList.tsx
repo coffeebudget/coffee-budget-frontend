@@ -82,55 +82,62 @@ export default function CategoryList({ categories, onEdit, onDelete }: CategoryL
               </TableRow>
             </TableHeader>
             <TableBody>
-              {categoryArray.map((category) => (
-                <TableRow key={category.id}>
-                  <TableCell className="font-medium">
-                    {category.name}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {category.keywords?.map((keyword, idx) => (
-                        <Badge key={idx} variant="secondary" className="text-xs">
-                          {keyword}
-                        </Badge>
-                      ))}
-                      {(!category.keywords || category.keywords.length === 0) && (
-                        <span className="text-xs text-muted-foreground italic">No keywords</span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onEdit(category)}
-                        disabled={loadingId === category.id}
-                        title="Edit Category"
-                      >
-                        {loadingId === category.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Edit className="h-4 w-4" />
+              {categoryArray.map((category) => {
+                // Ensure category.id is a valid key
+                const key = typeof category.id === 'number' && !isNaN(category.id) 
+                  ? category.id.toString() 
+                  : `category-${Math.random().toString(36).substr(2, 9)}`;
+                  
+                return (
+                  <TableRow key={key}>
+                    <TableCell className="font-medium">
+                      {category.name}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {category.keywords?.map((keyword, idx) => (
+                          <Badge key={idx} variant="secondary" className="text-xs">
+                            {keyword}
+                          </Badge>
+                        ))}
+                        {(!category.keywords || category.keywords.length === 0) && (
+                          <span className="text-xs text-muted-foreground italic">No keywords</span>
                         )}
-                      </Button>
-                      <Button
-                        variant={confirmDelete === category.id ? "destructive" : "ghost"}
-                        size="icon"
-                        onClick={() => handleDeleteClick(category.id)}
-                        disabled={loadingId === category.id}
-                        title={confirmDelete === category.id ? "Confirm Delete" : "Delete Category"}
-                      >
-                        {loadingId === category.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => onEdit(category)}
+                          disabled={loadingId === category.id}
+                          title="Edit Category"
+                        >
+                          {loadingId === category.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Edit className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button
+                          variant={confirmDelete === category.id ? "destructive" : "ghost"}
+                          size="icon"
+                          onClick={() => handleDeleteClick(category.id)}
+                          disabled={loadingId === category.id}
+                          title={confirmDelete === category.id ? "Confirm Delete" : "Delete Category"}
+                        >
+                          {loadingId === category.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>

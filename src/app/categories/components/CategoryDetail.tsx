@@ -94,24 +94,65 @@ export default function CategoryDetail({
     setKeywordImpact(null); // Reset the keywordImpact first
     
     try {
-      const impact = await previewKeywordImpact(token, category.id, keyword);
+      const impact = await previewKeywordImpact(token, category.id, keyword, false);
+      console.log("Keyword impact data received:", impact);
       
-      // If we have sample transactions but no totalImpactedCount, use the sample length
-      const totalImpactedCount = impact?.totalImpactedCount || 
-        (impact?.sampleTransactions?.length || 0);
+      // Map backend response to our expected structure
+      const totalImpactedCount = impact?.totalAffected || 0;
+      
+      // Handle various possible structures for categoryCounts
+      let uncategorizedCount = 0;
+      let affectedCategories = [];
+      
+      if (impact?.categoryCounts) {
+        // If categoryCounts is an object with category IDs as keys
+        if (typeof impact.categoryCounts === 'object' && !Array.isArray(impact.categoryCounts)) {
+          // Check for null key (uncategorized) or category with name "Uncategorized"
+          Object.entries(impact.categoryCounts).forEach(([key, value]: [string, any]) => {
+            if (key === 'null' || key === 'undefined' || value?.name === 'Uncategorized') {
+              uncategorizedCount = value.count || 0;
+            } else if (key !== 'null' && key !== 'undefined') {
+              affectedCategories.push({
+                id: parseInt(key),
+                name: value.name || `Category ${key}`,
+                count: value.count || 0
+              });
+            }
+          });
+        } 
+        // If categoryCounts is an array
+        else if (Array.isArray(impact.categoryCounts)) {
+          const uncatItem = impact.categoryCounts.find(
+            (c: any) => c.name === 'Uncategorized' || c.id === null || c.categoryId === null
+          );
+          uncategorizedCount = uncatItem?.count || 0;
+          
+          affectedCategories = impact.categoryCounts
+            .filter((c: any) => c.id !== null && c.name !== 'Uncategorized')
+            .map((c: any) => ({
+              id: c.id || c.categoryId,
+              name: c.name || `Category ${c.id || c.categoryId}`,
+              count: c.count || 0
+            }));
+        }
+      }
+      
+      // Calculate categorized count
+      const categorizedCount = totalImpactedCount - uncategorizedCount;
       
       // Ensure impact has the expected structure
       const safeImpact = {
         totalImpactedCount: totalImpactedCount,
-        uncategorizedCount: impact?.uncategorizedCount || 0,
-        categorizedCount: impact?.categorizedCount || 0,
-        affectedCategories: impact?.affectedCategories || [],
+        uncategorizedCount: uncategorizedCount,
+        categorizedCount: categorizedCount,
+        affectedCategories: affectedCategories,
         sampleTransactions: impact?.sampleTransactions || []
       };
+      
       setKeywordImpact(safeImpact);
       setShowPreview(true);
     } catch (err) {
-      console.error(err);
+      console.error("Error loading keyword impact:", err);
       setError("Failed to load keyword impact");
     } finally {
       setLoadingPreview(false);

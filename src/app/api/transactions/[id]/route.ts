@@ -15,7 +15,8 @@ export async function GET(
     }
     
     const token = session.user.accessToken;
-    const id = params.id;
+    const p = await params;
+    const id = p.id;
     
     if (!id || isNaN(Number(id))) {
       return NextResponse.json(
@@ -69,7 +70,8 @@ export async function PATCH(
     }
     
     const token = session.user.accessToken;
-    const id = params.id;
+    const p = await params;
+    const id = p.id;
     
     if (!id || isNaN(Number(id))) {
       return NextResponse.json(
@@ -120,7 +122,8 @@ export async function DELETE(
     }
     
     const token = session.user.accessToken;
-    const id = params.id;
+    const p = await params;
+    const id = p.id;
     
     if (!id || isNaN(Number(id))) {
       return NextResponse.json(

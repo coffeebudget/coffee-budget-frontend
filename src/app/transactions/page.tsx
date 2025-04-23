@@ -13,9 +13,7 @@ import { Loader2, ReceiptIcon, PlusCircle, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import KeywordSuggestionPopup from "./components/KeywordSuggestionPopup";
 import { showSuccessToast, showErrorToast } from "@/utils/toast-utils";
-import TransactionDrawer from "./components/TransactionDrawer";
 
 export default function TransactionsPage() {
   const { data: session } = useSession();
@@ -94,16 +92,20 @@ export default function TransactionsPage() {
         // Update existing transaction
         const updatedTransaction = await updateTransaction(currentTransaction.id!, transaction);
         setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? updatedTransaction : t));
+        showSuccessToast("Transaction updated successfully");
       } else {
         // Create new transaction
         const newTransaction = await createTransaction(transaction as any);
         setTransactions(prev => [...prev, newTransaction]);
+        showSuccessToast("Transaction created successfully");
       }
       setCurrentTransaction(null);
       setActiveTab("transactions"); // Switch back to transactions tab after adding/editing
     } catch (err) {
       console.error(err);
-      setError("Failed to save transaction");
+      const errorMessage = err instanceof Error ? err.message : "Failed to save transaction";
+      setError(errorMessage);
+      showErrorToast(errorMessage);
     }
   };
 
@@ -111,9 +113,12 @@ export default function TransactionsPage() {
     try {
       await deleteTransaction(id);
       setTransactions(prev => prev.filter(t => t.id !== id));
+      showSuccessToast("Transaction deleted successfully");
     } catch (err) {
       console.error(err);
-      setError("Failed to delete transaction");
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete transaction";
+      setError(errorMessage);
+      showErrorToast(errorMessage);
       throw err;
     }
   };

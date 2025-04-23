@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import CategoryDetail from "./components/CategoryDetail";
 import { toast } from "@/hooks/use-toast";
+import { showSuccessToast, showErrorToast } from "@/utils/toast-utils";
 
 export default function CategoriesPage() {
   const { data: session } = useSession();
@@ -22,6 +23,8 @@ export default function CategoriesPage() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [activeTab, setActiveTab] = useState("list");
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -78,14 +81,24 @@ export default function CategoriesPage() {
   };
 
   const handleDeleteCategory = async (id: number) => {
-    setLoading(true);
+    if (!token) return;
+    
+    setIsDeleting(true);
     try {
       await deleteCategory(token, id);
-      setCategories((prev) => prev.filter((cat) => cat.id !== id));
-    } catch (err: any) {
-      setError(err.message || "Failed to delete category");
+      
+      // Find the category that was deleted to show its name in the toast
+      const deletedCategory = categories.find(c => c.id === id);
+      const categoryName = deletedCategory ? deletedCategory.name : 'Category';
+      
+      // Remove the category from state
+      setCategories(prevCategories => prevCategories.filter(category => category.id !== id));
+      showSuccessToast(`${categoryName} has been deleted successfully`);
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      showErrorToast("Failed to delete category");
     } finally {
-      setLoading(false);
+      setIsDeleting(false);
     }
   };
 
@@ -113,29 +126,17 @@ export default function CategoriesPage() {
   };
 
   const handleResetToDefaults = async () => {
-    if (!confirm("This will reset all categories to defaults. Any custom categories will be preserved. Continue?")) {
-      return;
-    }
-    
-    setLoading(true);
-    setError(null);
-    
+    if (!token) return;
+    setIsResetting(true);
     try {
-      const defaultCategories = await resetCategoriesToDefaults(token);
-      setCategories(defaultCategories);
-      toast({
-        title: "Categories Reset",
-        description: "Default categories have been restored.",
-        variant: "default",
-      });
-
-      const data = await fetchCategories(token);
-      setCategories(data);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to reset categories to defaults");
+      const resetCategories = await resetCategoriesToDefaults(token);
+      setCategories(resetCategories);
+      showSuccessToast("Categories have been reset to defaults");
+    } catch (error) {
+      console.error("Error resetting categories:", error);
+      showErrorToast("Failed to reset categories to defaults");
     } finally {
-      setLoading(false);
+      setIsResetting(false);
     }
   };
 

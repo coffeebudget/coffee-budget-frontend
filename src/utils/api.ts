@@ -894,8 +894,10 @@ export async function resetCategoriesToDefaults(token: string) {
 
 // Add these new API functions
 
-export async function previewKeywordImpact(token: string, categoryId: number, keyword: string) {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/${categoryId}/preview-keyword-impact?keyword=${encodeURIComponent(keyword)}`, {
+export async function previewKeywordImpact(token: string, categoryId: number, keyword: string, onlyUncategorized: boolean = false) {
+  const url = `${process.env.NEXT_PUBLIC_API_URL}/categories/${categoryId}/preview-keyword-impact?keyword=${encodeURIComponent(keyword)}&onlyUncategorized=${onlyUncategorized}`;
+  
+  const response = await fetch(url, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, X, Save, HelpCircle } from "lucide-react";
+import { Loader2, Plus, X, Save, HelpCircle, AlertCircle, Trash } from "lucide-react";
 import { Category } from "@/utils/types";
 import { 
   addKeywordToCategory, 
@@ -19,6 +19,8 @@ import KeywordSuggestions from "./KeywordSuggestions";
 import KeywordImpactPreview from "./KeywordImpactPreview";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { showSuccessToast, showErrorToast } from "@/utils/toast-utils";
 
 interface CategoryFormProps {
   onCategoryChange: (category: Category, isNew: boolean) => Promise<void>;
@@ -68,15 +70,22 @@ export default function CategoryForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted", { name, keywords, excludeFromExpenseAnalytics, analyticsExclusionReason });
     setLoading(true);
     setError(null);
+
+    // Validate inputs
+    if (!name.trim()) {
+      setError("Category name is required");
+      setLoading(false);
+      showErrorToast("Category name is required");
+      return;
+    }
 
     try {
       const categoryData: Category = {
         id: categoryToEdit?.id || 0,
         name,
-        keywords,
+        keywords: keywords.map(k => k.trim()).filter(Boolean),
         excludeFromExpenseAnalytics,
         analyticsExclusionReason: excludeFromExpenseAnalytics ? analyticsExclusionReason : undefined
       };
@@ -92,10 +101,15 @@ export default function CategoryForm({
         setNewKeyword("");
         setExcludeFromExpenseAnalytics(false);
         setAnalyticsExclusionReason("");
+        showSuccessToast(`Category "${name}" has been created successfully`);
+      } else {
+        showSuccessToast(`Category "${name}" has been updated successfully`);
       }
     } catch (err) {
       console.error("Error in handleSubmit:", err);
-      setError("Failed to save category");
+      const errorMessage = err instanceof Error ? err.message : "An error occurred while saving the category";
+      setError(errorMessage);
+      showErrorToast(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -130,24 +144,65 @@ export default function CategoryForm({
     setKeywordImpact(null); // Reset the keywordImpact first
     
     try {
-      const impact = await previewKeywordImpact(token, categoryToEdit.id, keyword);
+      const impact = await previewKeywordImpact(token, categoryToEdit.id, keyword, false);
+      console.log("Keyword impact data received:", impact);
       
-      // If we have sample transactions but no totalImpactedCount, use the sample length
-      const totalImpactedCount = impact?.totalImpactedCount || 
-        (impact?.sampleTransactions?.length || 0);
+      // Map backend response to our expected structure
+      const totalImpactedCount = impact?.totalAffected || 0;
+      
+      // Handle various possible structures for categoryCounts
+      let uncategorizedCount = 0;
+      let affectedCategories = [];
+      
+      if (impact?.categoryCounts) {
+        // If categoryCounts is an object with category IDs as keys
+        if (typeof impact.categoryCounts === 'object' && !Array.isArray(impact.categoryCounts)) {
+          // Check for null key (uncategorized) or category with name "Uncategorized"
+          Object.entries(impact.categoryCounts).forEach(([key, value]: [string, any]) => {
+            if (key === 'null' || key === 'undefined' || value?.name === 'Uncategorized') {
+              uncategorizedCount = value.count || 0;
+            } else if (key !== 'null' && key !== 'undefined') {
+              affectedCategories.push({
+                id: parseInt(key),
+                name: value.name || `Category ${key}`,
+                count: value.count || 0
+              });
+            }
+          });
+        } 
+        // If categoryCounts is an array
+        else if (Array.isArray(impact.categoryCounts)) {
+          const uncatItem = impact.categoryCounts.find(
+            (c: any) => c.name === 'Uncategorized' || c.id === null || c.categoryId === null
+          );
+          uncategorizedCount = uncatItem?.count || 0;
+          
+          affectedCategories = impact.categoryCounts
+            .filter((c: any) => c.id !== null && c.name !== 'Uncategorized')
+            .map((c: any) => ({
+              id: c.id || c.categoryId,
+              name: c.name || `Category ${c.id || c.categoryId}`,
+              count: c.count || 0
+            }));
+        }
+      }
+      
+      // Calculate categorized count
+      const categorizedCount = totalImpactedCount - uncategorizedCount;
       
       // Ensure impact has the expected structure
       const safeImpact = {
         totalImpactedCount: totalImpactedCount,
-        uncategorizedCount: impact?.uncategorizedCount || 0,
-        categorizedCount: impact?.categorizedCount || 0,
-        affectedCategories: impact?.affectedCategories || [],
+        uncategorizedCount: uncategorizedCount,
+        categorizedCount: categorizedCount,
+        affectedCategories: affectedCategories,
         sampleTransactions: impact?.sampleTransactions || []
       };
+      
       setKeywordImpact(safeImpact);
       setShowPreview(true);
     } catch (err) {
-      console.error(err);
+      console.error("Error loading keyword impact:", err);
       setError("Failed to load keyword impact");
       // Fall back to direct add if preview fails
       setKeywords([...keywords, keyword.trim()]);

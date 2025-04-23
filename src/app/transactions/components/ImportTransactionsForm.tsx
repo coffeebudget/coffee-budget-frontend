@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { showSuccessToast, showErrorToast } from "@/utils/toast-utils";
 
 // Create simple Alert components
 interface AlertProps {
@@ -229,6 +230,7 @@ export default function ImportTransactionsForm({
           });
           console.log("Passing transactions to parent:", response);
           onImportComplete(response);
+          showSuccessToast(`Successfully imported ${response.length} transaction${response.length !== 1 ? 's' : ''}`);
         } else {
           setImportResult({
             importedCount: response.importedCount || 0,
@@ -241,9 +243,11 @@ export default function ImportTransactionsForm({
           if (response.transactions && Array.isArray(response.transactions)) {
             console.log("Passing transactions to parent:", response.transactions);
             onImportComplete(response.transactions);
+            showSuccessToast(`Successfully imported ${response.transactions.length} transaction${response.transactions.length !== 1 ? 's' : ''}`);
           } else {
             console.warn("No transactions array in response:", response);
             onImportComplete([]);
+            showSuccessToast('Import completed successfully');
           }
         }
         
@@ -267,7 +271,9 @@ export default function ImportTransactionsForm({
       }
     } catch (err) {
       console.error("Import error:", err);
-      setError(err instanceof Error ? err.message : "Failed to import transactions");
+      const errorMessage = err instanceof Error ? err.message : "Failed to import transactions";
+      setError(errorMessage);
+      showErrorToast(errorMessage);
       onImportComplete([]);
     } finally {
       setIsLoading(false);

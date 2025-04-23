@@ -105,15 +105,28 @@ export default function KeywordImpactPreview({
                 </p>
               </div>
 
-              {keywordImpact.affectedCategories && keywordImpact.affectedCategories.length > 0 && (
+              {keywordImpact.affectedCategories && 
+                keywordImpact.affectedCategories
+                  .filter(cat => 
+                    cat.name !== "Uncategorized" && 
+                    !cat.name.includes("Category Uncategorized") && 
+                    cat.count > 0
+                  ).length > 0 && (
                 <div>
-                  <p className="text-sm font-medium mb-2">Affected categories:</p>
+                  <p className="text-sm font-medium mb-2">Current categories of affected transactions:</p>
                   <div className="flex flex-wrap gap-2">
-                    {keywordImpact.affectedCategories.map((category) => (
-                      <Badge key={category.id} variant="outline">
-                        {category.name} ({category.count})
-                      </Badge>
-                    ))}
+                    {keywordImpact.affectedCategories
+                      .filter(cat => 
+                        cat.name !== "Uncategorized" && 
+                        !cat.name.includes("Category Uncategorized") && 
+                        cat.count > 0
+                      )
+                      .map((category) => (
+                        <Badge key={category.id} variant="outline">
+                          {category.name} <span className="font-semibold ml-1">({category.count} transactions)</span>
+                        </Badge>
+                      ))
+                    }
                   </div>
                 </div>
               )}
@@ -185,20 +198,33 @@ export default function KeywordImpactPreview({
                     </div>
                   )}
                   
-                  {keywordImpact.affectedCategories && keywordImpact.affectedCategories.length > 0 && (
+                  {keywordImpact.affectedCategories && 
+                    keywordImpact.affectedCategories
+                      .filter(cat => 
+                        cat.name !== "Uncategorized" && 
+                        !cat.name.includes("Category Uncategorized") && 
+                        cat.count > 0
+                      ).length > 0 && (
                     <div className="pl-6 space-y-2">
-                      <p className="text-sm text-muted-foreground">Or select specific categories:</p>
-                      {keywordImpact.affectedCategories.map((category) => (
-                        <div key={category.id} className="flex items-center space-x-2">
-                          <RadioGroupItem 
-                            value={JSON.stringify([category.id])} 
-                            id={`category-${category.id}`} 
-                          />
-                          <Label htmlFor={`category-${category.id}`}>
-                            {category.name} ({category.count})
-                          </Label>
-                        </div>
-                      ))}
+                      <p className="text-sm text-muted-foreground">Select which transactions to move by current category:</p>
+                      {keywordImpact.affectedCategories
+                        .filter(cat => 
+                          cat.name !== "Uncategorized" && 
+                          !cat.name.includes("Category Uncategorized") && 
+                          cat.count > 0
+                        )
+                        .map((category) => (
+                          <div key={category.id} className="flex items-center space-x-2">
+                            <RadioGroupItem 
+                              value={JSON.stringify([category.id])} 
+                              id={`category-${category.id}`} 
+                            />
+                            <Label htmlFor={`category-${category.id}`}>
+                              Move {category.count} transactions from "{category.name}"
+                            </Label>
+                          </div>
+                        ))
+                      }
                     </div>
                   )}
                 </RadioGroup>

@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { fetchCategories, fetchTags, fetchBankAccounts, fetchCreditCards } from "@/utils/api";
-import { fetchFilteredTransactions, createTransaction, deleteTransaction, updateTransaction } from "@/utils/api-client";
+import { 
+  fetchFilteredTransactions, 
+  createTransaction, 
+  deleteTransaction, 
+  updateTransaction,
+  bulkCategorizeTransactions,
+  bulkTagTransactions,
+  bulkDeleteTransactions
+} from "@/utils/api-client";
 import { useSession } from "next-auth/react";
 import AddTransactionForm from "@/app/transactions/components/AddTransactionForm";
 import TransactionList from "@/app/transactions/components/TransactionList";
@@ -147,6 +155,77 @@ export default function TransactionsPage() {
     setActiveTab("transactions");
   };
 
+  const handleBulkCategorizeTransactions = async (transactionIds: number[], categoryId: number) => {
+    try {
+      await bulkCategorizeTransactions(transactionIds, categoryId);
+      // Update the transactions in the state
+      setTransactions(prevTransactions => 
+        prevTransactions.map(transaction => 
+          transactionIds.includes(transaction.id as number)
+            ? { ...transaction, categoryId, category: categories.find(c => c.id === categoryId) }
+            : transaction
+        )
+      );
+      showSuccessToast(`${transactionIds.length} transactions categorized successfully`);
+    } catch (err) {
+      console.error(err);
+      const errorMessage = err instanceof Error ? err.message : "Failed to categorize transactions";
+      setError(errorMessage);
+      showErrorToast(errorMessage);
+      throw err;
+    }
+  };
+
+  const handleBulkTagTransactions = async (transactionIds: number[], tagIds: number[]) => {
+    try {
+      await bulkTagTransactions(transactionIds, tagIds);
+      // Update the transactions in the state
+      setTransactions(prevTransactions => 
+        prevTransactions.map(transaction => {
+          if (transactionIds.includes(transaction.id as number)) {
+            const currentTagIds = transaction.tagIds || [];
+            const newTagIds = [...new Set([...currentTagIds, ...tagIds])];
+            // Get the actual tag objects for the updated transaction
+            const updatedTags = newTagIds
+              .map(id => tags.find(t => t.id === id))
+              .filter((tag): tag is Tag => tag !== undefined);
+              
+            return {
+              ...transaction,
+              tagIds: newTagIds,
+              tags: updatedTags
+            };
+          }
+          return transaction;
+        })
+      );
+      showSuccessToast(`Tags added to ${transactionIds.length} transactions successfully`);
+    } catch (err) {
+      console.error(err);
+      const errorMessage = err instanceof Error ? err.message : "Failed to tag transactions";
+      setError(errorMessage);
+      showErrorToast(errorMessage);
+      throw err;
+    }
+  };
+
+  const handleBulkDeleteTransactions = async (transactionIds: number[]) => {
+    try {
+      await bulkDeleteTransactions(transactionIds);
+      // Remove the deleted transactions from the state
+      setTransactions(prevTransactions => 
+        prevTransactions.filter(transaction => !transactionIds.includes(transaction.id as number))
+      );
+      showSuccessToast(`${transactionIds.length} transactions deleted successfully`);
+    } catch (err) {
+      console.error(err);
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete transactions";
+      setError(errorMessage);
+      showErrorToast(errorMessage);
+      throw err;
+    }
+  };
+
   if (!session) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
@@ -225,6 +304,9 @@ export default function TransactionsPage() {
                 creditCards={creditCards}
                 onDeleteTransaction={handleDeleteTransaction}
                 onEditTransaction={handleEditTransaction}
+                onBulkCategorize={handleBulkCategorizeTransactions}
+                onBulkTag={handleBulkTagTransactions}
+                onBulkDelete={handleBulkDeleteTransactions}
               />
             )}
           </TabsContent>

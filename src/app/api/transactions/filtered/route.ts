@@ -58,4 +58,53 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+}
+
+// Add the DELETE method for bulk deletion of transactions
+export async function DELETE(request: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session || !session.user?.accessToken) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    
+    const token = session.user.accessToken;
+    const { ids } = await request.json();
+    
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json(
+        { error: "Invalid request. Expected transaction ids array" },
+        { status: 400 }
+      );
+    }
+    
+    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/transactions/bulk-delete`;
+    
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ transaction_ids: ids }),
+    });
+    
+    if (!response.ok) {
+      const errorMessage = await response.text();
+      console.error(`❌ Bulk Delete Transactions Failed: ${response.status} - ${errorMessage}`);
+      return NextResponse.json(
+        { error: `Failed to delete transactions: ${response.statusText}` },
+        { status: response.status }
+      );
+    }
+    
+    return NextResponse.json({ success: true, message: `${ids.length} transactions deleted` });
+  } catch (error) {
+    console.error("Error in bulk delete transactions API route:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
 } 

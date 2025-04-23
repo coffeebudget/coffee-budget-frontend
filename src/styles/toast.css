@@ -1,0 +1,27 @@
+/* Toast styles */
+:root {
+  --toastify-z-index: 9999;
+}
+
+/* Override any toast container styles */
+.Toastify__toast-container,
+[data-radix-toast-viewport],
+[role="status"] {
+  z-index: 9999 !important;
+  position: fixed !important;
+  opacity: 1 !important;
+}
+
+/* Ensure toast content is visible */
+.Toastify__toast,
+[data-radix-toast-root],
+[role="status"] > div {
+  opacity: 1 !important;
+  z-index: 9999 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Add a more prominent border */
+[data-radix-toast-root] {
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+} 

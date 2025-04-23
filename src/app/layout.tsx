@@ -10,10 +10,12 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <SessionProvider>
-          <Menu />
-          <main>{children}</main>
-        </SessionProvider>
+        <div className="relative z-0">
+          <SessionProvider>
+            <Menu />
+            <main>{children}</main>
+          </SessionProvider>
+        </div>
         <Toaster />
       </body>
     </html>

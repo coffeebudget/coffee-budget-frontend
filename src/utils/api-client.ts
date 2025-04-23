@@ -137,4 +137,47 @@ export async function findSimilarTransactions(transactionId?: number, descriptio
     body: JSON.stringify({ transactionId, description }),
   });
   return handleResponse(response);
+}
+
+/**
+ * Bulk categorize transactions
+ */
+export async function bulkCategorizeTransactions(transactionIds: number[], categoryId: number) {
+  const response = await fetch('/api/transactions/bulk-categorize', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ transactionIds, categoryId }),
+  });
+  return handleResponse(response);
+}
+
+/**
+ * Bulk tag transactions
+ */
+export async function bulkTagTransactions(transactionIds: number[], tagIds: number[]) {
+  const response = await fetch('/api/transactions/bulk-tag', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ transactionIds, tagIds }),
+  });
+  return handleResponse(response);
+}
+
+/**
+ * Bulk delete transactions
+ */
+export async function bulkDeleteTransactions(transactionIds: number[]) {
+  // Using the filtered transactions endpoint with the DELETE method
+  const response = await fetch('/api/transactions/filtered', {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ ids: transactionIds }),
+  });
+  return handleResponse(response);
 } 

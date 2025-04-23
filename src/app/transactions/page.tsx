@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { showSuccessToast, showErrorToast } from "@/utils/toast-utils";
+import ImportSummary from "@/app/transactions/components/ImportSummary";
 
 export default function TransactionsPage() {
   const { data: session } = useSession();
@@ -40,6 +41,10 @@ export default function TransactionsPage() {
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
   const [activeTab, setActiveTab] = useState("transactions");
+  
+  // Import summary state
+  const [showImportSummary, setShowImportSummary] = useState(false);
+  const [importedCount, setImportedCount] = useState(0);
   
   // Filters state
   const [filters, setFilters] = useState({
@@ -137,17 +142,23 @@ export default function TransactionsPage() {
   };
 
   const handleImportComplete = (newTransactions: Transaction[] | any) => {
+    let count = 0;
+    
     if (Array.isArray(newTransactions)) {
       setTransactions(prev => [...prev, ...newTransactions]);
+      count = newTransactions.length;
     } else {
       console.error('Expected array of transactions but received:', newTransactions);
-      // If you have access to the transactions inside a different property:
-      // For example, if the API returns { transactions: Transaction[] }
+      
       if (newTransactions && newTransactions.transactions && Array.isArray(newTransactions.transactions)) {
         setTransactions(prev => [...prev, ...newTransactions.transactions]);
+        count = newTransactions.transactions.length;
       }
     }
-    setActiveTab("transactions"); // Switch back to transactions tab after import
+    
+    setImportedCount(count);
+    setShowImportSummary(true);
+    setActiveTab("transactions"); // Switch to transactions tab to show both the list and summary
   };
 
   const handleCancelEdit = () => {
@@ -280,6 +291,17 @@ export default function TransactionsPage() {
           </div>
           
           <TabsContent value="transactions" className="mt-0">
+            {/* Import Summary (conditionally rendered) */}
+            {showImportSummary && (
+              <div className="mb-6">
+                <ImportSummary 
+                  importedCount={importedCount}
+                  categories={categories}
+                  onClose={() => setShowImportSummary(false)}
+                />
+              </div>
+            )}
+          
             {/* Transaction Filters */}
             <TransactionFilters
               filters={filters}

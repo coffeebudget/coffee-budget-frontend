@@ -8,7 +8,6 @@ import {
   fetchCreditCards,
 } from "@/utils/api";
 import { BankAccount, CreditCard, Transaction, Category } from "@/utils/types";
-import ImportSummary from "@/app/transactions/components/ImportSummary";
 import { CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -85,7 +84,7 @@ const DATE_FORMATS = [
 
 export default function ImportTransactionsForm({
   onImportComplete,
-  categories
+  categories,
 }: ImportTransactionsFormProps) {
   const { data: session } = useSession();
   const token = session?.user?.accessToken || "";
@@ -101,7 +100,7 @@ export default function ImportTransactionsForm({
   });
   const [dateFormat, setDateFormat] = useState(DATE_FORMATS[0].value);
   const [bankFormat, setBankFormat] = useState<
-    "standard" | "webank" | "fineco" | "bnl_txt" | "bnl_xls"
+    "standard" | "webank" | "fineco" | "bnl_txt" | "bnl_xls" | "carta_impronta"
   >("standard");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -118,9 +117,6 @@ export default function ImportTransactionsForm({
   const [selectedCreditCard, setSelectedCreditCard] = useState<number | null>(
     null
   );
-
-  const [showSummary, setShowSummary] = useState(false);
-  const [importedCount, setImportedCount] = useState(0);
 
   useEffect(() => {
     if (!token) return;
@@ -141,6 +137,13 @@ export default function ImportTransactionsForm({
 
     loadAccountData();
   }, [token]);
+
+  // Add a useEffect to auto-select the "card" selection type when CartaImpronta format is chosen
+  useEffect(() => {
+    if (bankFormat === "carta_impronta") {
+      setSelectionType("card");
+    }
+  }, [bankFormat]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -172,7 +175,21 @@ export default function ImportTransactionsForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!csvFile) return;
-  
+
+    // Validate required fields for CartaImpronta
+    if (bankFormat === "carta_impronta") {
+      if (selectionType !== "card" || !selectedCreditCard) {
+        setError("Credit card selection is required for CartaImpronta import");
+        return;
+      }
+      
+      // Validate file type
+      if (!csvFile.name.toLowerCase().endsWith('.xls') && !csvFile.name.toLowerCase().endsWith('.xlsx')) {
+        setError("CartaImpronta import requires an XLS or XLSX file");
+        return;
+      }
+    }
+
     setIsLoading(true);
     setError(null);
     setImportResult(null);
@@ -222,7 +239,6 @@ export default function ImportTransactionsForm({
         console.log("Import API response:", response);
         
         if (Array.isArray(response)) {
-          setImportedCount(response.length);
           setImportResult({
             importedCount: response.length,
             duplicatesCount: 0,
@@ -238,8 +254,6 @@ export default function ImportTransactionsForm({
             errors: response.errors || [],
           });
           
-          setImportedCount(response.importedCount || 0);
-          
           if (response.transactions && Array.isArray(response.transactions)) {
             console.log("Passing transactions to parent:", response.transactions);
             onImportComplete(response.transactions);
@@ -251,7 +265,7 @@ export default function ImportTransactionsForm({
           }
         }
         
-        setShowSummary(true);
+        // Reset other states
         setCsvFile(null);
         setCsvHeaders([]);
         setColumnMappings({
@@ -334,6 +348,18 @@ export default function ImportTransactionsForm({
                   </p>
                 )}
               </div>
+              {bankFormat === "carta_impronta" && (
+                <div className="mt-2 text-sm text-gray-600 bg-gray-50 p-2 rounded border border-gray-200">
+                  <p className="font-medium">CartaImpronta Import Format:</p>
+                  <p>Upload an XLS file containing a table with ID CCMO_CAIM that includes:</p>
+                  <ul className="list-disc pl-4 mt-1">
+                    <li>Date in column 1 (Data operazione)</li>
+                    <li>Amount in column 2 (Importo €)</li>
+                    <li>Description in column 5 (Descrizione)</li>
+                  </ul>
+                  <p className="mt-1 text-xs">All imported transactions will be categorized as expenses with negative amounts.</p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -348,6 +374,7 @@ export default function ImportTransactionsForm({
                   <SelectItem value="fineco">Fineco (.xlsx)</SelectItem>
                   <SelectItem value="bnl_txt">BNL (TXT)</SelectItem>
                   <SelectItem value="bnl_xls">BNL (XLS)</SelectItem>
+                  <SelectItem value="carta_impronta">CartaImpronta (XLS)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -411,14 +438,18 @@ export default function ImportTransactionsForm({
                     id="noAccount"
                     name="accountType"
                     className="h-4 w-4"
-                    checked={selectionType === null}
+                    checked={selectionType === null && bankFormat !== "carta_impronta"}
                     onChange={() => {
                       setSelectionType(null);
                       setSelectedBankAccount(null);
                       setSelectedCreditCard(null);
                     }}
+                    disabled={bankFormat === "carta_impronta"}
                   />
-                  <Label htmlFor="noAccount" className="font-normal">No Account</Label>
+                  <Label htmlFor="noAccount" className={`font-normal ${bankFormat === "carta_impronta" ? "text-gray-400" : ""}`}>
+                    No Account
+                    {bankFormat === "carta_impronta" && <span className="ml-2 text-xs text-red-500">(Credit card required for CartaImpronta import)</span>}
+                  </Label>
                 </div>
 
                 <div className="flex flex-col space-y-2">
@@ -469,13 +500,16 @@ export default function ImportTransactionsForm({
                       id="creditCard"
                       name="accountType"
                       className="h-4 w-4"
-                      checked={selectionType === "card"}
+                      checked={selectionType === "card" || bankFormat === "carta_impronta"}
                       onChange={() => {
                         setSelectionType("card");
                         setSelectedBankAccount(null);
                       }}
                     />
-                    <Label htmlFor="creditCard" className="font-normal">Credit Card</Label>
+                    <Label htmlFor="creditCard" className="font-normal">
+                      Credit Card
+                      {bankFormat === "carta_impronta" && <span className="ml-2 text-xs text-red-500">(Required for CartaImpronta)</span>}
+                    </Label>
                   </div>
                   
                   {selectionType === "card" && (
@@ -535,14 +569,6 @@ export default function ImportTransactionsForm({
           )}
         </Button>
       </CardFooter>
-
-      {showSummary && (
-        <ImportSummary 
-          importedCount={importedCount}
-          categories={categories}
-          onClose={() => setShowSummary(false)}
-        />
-      )}
     </>
   );
 }

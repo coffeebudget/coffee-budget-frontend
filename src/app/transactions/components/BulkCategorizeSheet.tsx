@@ -5,7 +5,7 @@ import { Category } from "@/utils/types";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Search } from "lucide-react";
+import { Search, Tag, XCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Sheet,
@@ -21,7 +21,7 @@ interface BulkCategorizeSheetProps {
   onOpenChange: (open: boolean) => void;
   categories: Category[];
   transactionCount: number;
-  onSubmit: (categoryId: number) => Promise<void>;
+  onSubmit: (categoryId: number | null) => Promise<void>;
 }
 
 export default function BulkCategorizeSheet({
@@ -32,6 +32,7 @@ export default function BulkCategorizeSheet({
   onSubmit,
 }: BulkCategorizeSheetProps) {
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [isUncategorize, setIsUncategorize] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -45,18 +46,27 @@ export default function BulkCategorizeSheet({
   );
 
   const handleSubmit = async () => {
-    if (!selectedCategoryId) return;
-    
     setIsSubmitting(true);
     try {
-      await onSubmit(selectedCategoryId);
+      await onSubmit(isUncategorize ? null : selectedCategoryId);
       onOpenChange(false);
       setSelectedCategoryId(null);
+      setIsUncategorize(false);
       setSearchTerm("");
     } catch (error) {
-      console.error("Error categorizing transactions:", error);
+      console.error(`Error ${isUncategorize ? 'uncategorizing' : 'categorizing'} transactions:`, error);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleOptionSelect = (value: string) => {
+    if (value === 'uncategorize') {
+      setIsUncategorize(true);
+      setSelectedCategoryId(null);
+    } else {
+      setIsUncategorize(false);
+      setSelectedCategoryId(Number(value));
     }
   };
 
@@ -64,7 +74,7 @@ export default function BulkCategorizeSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:max-w-md">
         <SheetHeader>
-          <SheetTitle>Categorize Transactions</SheetTitle>
+          <SheetTitle>Manage Transaction Categories</SheetTitle>
           <SheetDescription>
             Select a category for {transactionCount} transaction{transactionCount !== 1 ? 's' : ''}.
           </SheetDescription>
@@ -84,24 +94,41 @@ export default function BulkCategorizeSheet({
         
         <div className="py-4 h-[60vh] overflow-y-auto pr-2">
           <RadioGroup 
-            value={selectedCategoryId?.toString() || ""}
-            onValueChange={(value: string) => setSelectedCategoryId(Number(value))}
+            value={isUncategorize ? 'uncategorize' : (selectedCategoryId?.toString() || "")}
+            onValueChange={handleOptionSelect}
           >
+            {/* Uncategorize option */}
+            <div
+              className="flex items-center space-x-2 mb-3 p-2 rounded-md hover:bg-muted cursor-pointer bg-muted-foreground/10"
+              onClick={() => handleOptionSelect('uncategorize')}
+            >
+              <RadioGroupItem value="uncategorize" id="uncategorize" />
+              <Label htmlFor="uncategorize" className="flex items-center space-x-2 cursor-pointer">
+                <XCircle className="h-4 w-4 text-destructive" />
+                <div className="font-medium">Remove Category</div>
+              </Label>
+            </div>
+            
+            <div className="h-px bg-border my-4"></div>
+            
             {filteredCategories.length > 0 ? (
               filteredCategories.map((category) => (
                 <div
                   key={category.id}
                   className="flex items-center space-x-2 mb-3 p-2 rounded-md hover:bg-muted cursor-pointer"
-                  onClick={() => setSelectedCategoryId(category.id)}
+                  onClick={() => handleOptionSelect(category.id.toString())}
                 >
                   <RadioGroupItem value={category.id.toString()} id={`category-${category.id}`} />
-                  <Label htmlFor={`category-${category.id}`} className="flex-grow cursor-pointer">
-                    <div className="font-medium">{category.name}</div>
-                    {category.keywords && category.keywords.length > 0 && (
-                      <div className="text-xs text-muted-foreground mt-1">
-                        Keywords: {category.keywords.join(", ")}
-                      </div>
-                    )}
+                  <Label htmlFor={`category-${category.id}`} className="flex items-center space-x-2 cursor-pointer">
+                    <Tag className="h-4 w-4 text-primary" />
+                    <div>
+                      <div className="font-medium">{category.name}</div>
+                      {category.keywords && category.keywords.length > 0 && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Keywords: {category.keywords.join(", ")}
+                        </div>
+                      )}
+                    </div>
                   </Label>
                 </div>
               ))
@@ -124,10 +151,12 @@ export default function BulkCategorizeSheet({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={!selectedCategoryId || isSubmitting}
-            className="w-full sm:w-auto"
+            disabled={(!selectedCategoryId && !isUncategorize) || isSubmitting}
+            className={`w-full sm:w-auto ${isUncategorize ? 'bg-destructive hover:bg-destructive/90' : ''}`}
           >
-            {isSubmitting ? "Categorizing..." : "Categorize"}
+            {isSubmitting 
+              ? (isUncategorize ? "Removing..." : "Categorizing...") 
+              : (isUncategorize ? "Remove Category" : "Categorize")}
           </Button>
         </SheetFooter>
       </SheetContent>

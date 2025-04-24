@@ -4,9 +4,11 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import {
   importTransactions,
-  fetchBankAccounts,
-  fetchCreditCards,
 } from "@/utils/api";
+import { 
+  fetchBankAccounts,
+  fetchCreditCards
+} from "@/utils/api-client";
 import { BankAccount, CreditCard, Transaction, Category } from "@/utils/types";
 import { CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -100,11 +102,12 @@ export default function ImportTransactionsForm({
   });
   const [dateFormat, setDateFormat] = useState(DATE_FORMATS[0].value);
   const [bankFormat, setBankFormat] = useState<
-    "standard" | "webank" | "fineco" | "bnl_txt" | "bnl_xls" | "carta_impronta"
+    "standard" | "webank" | "fineco" | "bnl_txt" | "bnl_xls" | "carta_impronta" | "paypal_enrich"
   >("standard");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [importResult, setImportResult] = useState<ImportResponse | null>(null);
+  const [dateRangeForMatching, setDateRangeForMatching] = useState<number>(5);
 
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
@@ -124,8 +127,8 @@ export default function ImportTransactionsForm({
     async function loadAccountData() {
       try {
         const [bankAccountsData, creditCardsData] = await Promise.all([
-          fetchBankAccounts(token),
-          fetchCreditCards(token),
+          fetchBankAccounts(),
+          fetchCreditCards(),
         ]);
         setBankAccounts(bankAccountsData);
         setCreditCards(creditCardsData);
@@ -190,6 +193,14 @@ export default function ImportTransactionsForm({
       }
     }
 
+    // Validate for PayPal enrichment
+    if (bankFormat === "paypal_enrich") {
+      if (!csvFile.name.toLowerCase().endsWith('.csv')) {
+        setError("PayPal enrichment requires a CSV file");
+        return;
+      }
+    }
+
     setIsLoading(true);
     setError(null);
     setImportResult(null);
@@ -200,11 +211,11 @@ export default function ImportTransactionsForm({
       reader.onload = async (event) => {
         let fileContent = '';
       
-        if (csvFile.name.endsWith('.txt')) {
-          // TXT viene letto come testo
+        if (csvFile.name.endsWith('.txt') || (bankFormat === "paypal_enrich" && csvFile.name.endsWith('.csv'))) {
+          // TXT and PayPal CSV files need to be read as text with UTF-8 encoding
           fileContent = event.target?.result as string;
         } else {
-          // Altri formati vengono letti come binary e poi convertiti in base64
+          // Other formats are read as binary and converted to base64
           const arrayBuffer = event.target?.result as ArrayBuffer;
           const bytes = new Uint8Array(arrayBuffer);
           let binary = "";
@@ -222,6 +233,11 @@ export default function ImportTransactionsForm({
       
         if (bankFormat !== "standard") {
           payload.bankFormat = bankFormat;
+          
+          // Add dateRangeForMatching for PayPal enrichment
+          if (bankFormat === "paypal_enrich") {
+            payload.dateRangeForMatching = dateRangeForMatching;
+          }
         } else {
           // Process columnMappings to remove 'none' values
           const processedMappings: Record<string, string> = {};
@@ -233,39 +249,90 @@ export default function ImportTransactionsForm({
           payload.columnMappings = processedMappings;
           payload.dateFormat = dateFormat;
         }
-      
-        const response = await importTransactions(token, payload);      
-  
-        console.log("Import API response:", response);
-        
-        if (Array.isArray(response)) {
-          setImportResult({
-            importedCount: response.length,
-            duplicatesCount: 0,
-            errors: [],
+
+        // Special handling for PayPal enrichment
+        let response;
+        if (bankFormat === "paypal_enrich") {
+          // Use the dedicated PayPal enrichment endpoint
+          console.log("PayPal Enrichment - Sending data:", { 
+            csvDataLength: fileContent.length,
+            dateRangeForMatching
           });
-          console.log("Passing transactions to parent:", response);
-          onImportComplete(response);
-          showSuccessToast(`Successfully imported ${response.length} transaction${response.length !== 1 ? 's' : ''}`);
-        } else {
+          
+          // Send CSV content exactly as read from the file without modifications
+          // The backend will handle any formatting or encoding issues
+          response = await fetch('/api/transactions/paypal-enrich', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+              csvData: fileContent,
+              dateRangeForMatching: dateRangeForMatching
+            }),
+          });
+          
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            console.error("PayPal Enrichment - API Error:", {
+              status: response.status,
+              statusText: response.statusText,
+              errorData
+            });
+            throw new Error(errorData.error || errorData.message || `API error: ${response.status}`);
+          }
+          
+          response = await response.json();
+          console.log("PayPal Enrichment - API Response:", response);
+          
+          // Update the UI with enrichment results
           setImportResult({
-            importedCount: response.importedCount || 0,
-            duplicatesCount: response.duplicatesCount || 0,
+            importedCount: response.count || 0,
+            duplicatesCount: 0,
             errors: response.errors || [],
           });
           
-          if (response.transactions && Array.isArray(response.transactions)) {
-            console.log("Passing transactions to parent:", response.transactions);
-            onImportComplete(response.transactions);
-            showSuccessToast(`Successfully imported ${response.transactions.length} transaction${response.transactions.length !== 1 ? 's' : ''}`);
-          } else {
-            console.warn("No transactions array in response:", response);
+          showSuccessToast(response.message || `${response.count} transactions enriched with PayPal data`);
+          // No need to call onImportComplete as we didn't import new transactions, just enriched existing ones
+          if (response.count > 0) {
+            // If transactions were enriched, we should refresh the transactions list
             onImportComplete([]);
-            showSuccessToast('Import completed successfully');
+          }
+        } else {
+          // Normal import process for other formats
+          response = await importTransactions(token, payload);
+        
+          console.log("Import API response:", response);
+          
+          if (Array.isArray(response)) {
+            setImportResult({
+              importedCount: response.length,
+              duplicatesCount: 0,
+              errors: [],
+            });
+            console.log("Passing transactions to parent:", response);
+            onImportComplete(response);
+            showSuccessToast(`Successfully imported ${response.length} transaction${response.length !== 1 ? 's' : ''}`);
+          } else {
+            setImportResult({
+              importedCount: response.importedCount || 0,
+              duplicatesCount: response.duplicatesCount || 0,
+              errors: response.errors || [],
+            });
+            
+            if (response.transactions && Array.isArray(response.transactions)) {
+              console.log("Passing transactions to parent:", response.transactions);
+              onImportComplete(response.transactions);
+              showSuccessToast(`Successfully imported ${response.transactions.length} transaction${response.transactions.length !== 1 ? 's' : ''}`);
+            } else {
+              console.warn("No transactions array in response:", response);
+              onImportComplete([]);
+              showSuccessToast('Import completed successfully');
+            }
           }
         }
         
-        // Reset other states
+        // Reset form state regardless of import type
         setCsvFile(null);
         setCsvHeaders([]);
         setColumnMappings({
@@ -278,7 +345,7 @@ export default function ImportTransactionsForm({
         });
       };
   
-      if (csvFile.name.endsWith('.txt')) {
+      if (csvFile.name.endsWith('.txt') || (bankFormat === "paypal_enrich" && csvFile.name.endsWith('.csv'))) {
         reader.readAsText(csvFile, 'utf-8');
       } else {
         reader.readAsArrayBuffer(csvFile);
@@ -307,7 +374,11 @@ export default function ImportTransactionsForm({
             <AlertTitle>Import Results</AlertTitle>
             <AlertDescription>
               <div className="text-sm mt-2">
-                <p className="text-green-700">Successfully imported: {importResult.importedCount} transactions</p>
+                {bankFormat === "paypal_enrich" ? (
+                  <p className="text-green-700">Successfully enriched: {importResult.importedCount} transactions with PayPal data</p>
+                ) : (
+                  <p className="text-green-700">Successfully imported: {importResult.importedCount} transactions</p>
+                )}
                 
                 {importResult.duplicatesCount > 0 && (
                   <p className="text-yellow-700 mt-1">
@@ -360,6 +431,43 @@ export default function ImportTransactionsForm({
                   <p className="mt-1 text-xs">All imported transactions will be categorized as expenses with negative amounts.</p>
                 </div>
               )}
+              
+              {bankFormat === "paypal_enrich" && (
+                <div className="mt-2 text-sm text-gray-600 bg-gray-50 p-2 rounded border border-gray-200">
+                  <p className="font-medium">PayPal Enrichment:</p>
+                  <p>Upload a CSV file exported directly from PayPal Italy:</p>
+                  <ul className="list-disc pl-4 mt-1">
+                    <li>Download your transaction history from PayPal without any modifications</li>
+                    <li>The file should include headers like "Data", "Orario", "Nome", "Tipo", "Stato", etc.</li>
+                    <li>Only transactions with "Completata" (Completed) status will be processed</li>
+                    <li>Transactions with empty merchant names or generic card deposits will be skipped</li>
+                  </ul>
+                  <p className="mt-1 text-xs font-medium">This will enhance existing transactions with PayPal merchant details.</p>
+                  
+                  <div className="mt-3">
+                    <Label htmlFor="date-range-matching" className="text-sm font-medium">
+                      Date Range for Matching (days)
+                    </Label>
+                    <Input
+                      id="date-range-matching"
+                      type="number"
+                      min="1"
+                      max="30"
+                      value={dateRangeForMatching}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value);
+                        if (!isNaN(value) && value > 0) {
+                          setDateRangeForMatching(value);
+                        }
+                      }}
+                      className="mt-1 w-full"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Transactions within this many days will be considered for matching (default: 5 days).
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -375,6 +483,7 @@ export default function ImportTransactionsForm({
                   <SelectItem value="bnl_txt">BNL (TXT)</SelectItem>
                   <SelectItem value="bnl_xls">BNL (XLS)</SelectItem>
                   <SelectItem value="carta_impronta">CartaImpronta (XLS)</SelectItem>
+                  <SelectItem value="paypal_enrich">PayPal Enrichment (CSV)</SelectItem>
                 </SelectContent>
               </Select>
             </div>

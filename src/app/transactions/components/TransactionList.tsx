@@ -29,9 +29,10 @@ interface TransactionListProps {
   creditCards: CreditCard[];
   onDeleteTransaction: (id: number) => Promise<void>;
   onEditTransaction: (transaction: Transaction) => void;
-  onBulkCategorize?: (transactionIds: number[], categoryId: number) => void;
-  onBulkTag?: (transactionIds: number[], tagIds: number[]) => void;
-  onBulkDelete?: (transactionIds: number[]) => Promise<void>;
+  onBulkCategorize?: (transactionIds: string[], categoryId: number | null) => void;
+  onBulkTag?: (transactionIds: string[], tagIds: number[]) => void;
+  onBulkDelete?: (transactionIds: string[]) => Promise<void>;
+  onBulkUncategorize?: (transactionIds: string[]) => Promise<void>;
 }
 
 export default function TransactionList({ 
@@ -44,12 +45,13 @@ export default function TransactionList({
   onEditTransaction,
   onBulkCategorize,
   onBulkTag,
-  onBulkDelete 
+  onBulkDelete,
+  onBulkUncategorize
 }: TransactionListProps) {
   const [error, setError] = useState<string | null>(null);
   const [loadingId, setLoadingId] = useState<number | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
   const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
   const [recentlyCategorized, setRecentlyCategorized] = useState<{
@@ -71,7 +73,7 @@ export default function TransactionList({
             setSelectedIds([]);
           } else {
             // Otherwise, select all
-            setSelectedIds(transactions.map(t => t.id as number));
+            setSelectedIds(transactions.map(t => t.id?.toString() || ""));
           }
         }
       }
@@ -143,7 +145,9 @@ export default function TransactionList({
   };
 
   // Toggle selection for a single transaction
-  const toggleSelectTransaction = useCallback((id: number, index: number, isShiftKey = false) => {
+  const toggleSelectTransaction = useCallback((id: number | string, index: number, isShiftKey = false) => {
+    const idString = id.toString();
+    
     setSelectedIds(currentSelectedIds => {
       // Handle range selection with shift key
       if (isShiftKey && lastSelectedIndex !== null && lastSelectedIndex !== index) {
@@ -151,7 +155,7 @@ export default function TransactionList({
         const end = Math.max(lastSelectedIndex, index);
         const rangeIds = transactions
           .slice(start, end + 1)
-          .map(t => t.id as number);
+          .map(t => t.id?.toString() || "");
         
         // Create a new array with existing selections plus range selections
         const newSelections = [...currentSelectedIds];
@@ -165,9 +169,9 @@ export default function TransactionList({
       }
       
       // Normal toggle behavior
-      return currentSelectedIds.includes(id)
-        ? currentSelectedIds.filter(selectedId => selectedId !== id)
-        : [...currentSelectedIds, id];
+      return currentSelectedIds.includes(idString)
+        ? currentSelectedIds.filter(selectedId => selectedId !== idString)
+        : [...currentSelectedIds, idString];
     });
     
     // Update the last selected index
@@ -178,7 +182,7 @@ export default function TransactionList({
     if (selectedIds.length === transactions.length) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(transactions.map(t => t.id as number));
+      setSelectedIds(transactions.map(t => t.id?.toString() || ""));
     }
   };
 
@@ -207,16 +211,58 @@ export default function TransactionList({
     setIsTagSheetOpen(true);
   };
 
-  const handleApplyCategory = async (categoryId: number) => {
-    if (!onBulkCategorize || selectedIds.length === 0) return;
-    
+  const handleApplyCategory = async (categoryId: number | null) => {
+    if (onBulkCategorize && selectedIds.length > 0) {
+      setIsCategorizeSheetOpen(false);
+      
+      try {
+        // If categoryId is null, perform uncategorization
+        if (categoryId === null) {
+          await handleBulkUncategorize();
+        } else {
+          // Otherwise perform normal categorization
+          await onBulkCategorize(selectedIds, categoryId);
+        }
+        
+        // Use toast with the correct format
+        toast.success(
+          `Successfully ${categoryId === null ? 'removed category from' : 'categorized'} ${selectedIds.length} transaction${selectedIds.length !== 1 ? 's' : ''}.`
+        );
+        
+        setSelectedIds([]);
+      } catch (error) {
+        console.error("Error applying category:", error);
+        toast.error(
+          `Failed to ${categoryId === null ? 'uncategorize' : 'categorize'} transactions.`
+        );
+      }
+    }
+  };
+
+  const handleBulkUncategorize = async () => {
     try {
-      await onBulkCategorize(selectedIds, categoryId);
-      toast.success(`${selectedIds.length} transactions categorized successfully`);
-      setSelectedIds([]);
-    } catch (err) {
-      toast.error("Failed to categorize transactions");
-      console.error(err);
+      const response = await fetch("/api/transactions/bulk-uncategorize", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          transactionIds: selectedIds,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to uncategorize transactions");
+      }
+
+      if (onBulkUncategorize) {
+        await onBulkUncategorize(selectedIds);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Error during bulk uncategorization:", error);
+      throw error;
     }
   };
 
@@ -266,11 +312,26 @@ export default function TransactionList({
         {selectedIds.length > 0 && (
           <BulkToolbar
             selectedIds={selectedIds}
-            onCategorize={handleBulkCategorize}
-            onTag={handleBulkTag}
-            onDelete={handleBulkDelete}
+            onBulkCategorize={async (categoryId, ids) => {
+              if (onBulkCategorize) {
+                await onBulkCategorize(ids, categoryId);
+              }
+            }}
+            onBulkTag={async (tagId, ids) => {
+              if (onBulkTag) {
+                await onBulkTag(ids, [tagId]);
+              }
+            }}
+            onDeleteSelected={handleBulkDelete}
+            onBulkUncategorize={async (ids) => {
+              if (onBulkUncategorize) {
+                await onBulkUncategorize(ids);
+              }
+            }}
             onClearSelection={() => setSelectedIds([])}
-            isDeleting={isBulkDeleting}
+            categories={categories}
+            tags={tags}
+            disabled={isBulkDeleting}
           />
         )}
         <CardContent>
@@ -307,105 +368,110 @@ export default function TransactionList({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {transactions.map((transaction, index) => (
-                  <TableRow 
-                    key={`transaction-${Number(transaction.id)}`}
-                    className={selectedIds.includes(transaction.id as number) ? "bg-muted/50" : ""}
-                  >
-                    <TableCell>
-                      <Checkbox 
-                        checked={selectedIds.includes(transaction.id as number)}
-                        onCheckedChange={(checked) => {
-                          toggleSelectTransaction(
-                            transaction.id as number, 
-                            index,
-                            window.event && (window.event as MouseEvent).shiftKey
-                          );
-                        }}
-                        aria-label={`Select transaction ${transaction.id}`}
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {transaction.executionDate ? formatDate(transaction.executionDate) : 'N/A'}
-                    </TableCell>
-                    <TableCell>
-                      <div className="break-words">
-                        {transaction.description}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={transaction.type === 'expense' ? 'destructive' : 'default'}>
-                        ${formatAmount(transaction.amount)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={
-                        transaction.status === 'executed' ? 'default' :
-                        transaction.status === 'pending' ? 'secondary' :
-                        transaction.status === 'cancelled' ? 'destructive' : 'outline'
-                      }>
-                        {transaction.status || 'N/A'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {(transaction.categoryId || transaction.category?.id) ? (
-                        <span className="text-sm">
-                          {transaction.category?.name || 
-                           categories.find(c => c.id === (transaction.categoryId || transaction.category?.id))?.name || 
-                           'Unknown'}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">Uncategorized</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {(transaction.tagIds && transaction.tagIds.length > 0) || (transaction.tags && transaction.tags.length > 0) ? (
-                          transaction.tags ? 
-                            transaction.tags.map(tag => (
-                              <Badge key={tag.id} variant="secondary" className="text-xs">
-                                {tag.name}
-                              </Badge>
-                            ))
-                          :
-                            getTagsForTransaction(transaction.tagIds).map(tag => (
-                              <Badge key={tag.id} variant="secondary" className="text-xs">
-                                {tag.name}
-                              </Badge>
-                            ))
+                {transactions.map((transaction, index) => {
+                  // Convert ID to string to avoid type errors
+                  const transactionIdString = transaction.id ? transaction.id.toString() : "";
+                  
+                  return (
+                    <TableRow 
+                      key={`transaction-${transactionIdString}`}
+                      className={selectedIds.includes(transactionIdString) ? "bg-muted/50" : ""}
+                    >
+                      <TableCell>
+                        <Checkbox 
+                          checked={selectedIds.includes(transactionIdString)}
+                          onCheckedChange={(checked) => {
+                            toggleSelectTransaction(
+                              transactionIdString, 
+                              index,
+                              window.event && (window.event as MouseEvent).shiftKey
+                            );
+                          }}
+                          aria-label={`Select transaction ${transactionIdString}`}
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {transaction.executionDate ? formatDate(transaction.executionDate) : 'N/A'}
+                      </TableCell>
+                      <TableCell>
+                        <div className="break-words">
+                          {transaction.description}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={transaction.type === 'expense' ? 'destructive' : 'default'}>
+                          ${formatAmount(transaction.amount)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={
+                          transaction.status === 'executed' ? 'default' :
+                          transaction.status === 'pending' ? 'secondary' :
+                          transaction.status === 'cancelled' ? 'destructive' : 'outline'
+                        }>
+                          {transaction.status || 'N/A'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {(transaction.categoryId || transaction.category?.id) ? (
+                          <span className="text-sm">
+                            {transaction.category?.name || 
+                             categories.find(c => c.id === (transaction.categoryId || transaction.category?.id))?.name || 
+                             'Unknown'}
+                          </span>
                         ) : (
-                          <span className="text-muted-foreground text-sm">No tags</span>
+                          <span className="text-muted-foreground text-sm">Uncategorized</span>
                         )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onEditTransaction(transaction)}
-                          title="Edit Transaction"
-                          disabled={loadingId === transaction.id}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant={confirmDelete === transaction.id ? "destructive" : "ghost"}
-                          size="icon"
-                          onClick={() => handleDeleteClick(transaction.id!)}
-                          title={confirmDelete === transaction.id ? "Confirm Delete" : "Delete Transaction"}
-                          disabled={loadingId === transaction.id}
-                        >
-                          {loadingId === transaction.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {(transaction.tagIds && transaction.tagIds.length > 0) || (transaction.tags && transaction.tags.length > 0) ? (
+                            transaction.tags ? 
+                              transaction.tags.map(tag => (
+                                <Badge key={tag.id} variant="secondary" className="text-xs">
+                                  {tag.name}
+                                </Badge>
+                              ))
+                            :
+                              getTagsForTransaction(transaction.tagIds).map(tag => (
+                                <Badge key={tag.id} variant="secondary" className="text-xs">
+                                  {tag.name}
+                                </Badge>
+                              ))
                           ) : (
-                            <Trash2 className="h-4 w-4" />
+                            <span className="text-muted-foreground text-sm">No tags</span>
                           )}
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => onEditTransaction(transaction)}
+                            title="Edit Transaction"
+                            disabled={loadingId === transaction.id}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant={confirmDelete === transaction.id ? "destructive" : "ghost"}
+                            size="icon"
+                            onClick={() => handleDeleteClick(transaction.id!)}
+                            title={confirmDelete === transaction.id ? "Confirm Delete" : "Delete Transaction"}
+                            disabled={loadingId === transaction.id}
+                          >
+                            {loadingId === transaction.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>

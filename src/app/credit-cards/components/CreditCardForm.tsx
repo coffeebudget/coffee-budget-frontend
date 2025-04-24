@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { CreditCard, BankAccount } from "@/utils/types";
-import { fetchBankAccounts } from "@/utils/api";
+import { fetchBankAccounts } from "@/utils/api-client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -39,14 +39,14 @@ export default function CreditCardForm({
   useEffect(() => {
     const loadBankAccounts = async () => {
       try {
-        const accounts = await fetchBankAccounts(token);
+        const accounts = await fetchBankAccounts();
         setBankAccounts(accounts);
       } catch (err) {
         setError("Failed to load bank accounts");
       }
     };
     loadBankAccounts();
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     if (initialData) {

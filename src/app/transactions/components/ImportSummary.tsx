@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, CheckCircle, AlertCircle, Tag } from "lucide-react";
 import { Transaction, Category } from "@/utils/types";
-import { fetchUncategorizedTransactions, bulkCategorizeByKeyword, suggestCategoryForDescription } from "@/utils/api";
+import { fetchUncategorizedTransactions, suggestCategoryForDescription, updateTransaction } from "@/utils/api";
 
 interface ImportSummaryProps {
   importedCount: number;
@@ -86,19 +86,19 @@ export default function ImportSummary({
         throw new Error("Transaction not found");
       }
       
-      // Extract a keyword from the description
-      const keyword = transaction.description.split(' ')[0]; // Simple approach - use first word
+      // Update the specific transaction directly rather than using bulk categorize
+      await updateTransaction(token, transactionId, {
+        ...transaction,
+        categoryId
+      });
       
-      // Bulk categorize using this keyword
-      const result = await bulkCategorizeByKeyword(token, keyword, categoryId);
-      
-      // Update the UI
+      // Remove the categorized transaction from the view
       setUncategorizedTransactions(prev => 
-        prev.filter(t => !t.description.toLowerCase().includes(keyword.toLowerCase()))
+        prev.filter(t => t.id !== transactionId)
       );
       
       const category = categories.find(c => c.id === categoryId);
-      setSuccess(`Categorized ${result.count} transaction(s) as "${category?.name || 'Unknown'}"`);
+      setSuccess(`Categorized transaction as "${category?.name || 'Unknown'}"`);
     } catch (err) {
       console.error(err);
       setError("Failed to categorize transaction");

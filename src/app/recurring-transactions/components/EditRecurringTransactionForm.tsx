@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { adjustPattern, fetchBankAccounts, fetchCategories, fetchCreditCards, fetchTags } from '@/utils/api';
+import { adjustPattern, fetchCategories, fetchCreditCards, fetchTags } from '@/utils/api';
+import { fetchBankAccounts } from '@/utils/api-client';
 import { RecurringTransaction } from '@/utils/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -62,7 +63,7 @@ export default function EditRecurringTransactionForm({ recurringTransaction, tok
         const [cat, tg, ba, cc] = await Promise.all([
           fetchCategories(token),
           fetchTags(token),
-          fetchBankAccounts(token),
+          fetchBankAccounts(),
           fetchCreditCards(token),
         ]);
         setCategories(cat);

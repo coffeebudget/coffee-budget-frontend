@@ -80,46 +80,6 @@ export const updateTransaction = async (token: string, id: number, transaction: 
   return res.json();
 }
 
-// Bank Accounts
-export async function fetchBankAccounts(token: string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/bank-accounts`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return handleResponse(res);
-}
-
-export async function createBankAccount(token: string, account: any) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/bank-accounts`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(account),
-  });
-  return handleResponse(res);
-}
-
-export async function updateBankAccount(token: string, id: number, account: any) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/bank-accounts/${id}`, {
-    method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(account),
-  });
-  return handleResponse(res);
-}
-
-export async function deleteBankAccount(token: string, id: number) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/bank-accounts/${id}`, {
-    method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return handleResponse(res);
-}
-
 // Credit Cards
 export async function fetchCreditCards(token: string) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/credit-cards`, {
@@ -918,6 +878,21 @@ export async function applyKeywordToCategory(token: string, categoryId: number, 
     body: JSON.stringify({
       keyword,
       applyTo
+    }),
+  });
+  
+  return handleResponse(response);
+}
+
+export async function bulkUncategorize(token: string, transactionIds: number[]) {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/transactions/bulk-uncategorize`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      transactionIds
     }),
   });
   

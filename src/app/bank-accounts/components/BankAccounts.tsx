@@ -16,14 +16,12 @@ import {
 
 interface BankAccountsProps {
   bankAccounts: BankAccount[];
-  setBankAccounts: (accounts: BankAccount[]) => void;
   onEdit: (account: BankAccount) => void;
   onDelete: (id: number) => void;
 }
 
 export default function BankAccounts({ 
   bankAccounts, 
-  setBankAccounts,
   onEdit,
   onDelete 
 }: BankAccountsProps) {

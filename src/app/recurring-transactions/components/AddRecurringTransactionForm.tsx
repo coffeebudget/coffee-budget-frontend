@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { RecurringTransaction, Category, Tag, BankAccount, CreditCard } from "@/utils/types";
-import { fetchCategories, fetchTags, fetchBankAccounts, fetchCreditCards } from "@/utils/api";
+import { fetchCategories, fetchTags, fetchCreditCards } from "@/utils/api";
+import { fetchBankAccounts } from "@/utils/api-client";
 import { useSession } from "next-auth/react";
 import TagSelector from '@/components/TagSelector';
 import { Input } from "@/components/ui/input";
@@ -94,7 +95,7 @@ export default function AddRecurringTransactionForm({
         const [categoriesData, tagsData, bankAccountsData, creditCardsData] = await Promise.all([
           fetchCategories(token),
           fetchTags(token),
-          fetchBankAccounts(token),
+          fetchBankAccounts(),
           fetchCreditCards(token)
         ]);
         setCategories(categoriesData);

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchBankAccounts, createBankAccount, updateBankAccount, deleteBankAccount } from "@/utils/api";
 import { useSession } from "next-auth/react";
+import { useBankAccounts } from "@/hooks/useBankAccounts";
 import BankAccountForm from "./components/BankAccountForm";
 import BankAccounts from "./components/BankAccounts";
 import { BankAccount } from "@/utils/types";
@@ -13,32 +13,33 @@ import { Loader2, WalletIcon, PlusCircle, X } from "lucide-react";
 
 export default function BankAccountsPage() {
   const { data: session } = useSession();
-  const token = session?.user?.accessToken || "";
+  const { 
+    bankAccounts, 
+    isLoading, 
+    error: apiError, 
+    fetchBankAccounts, 
+    createBankAccount, 
+    updateBankAccount, 
+    deleteBankAccount 
+  } = useBankAccounts();
 
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [activeTab, setActiveTab] = useState("list");
   const [currentAccountData, setCurrentAccountData] = useState<BankAccount | null>(null);
 
   useEffect(() => {
-    const loadBankAccounts = async () => {
-      setLoading(true);
-      try {
-        const accounts = await fetchBankAccounts(token);
-        setBankAccounts(accounts);
-      } catch (err) {
-        setError("Failed to load bank accounts");
-      }
-      setLoading(false);
-    };
-    loadBankAccounts();
-  }, [token]);
+    fetchBankAccounts();
+  }, []);
+
+  useEffect(() => {
+    if (apiError) {
+      setError(apiError);
+    }
+  }, [apiError]);
 
   const handleAddAccount = async (newAccount: BankAccount) => {
     try {
-      const account = await createBankAccount(token, newAccount);
-      setBankAccounts([...bankAccounts, account]);
+      await createBankAccount(newAccount);
       setActiveTab("list"); // Switch back to list tab after adding
     } catch (err) {
       setError("Error adding bank account");
@@ -47,8 +48,7 @@ export default function BankAccountsPage() {
 
   const handleUpdateAccount = async (updatedAccount: BankAccount) => {
     try {
-      const account = await updateBankAccount(token, updatedAccount.id!, updatedAccount);
-      setBankAccounts(bankAccounts.map(ba => ba.id === updatedAccount.id ? account : ba));
+      await updateBankAccount(updatedAccount.id!, updatedAccount);
       setCurrentAccountData(null);
       setActiveTab("list"); // Switch back to list tab after updating
     } catch (err) {
@@ -116,7 +116,7 @@ export default function BankAccountsPage() {
           </div>
           
           <TabsContent value="list" className="mt-0">
-            {loading ? (
+            {isLoading ? (
               <div className="flex items-center justify-center h-32">
                 <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
                 <span className="ml-2 text-gray-600">Loading bank accounts...</span>
@@ -124,12 +124,10 @@ export default function BankAccountsPage() {
             ) : (
               <BankAccounts 
                 bankAccounts={bankAccounts} 
-                setBankAccounts={setBankAccounts}
                 onEdit={handleEditAccount}
                 onDelete={async (id) => {
                   try {
-                    await deleteBankAccount(token, id);
-                    setBankAccounts(bankAccounts.filter(account => account.id !== id));
+                    await deleteBankAccount(id);
                   } catch (err) {
                     setError("Error deleting bank account");
                   }

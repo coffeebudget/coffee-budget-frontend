@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { fetchPendingDuplicates, resolvePendingDuplicate, fetchCategories, fetchTags, fetchBankAccounts, fetchCreditCards } from "@/utils/api";
+import { fetchPendingDuplicates, resolvePendingDuplicate, fetchCategories, fetchTags, fetchCreditCards } from "@/utils/api";
+import { fetchBankAccounts } from "@/utils/api-client";
 import { PendingDuplicate, DuplicateTransactionChoice, Category, Tag, BankAccount, CreditCard } from "@/utils/types";
 import { Loader2, AlertTriangleIcon, CheckCircle2, CreditCard as CardIcon, CalendarIcon, BanknoteIcon, TagIcon, PercentIcon, InfoIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -67,7 +68,7 @@ export default function PendingDuplicatesPage() {
       const [categoriesData, tagsData, bankAccountsData, creditCardsData] = await Promise.all([
         fetchCategories(token),
         fetchTags(token),
-        fetchBankAccounts(token),
+        fetchBankAccounts(),
         fetchCreditCards(token)
       ]);
       

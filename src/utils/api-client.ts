@@ -180,4 +180,136 @@ export async function bulkDeleteTransactions(transactionIds: number[]) {
     body: JSON.stringify({ ids: transactionIds }),
   });
   return handleResponse(response);
+}
+
+/**
+ * Enrich transactions with PayPal data
+ */
+export async function enrichTransactionsWithPayPal(csvData: string, dateRangeForMatching?: number) {
+  const payload = {
+    csvData,
+    dateRangeForMatching
+  };
+  
+  const response = await fetch('/api/transactions/paypal-enrich', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+  
+  return handleResponse(response);
+}
+
+// Bank Account API functions
+
+/**
+ * Fetch all bank accounts
+ */
+export async function fetchBankAccounts() {
+  const response = await fetch('/api/bank-accounts');
+  return handleResponse(response);
+}
+
+/**
+ * Fetch a specific bank account
+ */
+export async function fetchBankAccount(id: number) {
+  const response = await fetch(`/api/bank-accounts/${id}`);
+  return handleResponse(response);
+}
+
+/**
+ * Create a new bank account
+ */
+export async function createBankAccount(accountData: { name: string; balance: number }) {
+  const response = await fetch('/api/bank-accounts', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(accountData),
+  });
+  return handleResponse(response);
+}
+
+/**
+ * Update an existing bank account
+ */
+export async function updateBankAccount(id: number, accountData: { name?: string; balance?: number }) {
+  const response = await fetch(`/api/bank-accounts/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(accountData),
+  });
+  return handleResponse(response);
+}
+
+/**
+ * Delete a bank account
+ */
+export async function deleteBankAccount(id: number) {
+  const response = await fetch(`/api/bank-accounts/${id}`, {
+    method: 'DELETE',
+  });
+  return handleResponse(response);
+}
+
+// Credit Card API functions
+
+/**
+ * Fetch all credit cards
+ */
+export async function fetchCreditCards() {
+  const response = await fetch('/api/credit-cards');
+  return handleResponse(response);
+}
+
+/**
+ * Fetch a specific credit card
+ */
+export async function fetchCreditCard(id: number) {
+  const response = await fetch(`/api/credit-cards/${id}`);
+  return handleResponse(response);
+}
+
+/**
+ * Create a new credit card
+ */
+export async function createCreditCard(cardData: { name: string; billingDay: number; creditLimit: number; availableCredit: number; bankAccountId?: number }) {
+  const response = await fetch('/api/credit-cards', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(cardData),
+  });
+  return handleResponse(response);
+}
+
+/**
+ * Update an existing credit card
+ */
+export async function updateCreditCard(id: number, cardData: { name?: string; billingDay?: number; creditLimit?: number; availableCredit?: number; bankAccountId?: number }) {
+  const response = await fetch(`/api/credit-cards/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(cardData),
+  });
+  return handleResponse(response);
+}
+
+/**
+ * Delete a credit card
+ */
+export async function deleteCreditCard(id: number) {
+  const response = await fetch(`/api/credit-cards/${id}`, {
+    method: 'DELETE',
+  });
+  return handleResponse(response);
 } 

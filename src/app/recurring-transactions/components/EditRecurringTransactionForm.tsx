@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { adjustPattern, fetchCategories, fetchCreditCards, fetchTags } from '@/utils/api';
-import { fetchBankAccounts } from '@/utils/api-client';
+import { adjustPattern, fetchCategories, fetchTags } from '@/utils/api';
+import { fetchBankAccounts, fetchCreditCards } from '@/utils/api-client';
 import { RecurringTransaction } from '@/utils/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -64,7 +64,7 @@ export default function EditRecurringTransactionForm({ recurringTransaction, tok
           fetchCategories(token),
           fetchTags(token),
           fetchBankAccounts(),
-          fetchCreditCards(token),
+          fetchCreditCards(),
         ]);
         setCategories(cat);
         setTags(tg);

@@ -82,6 +82,7 @@ export const updateTransaction = async (token: string, id: number, transaction: 
 
 // Credit Cards
 export async function fetchCreditCards(token: string) {
+  console.log('Fetching credit cards', token);
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/credit-cards`, {
     headers: { Authorization: `Bearer ${token}` },
   });

@@ -2,12 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import {
-  importTransactions,
-} from "@/utils/api";
 import { 
   fetchBankAccounts,
-  fetchCreditCards
+  fetchCreditCards,
+  importTransactions
 } from "@/utils/api-client";
 import { BankAccount, CreditCard, Transaction, Category } from "@/utils/types";
 import { CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -300,7 +298,7 @@ export default function ImportTransactionsForm({
           }
         } else {
           // Normal import process for other formats
-          response = await importTransactions(token, payload);
+          response = await importTransactions(payload);
         
           console.log("Import API response:", response);
           

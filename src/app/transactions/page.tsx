@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchCategories, fetchTags, fetchCreditCards } from "@/utils/api";
+import { fetchCategories, fetchTags } from "@/utils/api";
 import { 
   fetchFilteredTransactions, 
   createTransaction, 
@@ -10,7 +10,8 @@ import {
   bulkCategorizeTransactions,
   bulkTagTransactions,
   bulkDeleteTransactions,
-  fetchBankAccounts
+  fetchBankAccounts,
+  fetchCreditCards
 } from "@/utils/api-client";
 import { useSession } from "next-auth/react";
 import AddTransactionForm from "@/app/transactions/components/AddTransactionForm";
@@ -73,7 +74,7 @@ export default function TransactionsPage() {
         fetchCategories(token),
         fetchTags(token),
         fetchBankAccounts(),
-        fetchCreditCards(token)
+        fetchCreditCards()
       ]);
       setTransactions(transactionsData);
       setCategories(categoriesData);

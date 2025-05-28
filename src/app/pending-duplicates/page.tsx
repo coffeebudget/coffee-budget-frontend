@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { fetchPendingDuplicates, resolvePendingDuplicate, fetchCategories, fetchTags, fetchCreditCards } from "@/utils/api";
-import { fetchBankAccounts } from "@/utils/api-client";
+import { fetchPendingDuplicates, resolvePendingDuplicate, fetchCategories, fetchTags } from "@/utils/api";
+import { fetchBankAccounts, fetchCreditCards } from "@/utils/api-client";
 import { PendingDuplicate, DuplicateTransactionChoice, Category, Tag, BankAccount, CreditCard } from "@/utils/types";
 import { Loader2, AlertTriangleIcon, CheckCircle2, CreditCard as CardIcon, CalendarIcon, BanknoteIcon, TagIcon, PercentIcon, InfoIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -69,7 +69,7 @@ export default function PendingDuplicatesPage() {
         fetchCategories(token),
         fetchTags(token),
         fetchBankAccounts(),
-        fetchCreditCards(token)
+        fetchCreditCards()
       ]);
       
       setPendingDuplicates(duplicatesData);

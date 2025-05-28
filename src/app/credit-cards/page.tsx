@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchCreditCards, createCreditCard, updateCreditCard, deleteCreditCard } from "@/utils/api";
+import { fetchCreditCards, createCreditCard, updateCreditCard, deleteCreditCard } from "@/utils/api-client";
 import { useSession } from "next-auth/react";
 import CreditCardForm from "./components/CreditCardForm";
 import CreditCards from "./components/CreditCards";
@@ -13,7 +13,6 @@ import { Loader2, CreditCardIcon, PlusCircle, X } from "lucide-react";
 
 export default function CreditCardsPage() {
   const { data: session } = useSession();
-  const token = session?.user?.accessToken || "";
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +24,7 @@ export default function CreditCardsPage() {
     const loadCreditCards = async () => {
       setLoading(true);
       try {
-        const cards = await fetchCreditCards(token);
+        const cards = await fetchCreditCards();
         setCreditCards(cards);
       } catch (err) {
         setError("Failed to load credit cards");
@@ -33,11 +32,11 @@ export default function CreditCardsPage() {
       setLoading(false);
     };
     loadCreditCards();
-  }, [token]);
+  }, []);
 
   const handleAddCard = async (newCard: CreditCard) => {
     try {
-      const card = await createCreditCard(token, newCard);
+      const card = await createCreditCard(newCard);
       setCreditCards([...creditCards, card]);
       setActiveTab("list"); // Switch back to list tab after adding
     } catch (err) {
@@ -52,7 +51,7 @@ export default function CreditCardsPage() {
     }
 
     try {
-      const card = await updateCreditCard(token, Number(updatedCard.id), updatedCard);
+      const card = await updateCreditCard(Number(updatedCard.id), updatedCard);
       setCreditCards(creditCards.map(c => c.id === updatedCard.id ? card : c));
       setCurrentCardData(null);
       setActiveTab("list"); // Switch back to list tab after updating
@@ -74,7 +73,7 @@ export default function CreditCardsPage() {
 
   const handleDeleteCard = async (id: number) => {
     try {
-      await deleteCreditCard(token, id);
+      await deleteCreditCard(id);
       setCreditCards(creditCards.filter((card) => card.id !== id));
     } catch (err) {
       setError("Error deleting credit card");

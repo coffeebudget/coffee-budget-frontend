@@ -364,6 +364,7 @@ export default function TransactionList({
                   <TableHead>Status</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Tags</TableHead>
+                  <TableHead>Account</TableHead>
                   <TableHead className="w-[100px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -442,6 +443,23 @@ export default function TransactionList({
                             <span className="text-muted-foreground text-sm">No tags</span>
                           )}
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        {transaction.bankAccount?.id ? (
+                          <span className="text-sm">
+                            {transaction.bankAccount?.name || 
+                             bankAccounts.find(b => b.id === transaction.bankAccount?.id)?.name || 
+                             'Unknown Bank'}
+                          </span>
+                        ) : transaction.creditCard?.id ? (
+                          <span className="text-sm">
+                            {transaction.creditCard?.name || 
+                             creditCards.find(c => c.id === transaction.creditCard?.id)?.name || 
+                             'Unknown Card'}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">No account</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-1">

@@ -6,18 +6,12 @@ import {
   fetchExpenseDistribution, 
   fetchMonthlySummary, 
   fetchMonthlyStatistics,
-  fetchFilteredTransactions,
-  fetchCategories,
-  fetchTags,
   fetchSavingsPlan,
   fetchCashFlowForecast
 } from "@/utils/api";
-import { Category, Tag, Transaction } from "@/utils/types";
-import TransactionFilters from "@/components/common/TransactionFilters";
 import ExpenseDistributionChart from "./components/ExpenseDistributionChart";
 import MonthlySummaryChart from "./components/MonthlySummaryChart";
 import StatisticsCards from "./components/StatisticsCards";
-import FilteredTransactionList from "./components/FilteredTransactionList";
 import CurrentBalance from './components/CurrentBalance';
 import CashFlowForecastChart from './components/CashFlowForecastChart';
 import RecurringTransactionAlert from "./components/RecurringTransactionAlert";
@@ -31,9 +25,6 @@ export default function DashboardPage() {
   const [expenseDistribution, setExpenseDistribution] = useState([]);
   const [monthlySummary, setMonthlySummary] = useState([]);
   const [statistics, setStatistics] = useState(null);
-  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [tags, setTags] = useState<Tag[]>([]);
   
   // Current month for statistics
   const [statisticsMonth, setStatisticsMonth] = useState(
@@ -47,18 +38,6 @@ export default function DashboardPage() {
   const [forecastMode, setForecastMode] = useState<'historical' | 'recurring'>('historical');
 
   const [savingsPlan, setSavingsPlan] = useState([]);
-
-  // State for filters
-  const [filters, setFilters] = useState({
-    startDate: new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0], // Jan 1 of current year
-    endDate: new Date().toISOString().split('T')[0], // Today
-    categoryIds: [] as number[],
-    tagIds: [] as number[],
-    minAmount: undefined as number | undefined,
-    maxAmount: undefined as number | undefined,
-    type: undefined as 'expense' | 'income' | undefined,
-    searchTerm: '',
-  });
   
   // Loading and error states
   const [loading, setLoading] = useState(true);
@@ -73,18 +52,14 @@ export default function DashboardPage() {
       setError(null);
       
       try {
-        // Load categories and tags for filters
-        const [categoriesData, tagsData, savingsPlanData] = await Promise.all([
-          fetchCategories(token),
-          fetchTags(token),
+        // Load dashboard data
+        const [savingsPlanData] = await Promise.all([
           fetchSavingsPlan(token),
         ]);
         
-        setCategories(categoriesData);
-        setTags(tagsData);
         setSavingsPlan(savingsPlanData);
         
-        // Load dashboard data
+        // Load initial analytics data
         await refreshDashboardData();
       } catch (err) {
         console.error(err);
@@ -150,36 +125,21 @@ export default function DashboardPage() {
   }, [token, forecastMode]);
   
   
-  // Function to refresh dashboard data based on current filters
+  // Function to refresh dashboard analytics data
   const refreshDashboardData = async () => {
     if (!token) return;
     
     try {
-      const [distributionData, transactionsData] = await Promise.all([
-        fetchExpenseDistribution(token, filters.startDate, filters.endDate),
-        fetchFilteredTransactions(token, {
-          startDate: filters.startDate,
-          endDate: filters.endDate,
-          categoryIds: filters.categoryIds.length > 0 ? filters.categoryIds : undefined,
-          tagIds: filters.tagIds.length > 0 ? filters.tagIds : undefined,
-          minAmount: filters.minAmount,
-          maxAmount: filters.maxAmount,
-          type: filters.type,
-          searchTerm: filters.searchTerm || undefined
-        })
-      ]);
+      // Load current year expense distribution
+      const startOfYear = new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0];
+      const today = new Date().toISOString().split('T')[0];
       
+      const distributionData = await fetchExpenseDistribution(token, startOfYear, today);
       setExpenseDistribution(distributionData);
-      setFilteredTransactions(transactionsData);
     } catch (err) {
       console.error(err);
       setError("Failed to refresh dashboard data");
     }
-  };
-
-  // Handle filter changes
-  const handleFilterChange = (newFilters: any) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
   };
   
   // Handle statistics month change
@@ -192,10 +152,7 @@ export default function DashboardPage() {
     setSummaryMonths(parseInt(e.target.value));
   };
 
-  // Apply filters
-  const applyFilters = () => {
-    refreshDashboardData();
-  };
+
 
   if (!session) {
     return <div className="text-center p-8">Please log in to view your dashboard</div>;
@@ -283,29 +240,9 @@ export default function DashboardPage() {
             <CashFlowForecastChart data={cashFlowForecast} />
           </div>
 
-          
-          <TransactionFilters 
-            filters={filters}
-            categories={categories}
-            tags={tags}
-            onFilterChange={handleFilterChange}
-            onApplyFilters={applyFilters}
-            title="Filter Dashboard Data"
-            variant="dashboard"
-          />
-          
           <div className="bg-white p-4 rounded-lg shadow mb-6">
-            <h2 className="text-lg font-semibold mb-4">Expense Distribution by Category</h2>
+            <h2 className="text-lg font-semibold mb-4">Expense Distribution by Category (Current Year)</h2>
             <ExpenseDistributionChart data={expenseDistribution} />
-          </div>
-          
-          <div className="bg-white p-4 rounded-lg shadow mt-6">
-            <h2 className="text-lg font-semibold mb-4">Filtered Transactions</h2>
-            <FilteredTransactionList 
-              transactions={filteredTransactions}
-              categories={categories}
-              tags={tags}
-            />
           </div>
         </>
       )}

@@ -55,21 +55,14 @@ export async function GET(
   }
 }
 
-// PATCH endpoint to update a bank account by ID
+// PATCH endpoint to update bank account (e.g., associate with GoCardless)
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const id = params.id;
-    if (!id || isNaN(Number(id))) {
-      return NextResponse.json(
-        { error: "Invalid bank account ID" },
-        { status: 400 }
-      );
-    }
-
     const session = await getServerSession(authOptions);
+
     if (!session || !session.user?.accessToken) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -78,23 +71,24 @@ export async function PATCH(
     }
 
     const token = session.user.accessToken;
-    const accountData = await request.json();
+    const accountId = params.id;
+    const body = await request.json();
     
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/bank-accounts/${id}`,
+      `${process.env.NEXT_PUBLIC_API_URL}/bank-accounts/${accountId}`,
       {
-        method: "PATCH",
+        method: 'PATCH',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(accountData),
+        body: JSON.stringify(body)
       }
     );
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error(`Failed to update bank account ${id}:`, errorData);
+      console.error("Failed to update bank account:", errorData);
       return NextResponse.json(
         { error: errorData.message || "Failed to update bank account" },
         { status: response.status }
@@ -104,7 +98,7 @@ export async function PATCH(
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error("Error in bank-accounts/[id] API route:", error);
+    console.error("Error in bank account update API route:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

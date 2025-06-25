@@ -2,16 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { fetchCategories, createCategory, deleteCategory, updateCategory, bulkCategorizeByKeyword, resetCategoriesToDefaults } from "@/utils/api";
+import { fetchCategories, createCategory, deleteCategory, updateCategory, resetCategoriesToDefaults } from "@/utils/api";
 import CategoryForm from "@/app/categories/components/CategoryForm";
 import CategoryList from "@/app/categories/components/CategoryList";
 import { Category } from "@/utils/types";
-import { Loader2, FolderIcon, PlusCircle, ListIcon, TagIcon, X, InfoIcon, RefreshCw } from "lucide-react";
-import CategorizationDashboard from "./components/CategorizationDashboard";
+import { Loader2, FolderIcon, PlusCircle, ListIcon, X, RefreshCw } from "lucide-react";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import CategoryDetail from "./components/CategoryDetail";
-import { toast } from "@/hooks/use-toast";
 import { showSuccessToast, showErrorToast } from "@/utils/toast-utils";
 
 export default function CategoriesPage() {
@@ -22,7 +20,6 @@ export default function CategoriesPage() {
   const [error, setError] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [activeTab, setActiveTab] = useState("list");
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
@@ -74,9 +71,9 @@ export default function CategoriesPage() {
       }
       setEditingCategory(null);
       setActiveTab("list"); // Switch back to list tab after adding/editing
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("API error:", err);
-      setError(err.message || "Failed to save category");
+      setError(err instanceof Error ? err.message : "Failed to save category");
     }
   };
 
@@ -112,18 +109,7 @@ export default function CategoriesPage() {
     setActiveTab("list");
   };
 
-  const handleBulkCategorize = async (keyword: string, categoryId: number) => {
-    try {
-      console.log(`Page: Bulk categorizing keyword "${keyword}" with category ID ${categoryId}`);
-      const data = await bulkCategorizeByKeyword(token, keyword, categoryId);
-      console.log("Bulk categorize response:", data);
-      return data.count;
-    } catch (err) {
-      console.error("Bulk categorize error in page component:", err);
-      setError(err instanceof Error ? err.message : "Failed to bulk categorize transactions");
-      throw err; // Re-throw to let the calling component handle it
-    }
-  };
+
 
   const handleResetToDefaults = async () => {
     if (!token) return;
@@ -174,10 +160,7 @@ export default function CategoriesPage() {
                 <PlusCircle className="h-4 w-4" />
                 {editingCategory ? "Edit Category" : "Add Category"}
               </TabsTrigger>
-              <TabsTrigger value="dashboard" className="flex items-center gap-1">
-                <TagIcon className="h-4 w-4" />
-                Categorization Dashboard
-              </TabsTrigger>
+
             </TabsList>
 
             <Button 
@@ -228,13 +211,7 @@ export default function CategoriesPage() {
               />
             </div>
           </TabsContent>
-          
-          <TabsContent value="dashboard" className="mt-0">
-            <CategorizationDashboard 
-              categories={categories}
-              onCategorize={handleBulkCategorize}
-            />
-          </TabsContent>
+
         </Tabs>
         
         {error && (

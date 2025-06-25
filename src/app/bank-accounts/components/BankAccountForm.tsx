@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Save } from "lucide-react";
+import GocardlessConnectionManager from "./GocardlessConnectionManager";
+
 
 type BankAccountFormProps = {
   onSubmit: (account: BankAccount) => void;
@@ -23,15 +25,18 @@ export default function BankAccountForm({
 }: BankAccountFormProps) {
   const [name, setName] = useState(initialData?.name || "");
   const [balance, setBalance] = useState(initialData?.balance || 0);
+  const [gocardlessAccountId, setGocardlessAccountId] = useState(initialData?.gocardlessAccountId || null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (initialData) {
       setName(initialData.name);
       setBalance(initialData.balance);
+      setGocardlessAccountId(initialData.gocardlessAccountId || null);
     } else {
       setName("");
       setBalance(0);
+      setGocardlessAccountId(null);
     }
   }, [initialData]);
 
@@ -40,7 +45,12 @@ export default function BankAccountForm({
     setLoading(true);
     
     try {
-      await onSubmit({ id: initialData?.id, name, balance });
+      await onSubmit({ 
+        id: initialData?.id, 
+        name, 
+        balance,
+        gocardlessAccountId: gocardlessAccountId || undefined
+      });
       if (!isEditMode) {
         resetForm();
       }
@@ -54,6 +64,7 @@ export default function BankAccountForm({
   const resetForm = () => {
     setName("");
     setBalance(0);
+    setGocardlessAccountId(null);
   };
 
   return (
@@ -88,6 +99,19 @@ export default function BankAccountForm({
               required
             />
           </div>
+          
+          {/* GoCardless Connection Management - Only in Edit Mode */}
+          {isEditMode && initialData?.id && (
+            <div className="border-t pt-6">
+              <GocardlessConnectionManager
+                accountId={initialData.id}
+                gocardlessAccountId={gocardlessAccountId || undefined}
+                onConnectionChange={setGocardlessAccountId}
+                disabled={loading}
+              />
+            </div>
+          )}
+
         </form>
       </CardContent>
       

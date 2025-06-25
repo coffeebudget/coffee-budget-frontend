@@ -10,6 +10,7 @@ import TransactionLearningPrompt from "./TransactionLearningPrompt";
 import BulkToolbar from "./BulkToolbar";
 import BulkCategorizeSheet from "./BulkCategorizeSheet";
 import BulkTagSheet from "./BulkTagSheet";
+import SuggestedCategoryChip from "./SuggestedCategoryChip";
 import {
   Table,
   TableBody,
@@ -414,15 +415,29 @@ export default function TransactionList({
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {(transaction.categoryId || transaction.category?.id) ? (
-                          <span className="text-sm">
-                            {transaction.category?.name || 
-                             categories.find(c => c.id === (transaction.categoryId || transaction.category?.id))?.name || 
-                             'Unknown'}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">Uncategorized</span>
-                        )}
+                        <div>
+                          {(transaction.categoryId || transaction.category?.id) ? (
+                            <span className="text-sm">
+                              {transaction.category?.name || 
+                               categories.find(c => c.id === (transaction.categoryId || transaction.category?.id))?.name || 
+                               'Unknown'}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">Uncategorized</span>
+                          )}
+                          
+                          <SuggestedCategoryChip 
+                            transaction={transaction}
+                            onAccepted={() => {
+                              // Refresh transactions list or update local state
+                              // The parent component should handle this
+                            }}
+                            onRejected={() => {
+                              // Update local state to hide the suggestion
+                              // Could also call an API to record the rejection
+                            }}
+                          />
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">

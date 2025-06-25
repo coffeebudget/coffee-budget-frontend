@@ -31,7 +31,7 @@ export async function fetchTransactions() {
 }
 
 /**
- * Fetch transactions with filters
+ * Fetch filtered transactions
  */
 export async function fetchFilteredTransactions(
   filters: {
@@ -46,6 +46,8 @@ export async function fetchFilteredTransactions(
     orderBy?: 'executionDate' | 'amount' | 'description';
     orderDirection?: 'asc' | 'desc';
     uncategorizedOnly?: boolean;
+    bankAccountIds?: number[];
+    creditCardIds?: number[];
   }
 ) {
   const response = await fetch('/api/transactions/filtered', {

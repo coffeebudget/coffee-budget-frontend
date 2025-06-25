@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Category, Tag } from "@/utils/types";
+import { Category, Tag, BankAccount, CreditCard } from "@/utils/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,10 +19,14 @@ type TransactionFiltersProps = {
     orderBy?: 'executionDate' | 'amount' | 'description';
     orderDirection?: 'asc' | 'desc';
     uncategorizedOnly?: boolean;
+    bankAccountIds?: number[];
+    creditCardIds?: number[];
   };
   categories: Category[];
   tags: Tag[];
-  onFilterChange: (filters: any) => void;
+  bankAccounts?: BankAccount[];
+  creditCards?: CreditCard[];
+  onFilterChange: (filters: Partial<TransactionFiltersProps['filters']>) => void;
   onApplyFilters: () => void;
   title?: string;
   showOrderOptions?: boolean;
@@ -34,6 +38,8 @@ export default function TransactionFilters({
   filters,
   categories,
   tags,
+  bankAccounts = [],
+  creditCards = [],
   onFilterChange,
   onApplyFilters,
   title = "Filter Transactions",
@@ -278,6 +284,46 @@ export default function TransactionFilters({
                   {tags.map((tag) => (
                     <option key={tag.id} value={tag.id}>
                       {tag.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-muted-foreground mt-1">Hold Ctrl/Cmd to select multiple</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <Label htmlFor="bankAccountIds">Bank Accounts</Label>
+                <select
+                  id="bankAccountIds"
+                  multiple
+                  name="bankAccountIds"
+                  value={(filters.bankAccountIds || []).map(String)}
+                  onChange={(e) => handleMultiSelectChange(e, 'bankAccountIds')}
+                  className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {bankAccounts.map((account) => (
+                    <option key={account.id} value={account.id}>
+                      {account.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-muted-foreground mt-1">Hold Ctrl/Cmd to select multiple</p>
+              </div>
+
+              <div>
+                <Label htmlFor="creditCardIds">Credit Cards</Label>
+                <select
+                  id="creditCardIds"
+                  multiple
+                  name="creditCardIds"
+                  value={(filters.creditCardIds || []).map(String)}
+                  onChange={(e) => handleMultiSelectChange(e, 'creditCardIds')}
+                  className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {creditCards.map((card) => (
+                    <option key={card.id} value={card.id}>
+                      {card.name}
                     </option>
                   ))}
                 </select>

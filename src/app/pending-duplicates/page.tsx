@@ -2,14 +2,35 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { fetchPendingDuplicates, resolvePendingDuplicate, fetchCategories, fetchTags } from "@/utils/api";
+import { fetchPendingDuplicates, resolvePendingDuplicate, fetchCategories, fetchTags, triggerDuplicateDetection, bulkResolvePendingDuplicates, bulkDeletePendingDuplicates } from "@/utils/api";
 import { fetchBankAccounts, fetchCreditCards } from "@/utils/api-client";
 import { PendingDuplicate, DuplicateTransactionChoice, Category, Tag, BankAccount, CreditCard } from "@/utils/types";
-import { Loader2, AlertTriangleIcon, CheckCircle2, CreditCard as CardIcon, CalendarIcon, BanknoteIcon, TagIcon, PercentIcon, InfoIcon } from "lucide-react";
+import { Loader2, AlertTriangleIcon, CheckCircle2, CreditCard as CardIcon, CalendarIcon, BanknoteIcon, TagIcon, PercentIcon, InfoIcon, SearchIcon, Trash2, Check, CheckSquare, Filter } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Checkbox } from "@/components/ui/checkbox";
+import { showSuccessToast, showErrorToast } from "@/utils/toast-utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 // Extended types to match actual API response
 interface ExtendedBankAccount extends BankAccount {
@@ -18,7 +39,7 @@ interface ExtendedBankAccount extends BankAccount {
 }
 
 interface ExtendedCreditCard extends CreditCard {
-  // Add additional fields if needed
+  extraField?: string;
 }
 
 // Represents the API response format
@@ -52,6 +73,12 @@ export default function PendingDuplicatesPage() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
+  const [detectingDuplicates, setDetectingDuplicates] = useState(false);
+  
+  // Bulk action states
+  const [selectedDuplicates, setSelectedDuplicates] = useState<Set<number>>(new Set());
+  const [bulkProcessing, setBulkProcessing] = useState(false);
+  const [similarityFilter, setSimilarityFilter] = useState<number>(0); // 0 = all, 60, 80, etc.
 
   useEffect(() => {
     if (!token) return;
@@ -90,11 +117,104 @@ export default function PendingDuplicatesPage() {
     try {
       await resolvePendingDuplicate(token, duplicateId, choice);
       await loadData();
+      // Remove from selected if it was selected
+      setSelectedDuplicates(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(duplicateId);
+        return newSet;
+      });
     } catch (err) {
       console.error(err);
       setError("Failed to resolve duplicate");
     } finally {
       setResolvingId(null);
+    }
+  };
+
+  const handleDetectDuplicates = async () => {
+    if (!token) return;
+    
+    setDetectingDuplicates(true);
+    try {
+      const result = await triggerDuplicateDetection(token);
+      
+      showSuccessToast(`Found ${result.potentialDuplicatesFound} potential duplicates, created ${result.pendingDuplicatesCreated} new pending duplicates in ${result.executionTime}`);
+      
+      // Reload the pending duplicates list
+      await loadData();
+    } catch (err) {
+      console.error("Duplicate detection failed:", err);
+      showErrorToast(err instanceof Error ? err.message : "An unexpected error occurred");
+    } finally {
+      setDetectingDuplicates(false);
+    }
+  };
+
+  // Bulk action handlers
+  const handleSelectAll = () => {
+    const filtered = getFilteredDuplicates();
+    if (selectedDuplicates.size === filtered.length) {
+      setSelectedDuplicates(new Set());
+    } else {
+      setSelectedDuplicates(new Set(filtered.map(d => d.id)));
+    }
+  };
+
+  const handleSelectDuplicate = (duplicateId: number, checked: boolean) => {
+    setSelectedDuplicates(prev => {
+      const newSet = new Set(prev);
+      if (checked) {
+        newSet.add(duplicateId);
+      } else {
+        newSet.delete(duplicateId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleBulkResolve = async (choice: DuplicateTransactionChoice) => {
+    if (selectedDuplicates.size === 0) return;
+    
+    setBulkProcessing(true);
+    try {
+      const result = await bulkResolvePendingDuplicates(token, Array.from(selectedDuplicates), choice);
+      
+      if (result.errors > 0) {
+        showErrorToast(`${result.resolved} resolved successfully, ${result.errors} failed`);
+      } else {
+        showSuccessToast(`${result.resolved} duplicates resolved successfully`);
+      }
+      
+      setSelectedDuplicates(new Set());
+      await loadData();
+    } catch (err) {
+      console.error("Bulk resolve failed:", err);
+      showErrorToast(err instanceof Error ? err.message : "Bulk operation failed");
+    } finally {
+      setBulkProcessing(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedDuplicates.size === 0) return;
+    
+    setBulkProcessing(true);
+    try {
+      const result = await bulkDeletePendingDuplicates(token, Array.from(selectedDuplicates));
+      
+      if (result.errors > 0) {
+        showErrorToast(`${result.deleted} deleted successfully, ${result.errors} failed`);
+      } else {
+        showSuccessToast(`${result.deleted} duplicates deleted successfully`);
+      }
+      
+      setSelectedDuplicates(new Set());
+      await loadData();
+    } catch (err) {
+      console.error("Bulk delete failed:", err);
+      showErrorToast(err instanceof Error ? err.message : "Bulk delete failed");
+    } finally {
+      setBulkProcessing(false);
     }
   };
 
@@ -164,6 +284,11 @@ export default function PendingDuplicatesPage() {
     let score = 0;
     let total = 0;
     
+    // Handle case where existing transaction is null
+    if (!existing || !newData) {
+      return 0; // No similarity if either is null
+    }
+    
     if (existing.description && newData.description) {
       total += 3;
       const desc1 = existing.description.toLowerCase();
@@ -176,38 +301,49 @@ export default function PendingDuplicatesPage() {
     
     if (existing.amount && newData.amount) {
       total += 2;
-      if (existing.amount === newData.amount) score += 2;
+      const amount1 = normalizeAmount(existing.amount);
+      const amount2 = normalizeAmount(newData.amount);
+      
+      if (Math.abs(amount1 - amount2) < 0.01) score += 2;
+      else if (Math.abs(amount1 - amount2) < amount1 * 0.1) score += 1;
     }
     
     if (existing.executionDate && newData.executionDate) {
       total += 1;
-      const date1 = new Date(existing.executionDate).toDateString();
-      const date2 = new Date(newData.executionDate).toDateString();
-      if (date1 === date2) score += 1;
+      const date1 = new Date(existing.executionDate).getTime();
+      const date2 = new Date(newData.executionDate).getTime();
+      const daysDiff = Math.abs(date1 - date2) / (1000 * 60 * 60 * 24);
+      
+      if (daysDiff === 0) score += 1;
+      else if (daysDiff <= 1) score += 0.7;
+      else if (daysDiff <= 7) score += 0.3;
     }
     
-    return total > 0 ? Math.round((score / total) * 100) : 50;
+    return total > 0 ? Math.round((score / total) * 100) : 0;
   };
 
   const calculateLevenshteinDistance = (a: string, b: string) => {
-    const matrix = Array(b.length + 1).fill(null).map(() => Array(a.length + 1).fill(null));
+    const matrix = [];
     
-    for (let i = 0; i <= a.length; i += 1) {
-      matrix[0][i] = i;
+    for (let i = 0; i <= b.length; i++) {
+      matrix[i] = [i];
     }
     
-    for (let j = 0; j <= b.length; j += 1) {
-      matrix[j][0] = j;
+    for (let j = 0; j <= a.length; j++) {
+      matrix[0][j] = j;
     }
     
-    for (let j = 1; j <= b.length; j += 1) {
-      for (let i = 1; i <= a.length; i += 1) {
-        const indicator = a[i - 1] === b[j - 1] ? 0 : 1;
-        matrix[j][i] = Math.min(
-          matrix[j][i - 1] + 1,
-          matrix[j - 1][i] + 1,
-          matrix[j - 1][i - 1] + indicator
-        );
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        if (b.charAt(i - 1) === a.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1
+          );
+        }
       }
     }
     
@@ -216,22 +352,40 @@ export default function PendingDuplicatesPage() {
 
   const normalizeAmount = (amount: number | string): number => {
     if (typeof amount === 'string') {
-      return parseFloat(amount);
+      return parseFloat(amount.replace(/[^-\d.]/g, ''));
     }
-    return amount;
+    return Math.abs(amount);
   };
 
   const getSourceDescription = (source: string, reference?: string) => {
     switch (source) {
-      case 'recurring':
-        return "Created from a recurring transaction pattern";
       case 'csv_import':
-        return "Imported from a CSV file";
+        return `Detected during CSV import${reference ? ` (${reference})` : ''}`;
       case 'api':
-        return "Imported via API integration";
+        return `Detected during API sync${reference ? ` (${reference})` : ''}`;
+      case 'duplicate_detection':
+        return 'Found by manual duplicate detection';
       default:
-        return reference || "Unknown source";
+        return `Source: ${source}${reference ? ` (${reference})` : ''}`;
     }
+  };
+
+  // Filter duplicates by similarity
+  const getFilteredDuplicates = () => {
+    let filtered = pendingDuplicates;
+    
+    if (similarityFilter > 0) {
+      filtered = filtered.filter(duplicate => {
+        const similarity = calculateSimilarity(duplicate.existingTransaction, duplicate.newTransactionData);
+        return similarity >= similarityFilter;
+      });
+    }
+    
+    return filtered.sort((a, b) => {
+      const similarityA = calculateSimilarity(a.existingTransaction, a.newTransactionData);
+      const similarityB = calculateSimilarity(b.existingTransaction, b.newTransactionData);
+      return similarityB - similarityA; // Sort by similarity percentage descending (highest first)
+    });
   };
 
   if (!session) {
@@ -242,15 +396,50 @@ export default function PendingDuplicatesPage() {
     );
   }
 
+  const filteredDuplicates = getFilteredDuplicates();
+  const isAllSelected = selectedDuplicates.size > 0 && selectedDuplicates.size === filteredDuplicates.length;
+  const isPartiallySelected = selectedDuplicates.size > 0 && selectedDuplicates.size < filteredDuplicates.length;
+
   return (
     <div className="min-h-screen bg-gray-100 p-4">
       <div className="max-w-7xl mx-auto mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <AlertTriangleIcon className="h-8 w-8 text-yellow-500" />
-          <h1 className="text-3xl font-bold text-gray-800">Pending Duplicates</h1>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <AlertTriangleIcon className="h-8 w-8 text-yellow-500" />
+            <h1 className="text-3xl font-bold text-gray-800">Pending Duplicates</h1>
+            {pendingDuplicates.length > 0 && (
+              <Badge variant="outline" className="ml-2 text-lg px-3 py-1">
+                {pendingDuplicates.length} {pendingDuplicates.length === 1 ? 'duplicate' : 'duplicates'}
+              </Badge>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleDetectDuplicates}
+              disabled={detectingDuplicates || loading}
+              className="flex items-center gap-2"
+            >
+              {detectingDuplicates ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Detecting...
+                </>
+              ) : (
+                <>
+                  <SearchIcon className="h-4 w-4" />
+                  Detect Duplicates
+                </>
+              )}
+            </Button>
+          </div>
         </div>
         <p className="text-gray-600 max-w-3xl">
-          Review and resolve potential duplicate transactions detected in your account.
+          Review and resolve potential duplicate transactions detected in your account. Use bulk actions to resolve multiple duplicates at once.
+          {pendingDuplicates.length > 0 && (
+            <span className="block text-sm text-gray-500 mt-1">
+              Sorted by match confidence (highest first)
+            </span>
+          )}
         </p>
       </div>
       
@@ -302,42 +491,206 @@ export default function PendingDuplicatesPage() {
           </Card>
         ) : (
           <TooltipProvider>
+            {/* Bulk Actions Header */}
+            {filteredDuplicates.length > 0 && (
+              <Card className="mb-4 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                                             <Checkbox
+                         checked={isAllSelected}
+                         ref={(el: any) => {
+                           if (el) el.indeterminate = isPartiallySelected;
+                         }}
+                         onCheckedChange={handleSelectAll}
+                       />
+                      <span className="text-sm font-medium">
+                        Select All ({selectedDuplicates.size} selected)
+                      </span>
+                    </div>
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="flex items-center gap-1">
+                          <Filter className="h-3 w-3" />
+                          Filter by Similarity
+                          {similarityFilter > 0 && (
+                            <Badge variant="secondary" className="ml-1">
+                              {similarityFilter}%+
+                            </Badge>
+                          )}
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuLabel>Minimum Similarity</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => setSimilarityFilter(0)}>
+                          All Duplicates
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setSimilarityFilter(60)}>
+                          60%+ (Good matches)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setSimilarityFilter(80)}>
+                          80%+ (High confidence)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setSimilarityFilter(90)}>
+                          90%+ (Very likely duplicates)
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                  
+                  {selectedDuplicates.size > 0 && (
+                    <div className="flex items-center gap-2">
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="border-green-500 text-green-700 hover:bg-green-50"
+                            disabled={bulkProcessing}
+                          >
+                            <CheckCircle2 className="h-4 w-4 mr-1" />
+                            Keep Existing ({selectedDuplicates.size})
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Keep Existing Transactions?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will keep the existing transactions and discard the new ones for {selectedDuplicates.size} selected duplicates. This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleBulkResolve(DuplicateTransactionChoice.KEEP_EXISTING)}>
+                              Keep Existing
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="border-blue-500 text-blue-700 hover:bg-blue-50"
+                            disabled={bulkProcessing}
+                          >
+                            <Check className="h-4 w-4 mr-1" />
+                            Use New ({selectedDuplicates.size})
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Use New Transactions?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will keep the new transactions and remove the existing ones for {selectedDuplicates.size} selected duplicates. This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleBulkResolve(DuplicateTransactionChoice.USE_NEW)}>
+                              Use New
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+
+                      <Button 
+                        onClick={() => handleBulkResolve(DuplicateTransactionChoice.MAINTAIN_BOTH)}
+                        variant="outline" 
+                        size="sm" 
+                        className="border-yellow-500 text-yellow-700 hover:bg-yellow-50"
+                        disabled={bulkProcessing}
+                      >
+                        <CheckSquare className="h-4 w-4 mr-1" />
+                        Keep Both ({selectedDuplicates.size})
+                      </Button>
+
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="border-red-500 text-red-700 hover:bg-red-50"
+                            disabled={bulkProcessing}
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Delete ({selectedDuplicates.size})
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Pending Duplicates?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will delete the {selectedDuplicates.size} selected pending duplicates without resolving them. The original transactions will remain unchanged. This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleBulkDelete} className="bg-red-600 hover:bg-red-700">
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+
+                      {bulkProcessing && (
+                        <div className="flex items-center text-gray-500">
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Processing...
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </Card>
+            )}
+
             <div className="space-y-4">
-              {pendingDuplicates.map((duplicate) => {
+              {filteredDuplicates.map((duplicate) => {
                 const similarity = calculateSimilarity(duplicate.existingTransaction, duplicate.newTransactionData);
-                const existingTagNames = getTagNames(duplicate.existingTransaction.tagIds);
+                const existingTagNames = duplicate.existingTransaction ? getTagNames(duplicate.existingTransaction.tagIds) : [];
                 const newTagNames = getTagNames(duplicate.newTransactionData.tagIds);
                 
                 // Get bank account and credit card info
-                const existingBankAccount = getBankAccountInfo(
+                const existingBankAccount = duplicate.existingTransaction ? getBankAccountInfo(
                   duplicate.existingTransaction.bankAccountId || 
                   (duplicate.existingTransaction as any).bankAccount
-                );
+                ) : null;
                 const newBankAccount = getBankAccountInfo(
                   duplicate.newTransactionData.bankAccountId || 
                   duplicate.newTransactionData.bankAccount
                 );
-                const existingCreditCard = getCreditCardInfo(
+                const existingCreditCard = duplicate.existingTransaction ? getCreditCardInfo(
                   duplicate.existingTransaction.creditCardId || 
                   (duplicate.existingTransaction as any).creditCard
-                );
+                ) : null;
                 const newCreditCard = getCreditCardInfo(
                   duplicate.newTransactionData.creditCardId || 
                   duplicate.newTransactionData.creditCard
                 );
                 
                 // Get category info
-                const existingCategory = (duplicate.existingTransaction as any).category || duplicate.existingTransaction.categoryId;
+                const existingCategory = duplicate.existingTransaction ? ((duplicate.existingTransaction as any).category || duplicate.existingTransaction.categoryId) : null;
                 const newCategory = duplicate.newTransactionData.category || duplicate.newTransactionData.categoryId;
                 
                 // Normalize amounts
-                const existingAmount = normalizeAmount(duplicate.existingTransaction.amount);
+                const existingAmount = duplicate.existingTransaction ? normalizeAmount(duplicate.existingTransaction.amount) : 0;
                 const newAmount = normalizeAmount(duplicate.newTransactionData.amount);
                 
+                const isSelected = selectedDuplicates.has(duplicate.id);
+                
                 return (
-                  <Card key={duplicate.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                  <Card key={duplicate.id} className={`overflow-hidden hover:shadow-md transition-shadow ${isSelected ? 'ring-2 ring-blue-500' : ''}`}>
                     <div className="p-4 border-b bg-gray-50 flex justify-between items-center">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-3">
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={(checked) => handleSelectDuplicate(duplicate.id, checked as boolean)}
+                        />
                         <h3 className="font-medium text-gray-800">Potential Duplicate</h3>
                         <Badge variant={similarity > 80 ? "destructive" : similarity > 60 ? "outline" : "outline"} className="ml-2">
                           {similarity}% Match
@@ -362,30 +715,35 @@ export default function PendingDuplicatesPage() {
                       <CardContent className="border-b md:border-b-0 md:border-r border-gray-200 p-4">
                         <div className="flex justify-between items-center mb-3">
                           <h3 className="font-medium text-gray-800">Existing Transaction</h3>
-                          <Badge variant={duplicate.existingTransaction.status === "executed" ? "secondary" : "outline"}>
-                            {duplicate.existingTransaction.status || "executed"}
-                          </Badge>
+                          {duplicate.existingTransaction ? (
+                            <Badge variant={duplicate.existingTransaction.status === "executed" ? "secondary" : "outline"}>
+                              {duplicate.existingTransaction.status || "executed"}
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline">Not Found</Badge>
+                          )}
                         </div>
                         
-                        <div className="space-y-3">
-                          <div>
-                            <p className="font-medium">{duplicate.existingTransaction.description}</p>
-                            <p className={`text-lg font-bold ${duplicate.existingTransaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                              {duplicate.existingTransaction.type === 'income' ? '+' : ''}{formatAmount(existingAmount)}
-                            </p>
-                          </div>
-                          
-                          <div className="grid grid-cols-2 gap-2 text-sm">
-                            <div className="flex items-center gap-1 text-gray-600">
-                              <CalendarIcon className="h-3.5 w-3.5" />
-                              <span>{formatDate(duplicate.existingTransaction.executionDate)}</span>
+                        {duplicate.existingTransaction ? (
+                          <div className="space-y-3">
+                            <div>
+                              <p className="font-medium">{duplicate.existingTransaction.description}</p>
+                              <p className={`text-lg font-bold ${duplicate.existingTransaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                                {duplicate.existingTransaction.type === 'income' ? '+' : ''}{formatAmount(existingAmount)}
+                              </p>
                             </div>
                             
-                            <div className="flex items-center gap-1 text-gray-600">
-                              <span className="px-1.5 py-0.5 bg-gray-100 rounded text-xs">
-                                {getCategoryName(existingCategory)}
-                              </span>
-                            </div>
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              <div className="flex items-center gap-1 text-gray-600">
+                                <CalendarIcon className="h-3.5 w-3.5" />
+                                <span>{formatDate(duplicate.existingTransaction.executionDate)}</span>
+                              </div>
+                              
+                              <div className="flex items-center gap-1 text-gray-600">
+                                <span className="px-1.5 py-0.5 bg-gray-100 rounded text-xs">
+                                  {getCategoryName(existingCategory)}
+                                </span>
+                              </div>
                             
                             {existingBankAccount && (
                               <div className="flex items-center gap-1 text-gray-600 col-span-2">
@@ -430,6 +788,14 @@ export default function PendingDuplicatesPage() {
                             )}
                           </div>
                         </div>
+                        ) : (
+                          <div className="space-y-3">
+                            <div className="text-center py-8">
+                              <p className="text-gray-500">Original transaction no longer exists</p>
+                              <p className="text-sm text-gray-400 mt-2">The referenced transaction may have been deleted</p>
+                            </div>
+                          </div>
+                        )}
                       </CardContent>
                       
                       <CardContent className="p-4">
@@ -540,31 +906,22 @@ export default function PendingDuplicatesPage() {
                           ) : (
                             <>
                               <Button
-                                onClick={() => handleResolveDuplicate(duplicate.id, DuplicateTransactionChoice.MERGE)}
+                                onClick={() => handleResolveDuplicate(duplicate.id, DuplicateTransactionChoice.USE_NEW)}
                                 variant="default"
                                 size="sm"
                                 disabled={loading}
                               >
                                 <CheckCircle2 className="h-4 w-4 mr-1" />
-                                Merge
+                                Use New
                               </Button>
                               <Button
-                                onClick={() => handleResolveDuplicate(duplicate.id, DuplicateTransactionChoice.REPLACE)}
-                                variant="outline"
-                                size="sm"
-                                className="border-amber-500 text-amber-700 hover:bg-amber-50"
-                                disabled={loading}
-                              >
-                                Replace
-                              </Button>
-                              <Button
-                                onClick={() => handleResolveDuplicate(duplicate.id, DuplicateTransactionChoice.IGNORE)}
+                                onClick={() => handleResolveDuplicate(duplicate.id, DuplicateTransactionChoice.KEEP_EXISTING)}
                                 variant="outline"
                                 size="sm"
                                 className="border-red-500 text-red-700 hover:bg-red-50"
                                 disabled={loading}
                               >
-                                Ignore
+                                Keep Existing
                               </Button>
                               <Button
                                 onClick={() => handleResolveDuplicate(duplicate.id, DuplicateTransactionChoice.MAINTAIN_BOTH)}

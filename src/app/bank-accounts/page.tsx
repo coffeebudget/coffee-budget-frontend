@@ -5,11 +5,13 @@ import { useSession } from "next-auth/react";
 import { useBankAccounts } from "@/hooks/useBankAccounts";
 import BankAccountForm from "./components/BankAccountForm";
 import BankAccounts from "./components/BankAccounts";
+import GocardlessIntegrationDialog from "./components/GocardlessIntegrationDialog";
 import { BankAccount } from "@/utils/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, WalletIcon, PlusCircle, X } from "lucide-react";
+import { Loader2, WalletIcon, PlusCircle, X, Link, RefreshCw, Download } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 export default function BankAccountsPage() {
   const { data: session } = useSession();
@@ -26,6 +28,10 @@ export default function BankAccountsPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("list");
   const [currentAccountData, setCurrentAccountData] = useState<BankAccount | null>(null);
+  const [showGocardlessDialog, setShowGocardlessDialog] = useState(false);
+  const [syncingBalances, setSyncingBalances] = useState(false);
+
+  const [importingTransactions, setImportingTransactions] = useState(false);
 
   useEffect(() => {
     fetchBankAccounts();
@@ -41,7 +47,7 @@ export default function BankAccountsPage() {
     try {
       await createBankAccount(newAccount);
       setActiveTab("list"); // Switch back to list tab after adding
-    } catch (err) {
+    } catch {
       setError("Error adding bank account");
     }
   };
@@ -51,7 +57,7 @@ export default function BankAccountsPage() {
       await updateBankAccount(updatedAccount.id!, updatedAccount);
       setCurrentAccountData(null);
       setActiveTab("list"); // Switch back to list tab after updating
-    } catch (err) {
+    } catch {
       setError("Error updating bank account");
     }
   };
@@ -64,6 +70,112 @@ export default function BankAccountsPage() {
   const handleCancelEdit = () => {
     setCurrentAccountData(null);
     setActiveTab("list");
+  };
+
+  const handleSyncBalances = async () => {
+    setSyncingBalances(true);
+    try {
+      const response = await fetch('/api/gocardless/sync-balances', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to sync balances');
+      }
+
+      const data = await response.json();
+      
+      toast.success(
+        `Synchronized ${data.summary.successfulSyncs} of ${data.summary.totalAccounts} account balances`
+      );
+      
+      // Refresh the bank accounts list
+      await fetchBankAccounts();
+    } catch (error) {
+      console.error('Error syncing balances:', error);
+      toast.error('Failed to synchronize balances');
+    } finally {
+      setSyncingBalances(false);
+    }
+  };
+
+
+
+  const handleImportTransactions = async () => {
+    setImportingTransactions(true);
+    try {
+      const response = await fetch('/api/gocardless/import/all', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          toast.error('No GoCardless accounts connected!\n\nPlease connect your bank accounts first using the "GoCardless Integration" button.');
+          return;
+        }
+        throw new Error('Failed to import transactions');
+      }
+
+      const data = await response.json();
+      
+      // Display comprehensive import results
+      const { summary } = data;
+      
+      if (summary.totalNewTransactions > 0) {
+        toast.success(
+          `🎉 GoCardless Import Completed!\n\n` +
+          `📊 ${summary.totalAccounts} accounts processed\n` +
+          `✅ ${summary.successfulImports} successful imports\n` +
+          `📈 ${summary.totalNewTransactions} new transactions imported\n` +
+          `🔄 ${summary.totalDuplicates} duplicates skipped\n` +
+          `💰 ${summary.balancesSynchronized} balances synchronized`,
+          { 
+            duration: 8000,
+            style: {
+              maxWidth: '500px',
+            }
+          }
+        );
+      } else if (summary.totalDuplicates > 0) {
+        toast('ℹ️ Import completed - no new transactions found\n\n' +
+          `🔄 ${summary.totalDuplicates} transactions were already imported\n` +
+          `💰 ${summary.balancesSynchronized} balances synchronized`,
+          { 
+            duration: 6000,
+            icon: '📋',
+          }
+        );
+      } else {
+        toast('📭 No transactions found\n\nAll connected accounts are up to date!', {
+          duration: 4000,
+          icon: '✨',
+        });
+      }
+
+      // Show any failed imports as warnings
+      if (summary.failedImports > 0) {
+        toast.error(
+          `⚠️ Some imports failed\n\n` +
+          `❌ ${summary.failedImports} out of ${summary.totalAccounts} accounts failed\n` +
+          `✅ ${summary.successfulImports} accounts imported successfully`,
+          { duration: 6000 }
+        );
+      }
+      
+      // Refresh the bank accounts list to show updated balances
+      await fetchBankAccounts();
+    } catch (error) {
+      console.error('Error importing transactions:', error);
+      toast.error('Failed to import transactions from GoCardless');
+    } finally {
+      setImportingTransactions(false);
+    }
   };
 
   if (!session) {
@@ -102,17 +214,65 @@ export default function BankAccountsPage() {
               </TabsTrigger>
             </TabsList>
             
-            {currentAccountData && (
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* GoCardless Operations */}
+              <div className="flex items-center gap-1 border-r pr-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleSyncBalances}
+                  disabled={syncingBalances}
+                  className="flex items-center gap-1"
+                >
+                  {syncingBalances ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4" />
+                  )}
+                  Sync Balances
+                </Button>
+
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleImportTransactions}
+                  disabled={importingTransactions}
+                  className="flex items-center gap-1"
+                >
+                  {importingTransactions ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
+                  Import Transactions
+                </Button>
+              </div>
+
+
+              
+              {/* Integration Setup */}
               <Button 
-                variant="outline" 
+                variant="default" 
                 size="sm" 
-                onClick={handleCancelEdit}
+                onClick={() => setShowGocardlessDialog(true)}
                 className="flex items-center gap-1"
               >
-                <X className="h-4 w-4" />
-                Cancel Edit
+                <Link className="h-4 w-4" />
+                GoCardless Integration
               </Button>
-            )}
+              
+              {currentAccountData && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleCancelEdit}
+                  className="flex items-center gap-1"
+                >
+                  <X className="h-4 w-4" />
+                  Cancel Edit
+                </Button>
+              )}
+            </div>
           </div>
           
           <TabsContent value="list" className="mt-0">
@@ -128,10 +288,11 @@ export default function BankAccountsPage() {
                 onDelete={async (id) => {
                   try {
                     await deleteBankAccount(id);
-                  } catch (err) {
+                  } catch {
                     setError("Error deleting bank account");
                   }
                 }}
+                onAccountUpdated={fetchBankAccounts}
               />
             )}
           </TabsContent>
@@ -153,6 +314,14 @@ export default function BankAccountsPage() {
             {error}
           </div>
         )}
+        
+        {/* GoCardless Integration Dialog */}
+        <GocardlessIntegrationDialog 
+          open={showGocardlessDialog}
+          onOpenChange={setShowGocardlessDialog}
+          bankAccounts={bankAccounts}
+          onAccountsUpdated={fetchBankAccounts}
+        />
       </div>
     </div>
   );

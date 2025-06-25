@@ -28,6 +28,8 @@ export async function POST(request: Request) {
     if (filters.orderBy) params.append('orderBy', filters.orderBy);
     if (filters.orderDirection) params.append('orderDirection', filters.orderDirection);
     if (filters.uncategorizedOnly) params.append('uncategorizedOnly', 'true');
+    if (filters.bankAccountIds?.length) params.append('bankAccountIds', filters.bankAccountIds.join(','));
+    if (filters.creditCardIds?.length) params.append('creditCardIds', filters.creditCardIds.join(','));
     
     console.log(`Making filtered API request with params: ${params.toString()}`);
     

@@ -383,18 +383,99 @@ export async function resolvePendingDuplicate(
   recurringTransactionId?: number
 ) {
   const url = `${process.env.NEXT_PUBLIC_API_URL}/pending-duplicates/${duplicateId}/resolve`;
+  
+  const body: any = { choice };
+  if (recurringTransactionId) {
+    body.recurringTransactionId = recurringTransactionId;
+  }
+
   const res = await fetch(url, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ 
-      choice,
-      recurringTransactionId 
-    }),
+    body: JSON.stringify(body),
   });
-  return handleResponse(res);
+
+  if (!res.ok) {
+    throw new Error("Failed to resolve pending duplicate");
+  }
+
+  return res.json();
+}
+
+export async function triggerDuplicateDetection(token: string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pending-duplicates/detect-duplicates`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || `Failed to trigger duplicate detection: ${res.statusText}`);
+  }
+
+  return res.json();
+}
+
+export async function getDuplicateDetectionStatus(token: string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pending-duplicates/detect-duplicates/status`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to get duplicate detection status: ${res.statusText}`);
+  }
+
+  return res.json();
+}
+
+export async function bulkResolvePendingDuplicates(
+  token: string,
+  duplicateIds: number[],
+  choice: DuplicateTransactionChoice
+) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pending-duplicates/bulk-resolve`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ duplicateIds, choice }),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to bulk resolve pending duplicates");
+  }
+
+  return res.json();
+}
+
+export async function bulkDeletePendingDuplicates(
+  token: string,
+  duplicateIds: number[]
+) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pending-duplicates/bulk-delete`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ duplicateIds }),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to bulk delete pending duplicates");
+  }
+
+  return res.json();
 }
 
 export async function importTransactions(
@@ -491,6 +572,8 @@ export async function fetchFilteredTransactions(
     orderBy?: 'executionDate' | 'amount' | 'description';
     orderDirection?: 'asc' | 'desc';
     uncategorizedOnly?: boolean;
+    bankAccountIds?: number[];
+    creditCardIds?: number[];
   }
 ) {
   const params = new URLSearchParams();
@@ -506,6 +589,8 @@ export async function fetchFilteredTransactions(
   if (filters.orderBy) params.append('orderBy', filters.orderBy);
   if (filters.orderDirection) params.append('orderDirection', filters.orderDirection);
   if (filters.uncategorizedOnly) params.append('uncategorizedOnly', 'true');
+  if (filters.bankAccountIds?.length) params.append('bankAccountIds', filters.bankAccountIds.join(','));
+  if (filters.creditCardIds?.length) params.append('creditCardIds', filters.creditCardIds.join(','));
 
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/dashboard/transactions?${params.toString()}`,
@@ -834,6 +919,61 @@ export async function suggestCategoryForDescription(token: string, description: 
   return res.json();
 }
 
+export async function acceptSuggestedCategory(token: string, transactionId: number) {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/transactions/${transactionId}/accept-suggested-category`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to accept suggested category');
+  }
+
+  return response.json();
+}
+
+export async function rejectSuggestedCategory(token: string, transactionId: number) {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/transactions/${transactionId}/reject-suggested-category`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to reject suggested category');
+  }
+
+  return response.json();
+}
+
+export async function getAISuggestion(token: string, description: string, amount: number, type: 'income' | 'expense') {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/ai-suggest`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ description, amount, type }),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to get AI suggestion");
+  }
+
+  return res.json();
+}
+
 export async function resetCategoriesToDefaults(token: string) {
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/reset-to-defaults`, {
     method: 'POST',
@@ -898,6 +1038,25 @@ export async function bulkUncategorize(token: string, transactionIds: number[]) 
   });
   
   return handleResponse(response);
+}
+
+export async function bulkAiCategorize(token: string) {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/transactions/bulk-ai-categorize`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to run bulk AI categorization');
+  }
+
+  return response.json();
 }
 
   

@@ -9,7 +9,11 @@ import { Toaster } from "@/components/ui/toaster";
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body>
+      <body 
+        data-new-gr-c-s-check-loaded="" 
+        data-gr-ext-installed=""
+        suppressHydrationWarning={true}
+      >
         <div className="relative z-0">
           <SessionProvider>
             <Menu />

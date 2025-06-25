@@ -11,6 +11,7 @@ export type BankAccount = {
   id?: number; // Make id optional
   name: string;
   balance: number;
+  gocardlessAccountId?: string; // Add GoCardless account ID for integration
 };
 
 export type Transaction = {
@@ -27,6 +28,7 @@ export type Transaction = {
   nextOccurrence?: string;
   executionDate: string;
   source?: string;
+  suggestedCategoryName?: string; // AI suggested category name
     // These are for display purposes only  
   category?: Category;
   tags?: Tag[];
@@ -100,10 +102,9 @@ export type PendingDuplicate = {
 
 // Define the enum for duplicate transaction choices
 export enum DuplicateTransactionChoice {
-  MERGE = 'merge',
-  IGNORE = 'ignore',
-  REPLACE = 'replace',
-  MAINTAIN_BOTH = 'maintain both'
+  MAINTAIN_BOTH = 'maintain both',
+  KEEP_EXISTING = 'keep existing',
+  USE_NEW = 'use new',
 }
 
 export type UnconfirmedPattern = {

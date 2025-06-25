@@ -13,13 +13,14 @@ import {
   fetchBankAccounts,
   fetchCreditCards
 } from "@/utils/api-client";
+import { bulkAiCategorize } from "@/utils/api";
 import { useSession } from "next-auth/react";
 import AddTransactionForm from "@/app/transactions/components/AddTransactionForm";
 import TransactionList from "@/app/transactions/components/TransactionList";
 import TransactionFilters from "@/components/common/TransactionFilters";
 import { Transaction, Category, Tag, BankAccount, CreditCard } from "@/utils/types";
 import ImportTransactionsForm from "@/app/transactions/components/ImportTransactionsForm";
-import { Loader2, ReceiptIcon, PlusCircle, Upload, X } from "lucide-react";
+import { Loader2, ReceiptIcon, PlusCircle, Upload, X, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -29,10 +30,6 @@ import ImportSummary from "@/app/transactions/components/ImportSummary";
 export default function TransactionsPage() {
   const { data: session } = useSession();
   const token = session?.user?.accessToken || "";
-
-  // Get date for 30 days ago
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
@@ -48,10 +45,13 @@ export default function TransactionsPage() {
   const [showImportSummary, setShowImportSummary] = useState(false);
   const [importedCount, setImportedCount] = useState(0);
   
-  // Filters state
+  // Bulk AI categorization state
+  const [bulkAiProcessing, setBulkAiProcessing] = useState(false);
+  
+  // Filters state - Initialize with empty dates to avoid hydration issues
   const [filters, setFilters] = useState({
-    startDate: thirtyDaysAgo.toISOString().split('T')[0], // 30 days ago
-    endDate: new Date().toISOString().split('T')[0], // Today
+    startDate: '', // Will be set in useEffect
+    endDate: '', // Will be set in useEffect
     categoryIds: [] as number[],
     tagIds: [] as number[],
     minAmount: undefined as number | undefined,
@@ -61,7 +61,22 @@ export default function TransactionsPage() {
     orderBy: 'executionDate' as 'executionDate' | 'amount' | 'description',
     orderDirection: 'desc' as 'asc' | 'desc',
     uncategorizedOnly: false,
+    bankAccountIds: [] as number[],
+    creditCardIds: [] as number[],
   });
+
+  // Initialize dates after component mounts to avoid hydration issues
+  useEffect(() => {
+    const today = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+    
+    setFilters(prev => ({
+      ...prev,
+      startDate: thirtyDaysAgo.toISOString().split('T')[0],
+      endDate: today.toISOString().split('T')[0],
+    }));
+  }, []);
 
   const loadData = async () => {
     if (!token) return;
@@ -90,8 +105,10 @@ export default function TransactionsPage() {
   };
 
   useEffect(() => {
-    loadData();
-  }, [token]);
+    if (token && filters.startDate && filters.endDate) {
+      loadData();
+    }
+  }, [token, filters.startDate, filters.endDate]);
 
   const handleFilterChange = (newFilters: any) => {
     setFilters(prev => ({ ...prev, ...newFilters }));
@@ -239,6 +256,34 @@ export default function TransactionsPage() {
     }
   };
 
+  const handleBulkAiCategorize = async () => {
+    if (!token) return;
+    
+    setBulkAiProcessing(true);
+    try {
+      const result = await bulkAiCategorize(token);
+      
+      // Refresh the transactions to show the new suggestions
+      await loadData();
+      
+      showSuccessToast(
+        `🎉 Bulk AI Categorization Complete!\n\n` +
+        `📊 ${result.totalProcessed} transactions processed\n` +
+        `✅ ${result.keywordMatched} matched by keywords (FREE)\n` +
+        `🤖 ${result.aiSuggestions} AI suggestions created\n` +
+        `❌ ${result.errors} errors\n` +
+        `💰 Estimated cost: $${result.estimatedCost.toFixed(3)}`
+      );
+    } catch (err) {
+      console.error(err);
+      const errorMessage = err instanceof Error ? err.message : "Failed to run bulk AI categorization";
+      setError(errorMessage);
+      showErrorToast(errorMessage);
+    } finally {
+      setBulkAiProcessing(false);
+    }
+  };
+
   if (!session) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
@@ -309,10 +354,31 @@ export default function TransactionsPage() {
               filters={filters}
               categories={categories}
               tags={tags}
+              bankAccounts={bankAccounts}
+              creditCards={creditCards}
               onFilterChange={handleFilterChange}
               onApplyFilters={applyFilters}
               showOrderOptions={true}
             />
+            
+            {/* Bulk AI Categorization */}
+            <div className="mb-4">
+              <Button
+                onClick={handleBulkAiCategorize}
+                disabled={bulkAiProcessing}
+                className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+              >
+                {bulkAiProcessing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Brain className="h-4 w-4" />
+                )}
+                {bulkAiProcessing ? 'Processing...' : 'AI Categorize All Uncategorized'}
+              </Button>
+              <p className="text-sm text-gray-600 mt-1">
+                Smart categorization: tries keywords first (free), then AI for remaining transactions. ~$1-2 for 600 transactions.
+              </p>
+            </div>
             
             {loading ? (
               <div className="flex items-center justify-center h-32">

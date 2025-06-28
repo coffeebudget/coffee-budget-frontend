@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Save, Calendar } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect, SearchableSelectOption } from "@/components/ui/searchable-select";
 import { Checkbox } from "@/components/ui/checkbox";
 
 type AddRecurringTransactionFormProps = {
@@ -166,6 +167,13 @@ export default function AddRecurringTransactionForm({
     setApplyToPast(false);
   };
 
+  // Convert categories to SearchableSelectOption format
+  const categoryOptions: SearchableSelectOption[] = categories.map(cat => ({
+    id: cat.id,
+    label: cat.name,
+    keywords: cat.keywords || [],
+  }));
+
   return (
     <>
       <CardHeader>
@@ -248,23 +256,16 @@ export default function AddRecurringTransactionForm({
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="categoryId">Category</Label>
-              <Select 
-                value={categoryId?.toString() || 'none'} 
-                onValueChange={(value) => setCategoryId(value === 'none' ? null : parseInt(value))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id?.toString() || `category-${category.name}`}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                options={categoryOptions}
+                value={categoryId}
+                onChange={(value) => setCategoryId(typeof value === 'string' ? parseInt(value) : value)}
+                placeholder="Select category"
+                label="Category"
+                searchPlaceholder="Search categories..."
+                emptyMessage="No categories found"
+                allowClear={true}
+              />
             </div>
             
             <div className="space-y-2 col-span-2">

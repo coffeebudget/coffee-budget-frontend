@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, CheckCircle, AlertCircle, Tag } from "lucide-react";
 import { Transaction, Category } from "@/utils/types";
-import { fetchUncategorizedTransactions, suggestCategoryForDescription, updateTransaction } from "@/utils/api";
+import { fetchUncategorizedTransactions, updateTransaction } from "@/utils/api";
 
 interface ImportSummaryProps {
   importedCount: number;
@@ -29,7 +29,6 @@ export default function ImportSummary({
   const [uncategorizedTransactions, setUncategorizedTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [suggestions, setSuggestions] = useState<Record<number, Category | null>>({});
   const [categorizing, setCategorizing] = useState<number | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -42,25 +41,6 @@ export default function ImportSummary({
       try {
         const transactions = await fetchUncategorizedTransactions(token);
         setUncategorizedTransactions(transactions);
-        
-        // Generate suggestions for each transaction
-        const suggestionPromises = transactions.map(async (transaction: Transaction) => {
-          try {
-            const { category } = await suggestCategoryForDescription(token, transaction.description);
-            return { id: transaction.id, category };
-          } catch (err) {
-            console.error(`Failed to get suggestion for transaction ${transaction.id}`, err);
-            return { id: transaction.id, category: null };
-          }
-        });
-        
-        const suggestionResults = await Promise.all(suggestionPromises);
-        const suggestionMap = suggestionResults.reduce((acc, { id, category }) => {
-          acc[id] = category;
-          return acc;
-        }, {} as Record<number, Category | null>);
-        
-        setSuggestions(suggestionMap);
       } catch (err) {
         console.error(err);
         setError("Failed to load uncategorized transactions");
@@ -156,7 +136,6 @@ export default function ImportSummary({
                           <th className="px-4 py-2 text-xs font-medium text-gray-500 uppercase">Date</th>
                           <th className="px-4 py-2 text-xs font-medium text-gray-500 uppercase">Description</th>
                           <th className="px-4 py-2 text-xs font-medium text-gray-500 uppercase">Amount</th>
-                          <th className="px-4 py-2 text-xs font-medium text-gray-500 uppercase">Suggested Category</th>
                           <th className="px-4 py-2 text-xs font-medium text-gray-500 uppercase">Actions</th>
                         </tr>
                       </thead>
@@ -172,55 +151,32 @@ export default function ImportSummary({
                               ${parseFloat(transaction.amount.toString()).toFixed(2)}
                             </td>
                             <td className="px-4 py-2 text-sm">
-                              {transaction.id && suggestions[transaction.id] ? (
-                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                                  {suggestions[transaction.id]?.name}
-                                </Badge>
-                              ) : (
-                                <span className="text-gray-400 italic">No suggestion</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-2 text-sm">
-                              <div className="flex flex-wrap gap-1">
-                                {transaction.id && suggestions[transaction.id] ? (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-7 text-xs"
-                                    onClick={() => handleCategorize(transaction.id!, suggestions[transaction.id!]!.id)}
-                                    disabled={categorizing === transaction.id}
-                                  >
-                                    {categorizing === transaction.id ? (
-                                      <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                                    ) : (
-                                      <Tag className="h-3 w-3 mr-1" />
-                                    )}
-                                    Use suggestion
-                                  </Button>
-                                ) : null}
-                                <div className="relative group">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-7 text-xs"
-                                  >
-                                    Choose category
-                                  </Button>
-                                  <div className="absolute z-10 left-0 mt-1 w-48 bg-white shadow-lg rounded-md border border-gray-200 hidden group-hover:block">
-                                    <div className="p-2 max-h-48 overflow-y-auto">
-                                      {categories.map(category => (
-                                        <Button
-                                          key={category.id}
-                                          variant="ghost"
-                                          size="sm"
-                                          className="w-full justify-start text-xs"
-                                          onClick={() => handleCategorize(transaction.id!, category.id)}
-                                          disabled={categorizing === transaction.id}
-                                        >
-                                          {category.name}
-                                        </Button>
-                                      ))}
-                                    </div>
+                              <div className="relative group">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 text-xs"
+                                  disabled={categorizing === transaction.id}
+                                >
+                                  {categorizing === transaction.id ? (
+                                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                  ) : null}
+                                  Choose category
+                                </Button>
+                                <div className="absolute z-10 left-0 mt-1 w-48 bg-white shadow-lg rounded-md border border-gray-200 hidden group-hover:block">
+                                  <div className="p-2 max-h-48 overflow-y-auto">
+                                    {categories.map(category => (
+                                      <Button
+                                        key={category.id}
+                                        variant="ghost"
+                                        size="sm"
+                                        className="w-full justify-start text-xs"
+                                        onClick={() => handleCategorize(transaction.id!, category.id)}
+                                        disabled={categorizing === transaction.id}
+                                      >
+                                        {category.name}
+                                      </Button>
+                                    ))}
                                   </div>
                                 </div>
                               </div>

@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
+import { SearchableSelect, SearchableSelectOption } from '@/components/ui/searchable-select';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from "@/components/ui/switch";
 import TagSelector from '@/components/TagSelector';
@@ -95,6 +96,13 @@ export default function EditRecurringTransactionForm({ recurringTransaction, tok
       setLoading(false);
     }
   };
+
+  // Convert categories to SearchableSelectOption format
+  const categoryOptions: SearchableSelectOption[] = categories.map(cat => ({
+    id: cat.id,
+    label: cat.name,
+    keywords: cat.keywords || [],
+  }));
 
   return (
     <Card>
@@ -253,22 +261,19 @@ export default function EditRecurringTransactionForm({ recurringTransaction, tok
 
 
         <div className="space-y-2">
-          <Label htmlFor="categoryId">Category</Label>
-          <Select
-            value={formData.categoryId?.toString() || ''}
-            onValueChange={(val) => setFormData(prev => ({ ...prev, categoryId: Number(val) }))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id.toString()}>
-                  {cat.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SearchableSelect
+            options={categoryOptions}
+            value={formData.categoryId || null}
+            onChange={(value) => setFormData(prev => ({ 
+              ...prev, 
+              categoryId: value ? (typeof value === 'string' ? parseInt(value) : value) : undefined
+            }))}
+            placeholder="Select category"
+            label="Category"
+            searchPlaceholder="Search categories..."
+            emptyMessage="No categories found"
+            allowClear={true}
+          />
         </div>
 
 

@@ -4,18 +4,17 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { 
   fetchExpenseDistribution, 
-  fetchMonthlySummary, 
-  fetchMonthlyStatistics,
-  fetchSavingsPlan,
-  fetchCashFlowForecast
+  fetchMonthlySummary
 } from "@/utils/api";
 import ExpenseDistributionChart from "./components/ExpenseDistributionChart";
 import MonthlySummaryChart from "./components/MonthlySummaryChart";
-import StatisticsCards from "./components/StatisticsCards";
-import CurrentBalance from './components/CurrentBalance';
-import CashFlowForecastChart from './components/CashFlowForecastChart';
-import RecurringTransactionAlert from "./components/RecurringTransactionAlert";
-import SavingsPlanTable from "./components/SavingsPlanTable";
+import AIAnalysisCard from "./components/AIAnalysisCard";
+import BudgetManagementCard from "./components/BudgetManagementCard";
+import FinancialOverview from "./components/FinancialOverview";
+import SmartAlerts from "./components/SmartAlerts";
+import SpendingTrendsHeatmap from "./components/SpendingTrendsHeatmap";
+import BudgetProgressRings from "./components/BudgetProgressRings";
+import CashFlowWaterfall from "./components/CashFlowWaterfall";
 
 export default function DashboardPage() {
   const { data: session } = useSession();
@@ -24,20 +23,9 @@ export default function DashboardPage() {
   // State for data
   const [expenseDistribution, setExpenseDistribution] = useState([]);
   const [monthlySummary, setMonthlySummary] = useState([]);
-  const [statistics, setStatistics] = useState(null);
-  
-  // Current month for statistics
-  const [statisticsMonth, setStatisticsMonth] = useState(
-    new Date().toISOString().split('T')[0].substring(0, 7) // Current month in YYYY-MM format
-  );
   
   // Months to display in monthly summary chart
   const [summaryMonths, setSummaryMonths] = useState(12);
-
-  const [cashFlowForecast, setCashFlowForecast] = useState([]);
-  const [forecastMode, setForecastMode] = useState<'historical' | 'recurring'>('historical');
-
-  const [savingsPlan, setSavingsPlan] = useState([]);
   
   // Loading and error states
   const [loading, setLoading] = useState(true);
@@ -52,13 +40,6 @@ export default function DashboardPage() {
       setError(null);
       
       try {
-        // Load dashboard data
-        const [savingsPlanData] = await Promise.all([
-          fetchSavingsPlan(token),
-        ]);
-        
-        setSavingsPlan(savingsPlanData);
-        
         // Load initial analytics data
         await refreshDashboardData();
       } catch (err) {
@@ -71,25 +52,6 @@ export default function DashboardPage() {
     
     loadDashboardData();
   }, [token]);
-
-  // Update statistics when month changes
-  useEffect(() => {
-    if (!token) return;
-    
-    const fetchStatisticsForMonth = async () => {
-      try {
-        // Create a date for the first day of the selected month
-        const statsDate = `${statisticsMonth}-01`;
-        const statsData = await fetchMonthlyStatistics(token, statsDate);
-        setStatistics(statsData);
-      } catch (err) {
-        console.error(err);
-        setError("Failed to fetch statistics for selected month");
-      }
-    };
-    
-    fetchStatisticsForMonth();
-  }, [token, statisticsMonth]);
   
   // Update monthly summary when months change
   useEffect(() => {
@@ -107,22 +69,6 @@ export default function DashboardPage() {
     
     fetchSummaryData();
   }, [token, summaryMonths]);
-
-  const fetchForecast = async () => {
-    try {
-      const forecastData = await fetchCashFlowForecast(token, 24, forecastMode);
-      setCashFlowForecast(forecastData);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to fetch cash flow forecast");
-    }
-  };
-  
-
-  useEffect(() => {
-    if (!token) return;
-    fetchForecast();
-  }, [token, forecastMode]);
   
   
   // Function to refresh dashboard analytics data
@@ -142,38 +88,50 @@ export default function DashboardPage() {
     }
   };
   
-  // Handle statistics month change
-  const handleStatisticsMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setStatisticsMonth(e.target.value);
-  };
-  
   // Handle summary months change
   const handleSummaryMonthsChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSummaryMonths(parseInt(e.target.value));
   };
 
-
-
   if (!session) {
     return <div className="text-center p-8">Please log in to view your dashboard</div>;
   }
-
-  // Format the selected month for display
-  const formatSelectedMonth = () => {
-    if (!statisticsMonth) return "Current Month";
-    const [year, month] = statisticsMonth.split('-');
-    const date = new Date(parseInt(year), parseInt(month) - 1);
-    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-  };
 
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6">Financial Dashboard</h1>
       
-      <CurrentBalance />
+      {/* Hero Section - Financial Overview */}
+      <FinancialOverview className="mb-8" />
+      
+      {/* Smart Alerts */}
+      <SmartAlerts className="mb-6" />
+      
+      {/* Budget Management Card */}
+      <BudgetManagementCard />
 
-      {/* Add the RecurringTransactionAlert component here */}
-      <RecurringTransactionAlert />
+      {/* Advanced Visualizations Section */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-6 text-gray-800">📊 Visualizzazioni Avanzate</h2>
+        
+        {/* Budget Progress Rings */}
+        <BudgetProgressRings className="mb-6" />
+        
+        {/* Cash Flow Waterfall */}
+        <CashFlowWaterfall className="mb-6" />
+        
+        {/* Spending Trends Heatmap */}
+        <SpendingTrendsHeatmap className="mb-6" />
+      </div>
+
+      {/* AI Analysis Card */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-6 text-gray-800">🤖 Analisi Beta</h2>
+        <AIAnalysisCard 
+          totalTransactions={0}
+          hasUncategorized={false}
+        />
+      </div>
 
       {loading ? (
         <div className="text-center p-8">Loading dashboard data...</div>
@@ -181,68 +139,34 @@ export default function DashboardPage() {
         <div className="text-red-500 text-center p-4">{error}</div>
       ) : (
         <>
-          {/* Month selector for statistics */}
-          <div className="bg-white p-4 rounded-lg shadow mb-6">
-            <div className="flex flex-col md:flex-row justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Monthly Statistics: {formatSelectedMonth()}</h2>
-              <div className="mt-2 md:mt-0">
-                <input
-                  type="month"
-                  value={statisticsMonth}
-                  onChange={handleStatisticsMonthChange}
-                  className="p-2 border rounded"
-                  max={new Date().toISOString().split('T')[0].substring(0, 7)}
-                />
+          {/* Traditional Charts Section */}
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-6 text-gray-800">📈 Analisi Tradizionali</h2>
+            
+            {/* Monthly Summary Chart */}
+            <div className="bg-white p-4 rounded-lg shadow mb-6">
+              <div className="flex flex-col md:flex-row justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold">Entrate & Spese Mensili</h2>
+                <div className="mt-2 md:mt-0">
+                  <select
+                    value={summaryMonths}
+                    onChange={handleSummaryMonthsChange}
+                    className="p-2 border rounded"
+                  >
+                    <option value="3">Ultimi 3 mesi</option>
+                    <option value="6">Ultimi 6 mesi</option>
+                    <option value="12">Ultimi 12 mesi</option>
+                  </select>
+                </div>
               </div>
+              <MonthlySummaryChart data={monthlySummary} />
             </div>
-            <StatisticsCards statistics={statistics} />
-          </div>
 
-          
-          {/* Monthly Summary Chart with its own filter */}
-          <div className="bg-white p-4 rounded-lg shadow mb-6">
-            <div className="flex flex-col md:flex-row justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Monthly Income & Expenses</h2>
-              <div className="mt-2 md:mt-0">
-                <select
-                  value={summaryMonths}
-                  onChange={handleSummaryMonthsChange}
-                  className="p-2 border rounded"
-                >
-                  <option value="3">Last 3 months</option>
-                  <option value="6">Last 6 months</option>
-                  <option value="12">Last 12 months</option>
-                  <option value="24">Last 24 months</option>
-                </select>
-              </div>
+            {/* Expense Distribution */}
+            <div className="bg-white p-4 rounded-lg shadow mb-6">
+              <h2 className="text-lg font-semibold mb-4">Distribuzione Spese per Categoria</h2>
+              <ExpenseDistributionChart data={expenseDistribution} />
             </div>
-            <MonthlySummaryChart data={monthlySummary} />
-          </div>
-
-          <div className="bg-white p-4 rounded-lg shadow mb-6">
-            <h2 className="text-lg font-semibold mb-4">Annual Savings Plan</h2>
-            <SavingsPlanTable data={savingsPlan} />
-          </div>
-
-          {/* Cash Flow Forecast Section */}
-          <div className="bg-white p-4 rounded-lg shadow mb-6">
-            <div className="flex flex-col md:flex-row justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Cash Flow Forecast</h2>
-              <select
-                className="border p-2 rounded mt-2 md:mt-0"
-                value={forecastMode}
-                onChange={(e) => setForecastMode(e.target.value as 'historical' | 'recurring')}
-              >
-                <option value="historical">Based on Historical Data</option>
-                <option value="recurring">Based on Recurring Transactions</option>
-              </select>
-            </div>
-            <CashFlowForecastChart data={cashFlowForecast} />
-          </div>
-
-          <div className="bg-white p-4 rounded-lg shadow mb-6">
-            <h2 className="text-lg font-semibold mb-4">Expense Distribution by Category (Current Year)</h2>
-            <ExpenseDistributionChart data={expenseDistribution} />
           </div>
         </>
       )}

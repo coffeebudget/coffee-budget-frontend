@@ -29,6 +29,7 @@ export type Transaction = {
   executionDate: string;
   source?: string;
   suggestedCategoryName?: string; // AI suggested category name
+  suggestedCategoryId?: number; // AI suggested category ID
     // These are for display purposes only  
   category?: Category;
   tags?: Tag[];

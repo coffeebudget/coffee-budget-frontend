@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { fetchPendingDuplicates, resolvePendingDuplicate, fetchCategories, fetchTags, triggerDuplicateDetection, bulkResolvePendingDuplicates, bulkDeletePendingDuplicates } from "@/utils/api";
+import { fetchPendingDuplicates, resolvePendingDuplicate, fetchCategories, fetchTags, triggerDuplicateDetection, bulkResolvePendingDuplicates, bulkDeletePendingDuplicates, cleanupActualDuplicates } from "@/utils/api";
 import { fetchBankAccounts, fetchCreditCards } from "@/utils/api-client";
 import { PendingDuplicate, DuplicateTransactionChoice, Category, Tag, BankAccount, CreditCard } from "@/utils/types";
-import { Loader2, AlertTriangleIcon, CheckCircle2, CreditCard as CardIcon, CalendarIcon, BanknoteIcon, TagIcon, PercentIcon, InfoIcon, SearchIcon, Trash2, Check, CheckSquare, Filter } from "lucide-react";
+import { Loader2, AlertTriangleIcon, CheckCircle2, CreditCard as CardIcon, CalendarIcon, BanknoteIcon, TagIcon, PercentIcon, InfoIcon, SearchIcon, Trash2, Check, CheckSquare, Filter, Recycle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -74,6 +74,7 @@ export default function PendingDuplicatesPage() {
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
   const [detectingDuplicates, setDetectingDuplicates] = useState(false);
+  const [cleaningUpDuplicates, setCleaningUpDuplicates] = useState(false);
   
   // Bulk action states
   const [selectedDuplicates, setSelectedDuplicates] = useState<Set<number>>(new Set());
@@ -147,6 +148,25 @@ export default function PendingDuplicatesPage() {
       showErrorToast(err instanceof Error ? err.message : "An unexpected error occurred");
     } finally {
       setDetectingDuplicates(false);
+    }
+  };
+
+  const handleCleanupDuplicates = async () => {
+    if (!token) return;
+    
+    setCleaningUpDuplicates(true);
+    try {
+      const result = await cleanupActualDuplicates(token);
+      
+      showSuccessToast(`Cleanup completed! Removed ${result.duplicatesRemoved} duplicate transactions, kept ${result.transactionsKept} unique transactions. Processing time: ${result.executionTime}`);
+      
+      // Reload the pending duplicates list
+      await loadData();
+    } catch (err) {
+      console.error("Cleanup failed:", err);
+      showErrorToast(err instanceof Error ? err.message : "Cleanup failed");
+    } finally {
+      setCleaningUpDuplicates(false);
     }
   };
 
@@ -416,7 +436,7 @@ export default function PendingDuplicatesPage() {
           <div className="flex items-center gap-2">
             <Button
               onClick={handleDetectDuplicates}
-              disabled={detectingDuplicates || loading}
+              disabled={detectingDuplicates || loading || cleaningUpDuplicates}
               className="flex items-center gap-2"
             >
               {detectingDuplicates ? (
@@ -431,6 +451,46 @@ export default function PendingDuplicatesPage() {
                 </>
               )}
             </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  disabled={cleaningUpDuplicates || loading || detectingDuplicates}
+                  variant="outline"
+                  className="flex items-center gap-2 border-orange-500 text-orange-700 hover:bg-orange-50"
+                >
+                  {cleaningUpDuplicates ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Cleaning...
+                    </>
+                  ) : (
+                    <>
+                      <Recycle className="h-4 w-4" />
+                      Cleanup Actual Duplicates
+                    </>
+                  )}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Cleanup Actual Duplicates</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will automatically find and remove 100% identical duplicate transactions from your database.
+                    The system will keep the oldest transaction for each duplicate group and remove the newer ones.
+                    <br /><br />
+                    <strong>This action cannot be undone.</strong>
+                    <br /><br />
+                    Transactions that are already referenced by pending duplicates will be protected and not removed.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleCleanupDuplicates} className="bg-orange-600 hover:bg-orange-700">
+                    Cleanup Duplicates
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
         <p className="text-gray-600 max-w-3xl">

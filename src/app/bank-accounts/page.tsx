@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loader2, WalletIcon, PlusCircle, X, Link, RefreshCw, Download } from "lucide-react";
 import { toast } from "react-hot-toast";
+import GocardlessConnectionManager from "./components/GocardlessConnectionManager";
+import GocardlessImportOptions from "./components/GocardlessImportOptions";
 
 export default function BankAccountsPage() {
   const { data: session } = useSession();
@@ -102,9 +104,7 @@ export default function BankAccountsPage() {
     }
   };
 
-
-
-  const handleImportTransactions = async () => {
+  const handleImportTransactions = async (options = {}) => {
     setImportingTransactions(true);
     try {
       const response = await fetch('/api/gocardless/import/all', {
@@ -112,12 +112,13 @@ export default function BankAccountsPage() {
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify(options),
       });
 
       if (!response.ok) {
         if (response.status === 404) {
           toast.error('No GoCardless accounts connected!\n\nPlease connect your bank accounts first using the "GoCardless Integration" button.');
-          return;
+          return null;
         }
         throw new Error('Failed to import transactions');
       }
@@ -127,21 +128,96 @@ export default function BankAccountsPage() {
       // Display comprehensive import results
       const { summary } = data;
       
-      if (summary.totalNewTransactions > 0) {
+      if (summary.totalNewTransactions > 0 || summary.totalPendingDuplicates > 0) {
+        // Create a detailed success toast with better formatting
         toast.success(
-          `🎉 GoCardless Import Completed!\n\n` +
-          `📊 ${summary.totalAccounts} accounts processed\n` +
-          `✅ ${summary.successfulImports} successful imports\n` +
-          `📈 ${summary.totalNewTransactions} new transactions imported\n` +
-          `🔄 ${summary.totalDuplicates} duplicates skipped\n` +
-          `💰 ${summary.balancesSynchronized} balances synchronized`,
-          { 
-            duration: 8000,
+          (t) => (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🎉</span>
+                <span className="font-semibold text-lg">GoCardless Import Completed!</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="flex items-center gap-1">
+                  <span>📊</span>
+                  <span>{summary.totalAccounts} accounts processed</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span>✅</span>
+                  <span>{summary.successfulImports} successful imports</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span>📈</span>
+                  <span>{summary.totalNewTransactions} new transactions</span>
+                </div>
+                {summary.totalPendingDuplicates > 0 && (
+                  <div className="flex items-center gap-1">
+                    <span>⏳</span>
+                    <span>{summary.totalPendingDuplicates} pending duplicates</span>
+                  </div>
+                )}
+                {summary.totalDuplicates > 0 && (
+                  <div className="flex items-center gap-1">
+                    <span>🔄</span>
+                    <span>{summary.totalDuplicates} duplicates handled</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-1">
+                  <span>💰</span>
+                  <span>{summary.balancesSynchronized} balances synced</span>
+                </div>
+              </div>
+              {summary.totalPendingDuplicates > 0 && (
+                <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded text-blue-800 text-xs">
+                  💡 Visit the Pending Duplicates page to review and resolve potential duplicates
+                </div>
+              )}
+            </div>
+          ),
+          {
+            duration: 12000,
             style: {
-              maxWidth: '500px',
-            }
+              maxWidth: '600px',
+              padding: '20px',
+            },
           }
         );
+        
+        // If there are pending duplicates, show a follow-up toast
+        if (summary.totalPendingDuplicates > 0) {
+          setTimeout(() => {
+            toast(
+              (t) => (
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">👀</span>
+                  <div>
+                    <div className="font-medium">Review Pending Duplicates</div>
+                    <div className="text-sm text-gray-600 mt-1">
+                      {summary.totalPendingDuplicates} potential duplicates need your attention
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      window.location.href = '/pending-duplicates';
+                      toast.dismiss(t.id);
+                    }}
+                    className="ml-auto px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors"
+                  >
+                    Review Now
+                  </button>
+                </div>
+              ),
+              {
+                duration: 10000,
+                style: {
+                  background: '#fef3c7',
+                  border: '1px solid #f59e0b',
+                  color: '#92400e',
+                },
+              }
+            );
+          }, 3000);
+        }
       } else if (summary.totalDuplicates > 0) {
         toast('ℹ️ Import completed - no new transactions found\n\n' +
           `🔄 ${summary.totalDuplicates} transactions were already imported\n` +
@@ -158,21 +234,15 @@ export default function BankAccountsPage() {
         });
       }
 
-      // Show any failed imports as warnings
-      if (summary.failedImports > 0) {
-        toast.error(
-          `⚠️ Some imports failed\n\n` +
-          `❌ ${summary.failedImports} out of ${summary.totalAccounts} accounts failed\n` +
-          `✅ ${summary.successfulImports} accounts imported successfully`,
-          { duration: 6000 }
-        );
-      }
-      
-      // Refresh the bank accounts list to show updated balances
+      // Refresh the bank accounts data
       await fetchBankAccounts();
+      
+      // Return the data for the progress dialog
+      return data;
     } catch (error) {
       console.error('Error importing transactions:', error);
-      toast.error('Failed to import transactions from GoCardless');
+      toast.error('Failed to import transactions. Please try again.');
+      throw error; // Re-throw to let the progress dialog handle it
     } finally {
       setImportingTransactions(false);
     }
@@ -232,20 +302,10 @@ export default function BankAccountsPage() {
                   Sync Balances
                 </Button>
 
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleImportTransactions}
-                  disabled={importingTransactions}
-                  className="flex items-center gap-1"
-                >
-                  {importingTransactions ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Download className="h-4 w-4" />
-                  )}
-                  Import Transactions
-                </Button>
+                <GocardlessImportOptions
+                  onImport={handleImportTransactions}
+                  isImporting={importingTransactions}
+                />
               </div>
 
 

@@ -267,12 +267,11 @@ export default function TransactionsPage() {
       await loadData();
       
       showSuccessToast(
-        `🎉 Bulk AI Categorization Complete!\n\n` +
+        `🎉 Bulk Keyword Categorization Complete!\n\n` +
         `📊 ${result.totalProcessed} transactions processed\n` +
-        `✅ ${result.keywordMatched} matched by keywords (FREE)\n` +
-        `🤖 ${result.aiSuggestions} AI suggestions created\n` +
+        `✅ ${result.keywordMatched} matched by keywords\n` +
         `❌ ${result.errors} errors\n` +
-        `💰 Estimated cost: $${result.estimatedCost.toFixed(3)}`
+        `💰 Cost: FREE (keyword-based only)`
       );
     } catch (err) {
       console.error(err);
@@ -361,22 +360,22 @@ export default function TransactionsPage() {
               showOrderOptions={true}
             />
             
-            {/* Bulk AI Categorization */}
+            {/* Bulk Keyword Categorization */}
             <div className="mb-4">
               <Button
                 onClick={handleBulkAiCategorize}
                 disabled={bulkAiProcessing}
-                className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+                className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700"
               >
                 {bulkAiProcessing ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Brain className="h-4 w-4" />
                 )}
-                {bulkAiProcessing ? 'Processing...' : 'AI Categorize All Uncategorized'}
+                {bulkAiProcessing ? 'Processing...' : 'Keyword Categorize All Uncategorized'}
               </Button>
               <p className="text-sm text-gray-600 mt-1">
-                Smart categorization: tries keywords first (free), then AI for remaining transactions. ~$1-2 for 600 transactions.
+                Smart categorization using keyword matching only. Free and fast!
               </p>
             </div>
             

@@ -314,4 +314,60 @@ export async function deleteCreditCard(id: number) {
     method: 'DELETE',
   });
   return handleResponse(response);
+}
+
+// Budget Management API functions
+
+/**
+ * Get intelligent budget summary
+ */
+export async function fetchBudgetSummary() {
+  const response = await fetch('/api/categories/budget-summary');
+  return handleResponse(response);
+}
+
+/**
+ * Get all categories with spending data for budget management
+ */
+export async function fetchBudgetCategories() {
+  const response = await fetch('/api/categories/budget-categories');
+  return handleResponse(response);
+}
+
+/**
+ * Fetch transactions for a specific category with summary statistics
+ */
+export async function fetchCategoryTransactions(categoryId: number, months: number = 12) {
+  const response = await fetch(`/api/categories/${categoryId}/transactions?months=${months}`);
+  return handleResponse(response);
+}
+
+// Category API functions (extend existing categories API)
+
+/**
+ * Fetch all categories
+ */
+export async function fetchCategories() {
+  const response = await fetch('/api/categories');
+  return handleResponse(response);
+}
+
+/**
+ * Update category with budget settings
+ */
+export async function updateCategoryBudget(id: number, budgetData: {
+  budgetLevel?: 'primary' | 'secondary' | 'optional';
+  monthlyBudget?: number;
+  yearlyBudget?: number;
+  maxThreshold?: number;
+  warningThreshold?: number;
+}) {
+  const response = await fetch(`/api/categories/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(budgetData),
+  });
+  return handleResponse(response);
 } 

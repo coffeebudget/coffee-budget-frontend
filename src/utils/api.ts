@@ -478,6 +478,23 @@ export async function bulkDeletePendingDuplicates(
   return res.json();
 }
 
+export async function cleanupActualDuplicates(token: string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pending-duplicates/cleanup-actual-duplicates`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to cleanup actual duplicates");
+  }
+
+  return res.json();
+}
+
 export async function importTransactions(
   token: string,
   data: {
@@ -957,18 +974,52 @@ export async function rejectSuggestedCategory(token: string, transactionId: numb
   return response.json();
 }
 
-export async function getAISuggestion(token: string, description: string, amount: number, type: 'income' | 'expense') {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/ai-suggest`, {
+// AI categorization removed - focusing on keyword-based categorization only
+// export async function getAISuggestion(...) { ... }
+
+/**
+ * Analyze spending patterns using AI (replacement for categorization)
+ */
+export async function analyzeExpenses(
+  token: string, 
+  transactions: any[], 
+  analysisType: 'monthly' | 'category' | 'trends' = 'monthly'
+) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/analyze-expenses`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ description, amount, type }),
+    body: JSON.stringify({ transactions, analysisType }),
   });
 
   if (!res.ok) {
-    throw new Error("Failed to get AI suggestion");
+    throw new Error("Failed to analyze expenses");
+  }
+
+  return res.json();
+}
+
+/**
+ * Generate spending summary for a period
+ */
+export async function generateSpendingSummary(
+  token: string, 
+  transactions: any[], 
+  period: string
+) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/spending-summary`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ transactions, period }),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to generate spending summary");
   }
 
   return res.json();
@@ -1053,7 +1104,7 @@ export async function bulkAiCategorize(token: string) {
   );
 
   if (!response.ok) {
-    throw new Error('Failed to run bulk AI categorization');
+    throw new Error('Failed to run bulk keyword categorization');
   }
 
   return response.json();

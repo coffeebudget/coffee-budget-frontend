@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SearchableSelect, SearchableSelectOption } from "@/components/ui/searchable-select";
 import { Calendar, Loader2, Save, Tag as TagIcon, Plus, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";  
 import { Badge } from "@/components/ui/badge";
@@ -354,6 +355,13 @@ export default function AddTransactionForm({ onAddTransaction, initialData = nul
     }).format(amount);
   };
 
+  // Convert categories to SearchableSelectOption format
+  const categoryOptions: SearchableSelectOption[] = categories.map(cat => ({
+    id: cat.id,
+    label: cat.name,
+    keywords: cat.keywords || [],
+  }));
+
   return (
     <>
       <CardHeader>
@@ -436,35 +444,21 @@ export default function AddTransactionForm({ onAddTransaction, initialData = nul
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
               <div className="space-y-2">
-                <Select 
-                  value={(() => {
-                    // First check if the category ID exists in the categories array
-                    if (category !== null && category !== undefined) {
-                      const categoryExists = categories.some(c => c.id.toString() === category.toString());
-                      return categoryExists ? category.toString() : 'none';
-                    }
-                    return 'none';
-                  })()} 
-                  onValueChange={(value) => {
-                    setCategory(value === 'none' ? null : parseInt(value));
+                <SearchableSelect
+                  options={categoryOptions}
+                  value={category}
+                  onChange={(value) => {
+                    setCategory(typeof value === 'string' ? parseInt(value) : value);
                     // Reset keyword when category changes
                     setSelectedKeyword("");
                   }}
-                >
-                  <SelectTrigger id="category" className="bg-background text-foreground">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id.toString()}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  placeholder="Select category"
+                  label="Category"
+                  searchPlaceholder="Search categories..."
+                  emptyMessage="No categories found"
+                  allowClear={true}
+                />
                 
                 {/* Keyword suggestion section - only show if category is selected */}
                 {category && (

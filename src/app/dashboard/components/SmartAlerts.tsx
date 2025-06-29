@@ -24,6 +24,7 @@ interface BudgetAlert {
   budgetAmount: number;
   percentage: number;
   message: string;
+  alertScope: 'monthly' | 'annual' | 'average'; // Per rendere uniche le chiavi
 }
 
 interface CashFlowAlert {
@@ -98,7 +99,7 @@ export default function SmartAlerts({ className = '' }: { className?: string }) 
     const cashFlowAlerts: CashFlowAlert[] = [];
     const duplicateAlerts: DuplicateAlert[] = [];
 
-    // 1. BUDGET ALERTS
+    // 1. BUDGET ALERTS (Mensili)
     budgetData.forEach(category => {
       if (category.budgetStatus === 'over') {
         budgetAlerts.push({
@@ -109,7 +110,8 @@ export default function SmartAlerts({ className = '' }: { className?: string }) 
           currentAmount: category.currentMonthSpent,
           budgetAmount: category.monthlyBudget || category.maxThreshold,
           percentage: Math.round((category.currentMonthSpent / (category.monthlyBudget || category.maxThreshold)) * 100),
-          message: `Budget superato del ${Math.round(((category.currentMonthSpent / (category.monthlyBudget || category.maxThreshold)) - 1) * 100)}%`
+          message: `Budget superato del ${Math.round(((category.currentMonthSpent / (category.monthlyBudget || category.maxThreshold)) - 1) * 100)}%`,
+          alertScope: 'monthly'
         });
       } else if (category.budgetStatus === 'warning') {
         budgetAlerts.push({
@@ -120,8 +122,58 @@ export default function SmartAlerts({ className = '' }: { className?: string }) 
           currentAmount: category.currentMonthSpent,
           budgetAmount: category.monthlyBudget || category.maxThreshold,
           percentage: Math.round((category.currentMonthSpent / (category.monthlyBudget || category.maxThreshold)) * 100),
-          message: `Utilizzato ${Math.round((category.currentMonthSpent / (category.monthlyBudget || category.maxThreshold)) * 100)}% del budget`
+          message: `Utilizzato ${Math.round((category.currentMonthSpent / (category.monthlyBudget || category.maxThreshold)) * 100)}% del budget`,
+          alertScope: 'monthly'
         });
+      }
+    });
+
+    // 1.1. BUDGET ALERTS ANNUALI (Rolling 12M)
+    budgetData.forEach(category => {
+      const monthlyAverage = category.averageMonthlySpending || 0;
+      const spending12M = monthlyAverage * 12;
+      
+      // Calcola budget annuale
+      let budget12M = 0;
+      if (category.budgetLevel === 'primary') {
+        budget12M = (category.monthlyBudget || monthlyAverage) * 12;
+      } else if (category.budgetLevel === 'secondary') {
+        budget12M = (category.maxThreshold || category.monthlyBudget || monthlyAverage * 1.2) * 12;
+      } else if (category.budgetLevel === 'optional') {
+        budget12M = (category.monthlyBudget || monthlyAverage * 1.5) * 12;
+      }
+
+      if (budget12M > 0) {
+        const percentage12M = (spending12M / budget12M) * 100;
+        const remainingBudget = budget12M - spending12M;
+        const currentMonth = new Date().getMonth() + 1;
+        const remainingMonths = 12 - currentMonth;
+        
+        if (percentage12M > 100) {
+          budgetAlerts.push({
+            type: 'budget_exceeded',
+            severity: 'high',
+            categoryName: category.categoryName + ' (12M)',
+            categoryId: category.categoryId,
+            currentAmount: spending12M,
+            budgetAmount: budget12M,
+            percentage: Math.round(percentage12M),
+            message: `🔔 Categoria ${category.categoryName} ha superato il budget annuo del ${Math.round(percentage12M - 100)}%`,
+            alertScope: 'annual'
+          });
+        } else if (remainingBudget > 0 && remainingMonths <= 2) {
+          budgetAlerts.push({
+            type: 'savings_target',
+            severity: 'low',
+            categoryName: category.categoryName + ' (12M)',
+            categoryId: category.categoryId,
+            currentAmount: spending12M,
+            budgetAmount: budget12M,
+            percentage: Math.round(percentage12M),
+            message: `🔔 Hai ancora €${Math.round(remainingBudget)} disponibili per ${category.categoryName} nei prossimi ${remainingMonths} mesi`,
+            alertScope: 'annual'
+          });
+        }
       }
 
       // 🎯 NUOVO ALERT: Categorie Primary che superano la spesa media storica
@@ -137,7 +189,8 @@ export default function SmartAlerts({ className = '' }: { className?: string }) 
             currentAmount: category.currentMonthSpent,
             budgetAmount: category.averageMonthlySpending,
             percentage: Math.round(spendingVsAverage * 100),
-            message: `Spesa ${Math.round((spendingVsAverage - 1) * 100)}% sopra la media storica`
+            message: `Spesa ${Math.round((spendingVsAverage - 1) * 100)}% sopra la media storica`,
+            alertScope: 'average'
           });
         } else if (category.currentMonthSpent > 0 && spendingVsAverage < 0.8) {
           // Alert positivo per le categorie primary con spesa sotto la media
@@ -149,7 +202,8 @@ export default function SmartAlerts({ className = '' }: { className?: string }) 
             currentAmount: category.currentMonthSpent,
             budgetAmount: category.averageMonthlySpending,
             percentage: Math.round(spendingVsAverage * 100),
-            message: `Spesa ${Math.round((1 - spendingVsAverage) * 100)}% sotto la media - Ottimo controllo!`
+            message: `Spesa ${Math.round((1 - spendingVsAverage) * 100)}% sotto la media - Ottimo controllo!`,
+            alertScope: 'average'
           });
         }
       }
@@ -299,7 +353,7 @@ export default function SmartAlerts({ className = '' }: { className?: string }) 
     ...alerts.cashFlowAlerts,
     ...alerts.duplicateAlerts
   ].filter(alert => {
-    const alertId = `${alert.type}-${('categoryId' in alert) ? alert.categoryId : ('count' in alert) ? alert.count : 'general'}`;
+    const alertId = `${alert.type}-${('categoryId' in alert) ? alert.categoryId : ('count' in alert) ? alert.count : 'general'}${('alertScope' in alert) ? `-${alert.alertScope}` : ''}`;
     return !dismissedAlerts.has(alertId);
   });
 
@@ -339,7 +393,7 @@ export default function SmartAlerts({ className = '' }: { className?: string }) 
       {!collapsed && (
         <div className="p-4 space-y-3 max-h-96 overflow-y-auto">
           {alerts.budgetAlerts.map((alert, index) => {
-            const alertId = `${alert.type}-${alert.categoryId}`;
+            const alertId = `${alert.type}-${alert.categoryId}-${alert.alertScope}`;
             if (dismissedAlerts.has(alertId)) return null;
             
             return (

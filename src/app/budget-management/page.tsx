@@ -164,6 +164,59 @@ export default function BudgetManagementPage() {
     }
   };
 
+  // 🔧 FIX: Calcola utilizzo budget allineato con i 3 box mostrati (identico alla Dashboard)
+  const calculateAlignedBudgetUtilization = () => {
+    if (!budgetSummary) return { utilization: 0, totalConfiguredBudget: 0, totalCurrentSpent: 0, hasAnyBudget: false };
+    
+    // Filtro per categorie di spesa (esclude entrate)
+    const filterExpenseCategories = (categories: CategorySpending[]) => 
+      categories.filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0);
+    
+    // Primary: calcola budget configurato e spesa media
+    const primaryExpenseCategories = filterExpenseCategories(budgetSummary.primaryCategoriesData || []);
+    const primaryBudgetConfigured = budgetSummary.primaryBudgetConfigured || 0;
+    const primaryCurrentSpent = primaryExpenseCategories.reduce((sum, cat) => {
+      return sum + (cat.averageMonthlySpending || 0); // USARE SPESA MEDIA
+    }, 0);
+    
+    // Secondary: calcola budget configurato e spesa media
+    const secondaryExpenseCategories = filterExpenseCategories(budgetSummary.allSecondaryCategories || []);
+    const secondaryBudgetConfigured = secondaryExpenseCategories.reduce((sum, cat) => {
+      const budget = cat.maxThreshold || cat.monthlyBudget || 0;
+      return sum + (Number(budget) || 0);
+    }, 0);
+    const secondaryCurrentSpent = secondaryExpenseCategories.reduce((sum, cat) => {
+      return sum + (cat.averageMonthlySpending || 0); // USARE SPESA MEDIA
+    }, 0);
+    
+    // Optional: calcola budget configurato e spesa media
+    const optionalExpenseCategories = filterExpenseCategories(budgetSummary.allOptionalCategories || []);
+    const optionalBudgetConfigured = optionalExpenseCategories.reduce((sum, cat) => {
+      return sum + (cat.monthlyBudget || 0);
+    }, 0);
+    const optionalCurrentSpent = optionalExpenseCategories.reduce((sum, cat) => {
+      return sum + (cat.averageMonthlySpending || 0); // USARE SPESA MEDIA
+    }, 0);
+    
+    const totalConfiguredBudget = primaryBudgetConfigured + secondaryBudgetConfigured + optionalBudgetConfigured;
+    const totalCurrentSpent = primaryCurrentSpent + secondaryCurrentSpent + optionalCurrentSpent;
+    const utilization = totalConfiguredBudget > 0 ? (totalCurrentSpent / totalConfiguredBudget) * 100 : 0;
+    
+    return {
+      utilization: Math.round(utilization * 10) / 10, // 1 decimale
+      totalConfiguredBudget,
+      totalCurrentSpent,
+      hasAnyBudget: totalConfiguredBudget > 0
+    };
+  };
+
+  const alignedBudgetCalc = calculateAlignedBudgetUtilization();
+  
+  // Usa il calcolo allineato con i box mostrati
+  const safeMonthlyBudgetUtilization = alignedBudgetCalc.hasAnyBudget ? 
+    alignedBudgetCalc.utilization : 
+    (budgetSummary?.monthlyBudgetUtilization || 0);
+
   if (loading) {
     return (
       <div className="container mx-auto p-4">
@@ -228,39 +281,300 @@ export default function BudgetManagementPage() {
             </div>
           </div>
 
-          {/* Budget Metrics - Bottom Row */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-white rounded-lg p-4 text-center">
-              <Euro className="w-8 h-8 text-green-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-green-800">
-                €{budgetSummary.primaryCategoriesData
-                  .filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0) // Solo categorie di spesa
-                  .reduce((sum, cat) => sum + (cat.averageMonthlySpending || 0), 0)
-                  .toLocaleString()}
+          {/* Strategia Budget Intelligente - 3 Box per Livello (identico alla Dashboard) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            {/* Primary: Accantonamento Automatico */}
+            <div className="bg-white rounded-lg p-4 border-l-4 border-red-500">
+              <div className="flex items-center mb-3">
+                <PiggyBank className="w-6 h-6 text-red-600 mr-2" />
+                <div>
+                  <div className="text-sm font-medium text-gray-700">Accantonamento</div>
+                  <div className="text-xs text-red-600">Categorie Primarie</div>
+                </div>
               </div>
-              <div className="text-sm text-gray-600">Accantonamento Mensile</div>
-            </div>
-            <div className="bg-white rounded-lg p-4 text-center">
-              <Target className="w-8 h-8 text-red-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-red-800">
-                {budgetSummary.primaryCategoriesData.length}
+              
+              {/* Valore Auto-calcolato */}
+              <div className="mb-3">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-gray-600">🤖 Spesa media:</span>
+                  <span className="text-lg font-bold text-red-700">
+                    €{budgetSummary.primaryCategoriesData
+                      .filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0)
+                      .reduce((sum, cat) => sum + (cat.averageMonthlySpending || 0), 0)
+                      .toLocaleString()}
+                  </span>
+                </div>
+                <div className="text-xs text-gray-500">Da storico transazioni</div>
               </div>
-              <div className="text-sm text-gray-600">Primary Categories</div>
-            </div>
-            <div className="bg-white rounded-lg p-4 text-center">
-              <AlertTriangle className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-yellow-800">
-                {budgetSummary.secondaryWarnings.length}
+              
+              {/* Valore Configurato */}
+              <div className="mb-3 pb-3 border-b border-gray-200">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-gray-600">⚙️ Budget configurato:</span>
+                  <span className={`text-lg font-bold ${
+                    budgetSummary.primaryBudgetConfigured > 0 ? 'text-blue-700' : 'text-gray-400'
+                  }`}>
+                    €{budgetSummary.primaryBudgetConfigured.toLocaleString()}
+                  </span>
+                </div>
+                <div className="text-xs text-gray-500">
+                  {budgetSummary.primaryBudgetConfigured > 0 ? 'Impostato dall\'utente' : 'Non configurato'}
+                </div>
               </div>
-              <div className="text-sm text-gray-600">Budget Warnings</div>
-            </div>
-            <div className="bg-white rounded-lg p-4 text-center">
-              <TrendingUp className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-              <div className="text-2xl font-bold text-blue-800">
-                {budgetSummary.monthlyBudgetUtilization}%
+              
+              {/* Delta Semplificato */}
+              <div className="mb-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-600">Delta mensile:</span>
+                  <span className={`text-sm font-bold ${
+                    (budgetSummary.primaryBudgetConfigured - budgetSummary.primaryCategoriesData
+                      .filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0)
+                      .reduce((sum, cat) => sum + (cat.averageMonthlySpending || 0), 0)) >= 0 ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {(budgetSummary.primaryBudgetConfigured - budgetSummary.primaryCategoriesData
+                      .filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0)
+                      .reduce((sum, cat) => sum + (cat.averageMonthlySpending || 0), 0)) >= 0 ? '+' : ''}€{(budgetSummary.primaryBudgetConfigured - budgetSummary.primaryCategoriesData
+                      .filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0)
+                      .reduce((sum, cat) => sum + (cat.averageMonthlySpending || 0), 0)).toLocaleString()}
+                  </span>
+                </div>
               </div>
-              <div className="text-sm text-gray-600">Budget Utilization</div>
+              
+              <div className="text-xs text-red-600">
+                📊 {budgetSummary.primaryCategoriesData.filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0).length} categorie essenziali
+              </div>
             </div>
+
+            {/* Secondary: Budget Controllabile */}
+            <div className="bg-white rounded-lg p-4 border-l-4 border-yellow-500">
+              <div className="flex items-center mb-3">
+                <Target className="w-6 h-6 text-yellow-600 mr-2" />
+                <div>
+                  <div className="text-sm font-medium text-gray-700">Budget Controllabile</div>
+                  <div className="text-xs text-yellow-600">Categorie Secondarie</div>
+                </div>
+              </div>
+              
+              {/* Valore Auto-calcolato */}
+              <div className="mb-3">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-gray-600">🤖 Spesa media:</span>
+                  <span className="text-lg font-bold text-yellow-700">
+                    €{budgetSummary.allSecondaryCategories
+                      .filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0)
+                      .reduce((sum, cat) => sum + (cat.averageMonthlySpending || 0), 0)
+                      .toLocaleString()}
+                  </span>
+                </div>
+                <div className="text-xs text-gray-500">Da storico transazioni</div>
+              </div>
+              
+              {/* Valore Configurato */}
+              <div className="mb-3 pb-3 border-b border-gray-200">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-gray-600">⚙️ Budget configurato:</span>
+                  <span className={`text-lg font-bold ${
+                    budgetSummary.allSecondaryCategories
+                      .filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0)
+                      .reduce((sum, cat) => sum + ((cat.maxThreshold || cat.monthlyBudget) || 0), 0) > 0 ? 'text-blue-700' : 'text-gray-400'
+                  }`}>
+                    €{budgetSummary.allSecondaryCategories
+                      .filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0)
+                      .reduce((sum, cat) => sum + ((cat.maxThreshold || cat.monthlyBudget) || 0), 0)
+                      .toLocaleString()}
+                  </span>
+                </div>
+                <div className="text-xs text-gray-500">
+                  {budgetSummary.allSecondaryCategories
+                    .filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0)
+                    .reduce((sum, cat) => sum + ((cat.maxThreshold || cat.monthlyBudget) || 0), 0) > 0 ? 'Limite impostato' : 'Non configurato'}
+                </div>
+              </div>
+              
+              {/* Delta Semplificato */}
+              <div className="mb-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-600">Delta mensile:</span>
+                  <span className={`text-sm font-bold ${
+                    (budgetSummary.allSecondaryCategories
+                      .filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0)
+                      .reduce((sum, cat) => sum + ((cat.maxThreshold || cat.monthlyBudget) || 0), 0) - 
+                    budgetSummary.allSecondaryCategories
+                      .filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0)
+                      .reduce((sum, cat) => sum + (cat.averageMonthlySpending || 0), 0)) >= 0 ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {(budgetSummary.allSecondaryCategories
+                      .filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0)
+                      .reduce((sum, cat) => sum + ((cat.maxThreshold || cat.monthlyBudget) || 0), 0) - 
+                    budgetSummary.allSecondaryCategories
+                      .filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0)
+                      .reduce((sum, cat) => sum + (cat.averageMonthlySpending || 0), 0)) >= 0 ? '+' : ''}€{(budgetSummary.allSecondaryCategories
+                      .filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0)
+                      .reduce((sum, cat) => sum + ((cat.maxThreshold || cat.monthlyBudget) || 0), 0) - 
+                    budgetSummary.allSecondaryCategories
+                      .filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0)
+                      .reduce((sum, cat) => sum + (cat.averageMonthlySpending || 0), 0)).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="text-xs text-yellow-600">
+                {budgetSummary.secondaryWarnings.filter(c => c.budgetStatus === 'over').length > 0 ? (
+                  <>⚠️ {budgetSummary.secondaryWarnings.filter(c => c.budgetStatus === 'over').length} categorie oltre budget</>
+                ) : (
+                  <>✅ {budgetSummary.allSecondaryCategories.filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0).length} categorie monitorate</>
+                )}
+              </div>
+            </div>
+
+            {/* Optional: Budget Discrezionale */}
+            <div className="bg-white rounded-lg p-4 border-l-4 border-green-500">
+              <div className="flex items-center mb-3">
+                <TrendingUp className="w-6 h-6 text-green-600 mr-2" />
+                <div>
+                  <div className="text-sm font-medium text-gray-700">Budget Discrezionale</div>
+                  <div className="text-xs text-green-600">Categorie Opzionali</div>
+                </div>
+              </div>
+              
+              {/* Valore Auto-calcolato */}
+              <div className="mb-3">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-gray-600">🤖 Spesa media:</span>
+                  <span className="text-lg font-bold text-green-700">
+                    €{budgetSummary.allOptionalCategories
+                      .filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0)
+                      .reduce((sum, cat) => sum + (cat.averageMonthlySpending || 0), 0)
+                      .toLocaleString()}
+                  </span>
+                </div>
+                <div className="text-xs text-gray-500">Da storico transazioni</div>
+              </div>
+              
+              {/* Valore Configurato */}
+              <div className="mb-3 pb-3 border-b border-gray-200">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-gray-600">⚙️ Budget configurato:</span>
+                  <span className={`text-lg font-bold ${
+                    budgetSummary.allOptionalCategories
+                      .filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0)
+                      .reduce((sum, cat) => sum + (cat.monthlyBudget || 0), 0) > 0 ? 'text-blue-700' : 'text-gray-400'
+                  }`}>
+                    €{budgetSummary.allOptionalCategories
+                      .filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0)
+                      .reduce((sum, cat) => sum + (cat.monthlyBudget || 0), 0)
+                      .toLocaleString()}
+                  </span>
+                </div>
+                <div className="text-xs text-gray-500">
+                  {budgetSummary.allOptionalCategories
+                    .filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0)
+                    .reduce((sum, cat) => sum + (cat.monthlyBudget || 0), 0) > 0 ? 'Limite volontario' : 'Non configurato'}
+                </div>
+              </div>
+              
+              {/* Delta Semplificato */}
+              <div className="mb-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-600">Delta mensile:</span>
+                  <span className={`text-sm font-bold ${
+                    (budgetSummary.allOptionalCategories
+                      .filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0)
+                      .reduce((sum, cat) => sum + (cat.monthlyBudget || 0), 0) - 
+                    budgetSummary.allOptionalCategories
+                      .filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0)
+                      .reduce((sum, cat) => sum + (cat.averageMonthlySpending || 0), 0)) >= 0 ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {(budgetSummary.allOptionalCategories
+                      .filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0)
+                      .reduce((sum, cat) => sum + (cat.monthlyBudget || 0), 0) - 
+                    budgetSummary.allOptionalCategories
+                      .filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0)
+                      .reduce((sum, cat) => sum + (cat.averageMonthlySpending || 0), 0)) >= 0 ? '+' : ''}€{(budgetSummary.allOptionalCategories
+                      .filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0)
+                      .reduce((sum, cat) => sum + (cat.monthlyBudget || 0), 0) - 
+                    budgetSummary.allOptionalCategories
+                      .filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0)
+                      .reduce((sum, cat) => sum + (cat.averageMonthlySpending || 0), 0)).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="text-xs text-green-600">
+                💸 {budgetSummary.allOptionalCategories.filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0).length} categorie opzionali
+              </div>
+            </div>
+          </div>
+
+          {/* Budget Utilization Indicator (identico alla Dashboard) */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm font-medium text-gray-700">
+                Utilizzo Budget vs Spesa Media
+                <div className="text-xs text-gray-500">
+                  €{alignedBudgetCalc.totalCurrentSpent?.toLocaleString()} spesa media / €{alignedBudgetCalc.totalConfiguredBudget?.toLocaleString()} budget
+                </div>
+              </div>
+              <div className={`text-sm font-bold ${
+                safeMonthlyBudgetUtilization > 90 ? 'text-red-600' : 
+                safeMonthlyBudgetUtilization > 75 ? 'text-yellow-600' : 'text-green-600'
+              }`}>
+                {safeMonthlyBudgetUtilization.toFixed(1)}%
+              </div>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  safeMonthlyBudgetUtilization > 90 ? 'bg-red-500' : 
+                  safeMonthlyBudgetUtilization > 75 ? 'bg-yellow-500' : 'bg-green-500'
+                }`}
+                style={{ width: `${Math.min(safeMonthlyBudgetUtilization, 100)}%` }}
+              ></div>
+            </div>
+          </div>
+
+          {/* Quick Insights (identici alla Dashboard) */}
+          <div className="space-y-3">
+            {budgetSummary.secondaryWarnings.filter(c => c.budgetStatus === 'over').length > 0 && (
+              <div className="flex items-center p-3 bg-red-100 rounded-lg border border-red-200">
+                <AlertTriangle className="w-5 h-5 text-red-600 mr-3" />
+                <div className="text-sm">
+                  <span className="font-semibold text-red-800">
+                    {budgetSummary.secondaryWarnings.filter(c => c.budgetStatus === 'over').length} categorie hanno superato il budget!
+                  </span>
+                  <p className="text-red-600">Rivedi le tue spese secondarie.</p>
+                </div>
+              </div>
+            )}
+
+            {budgetSummary.primaryCategoriesData
+              .filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0)
+              .reduce((sum, cat) => sum + (cat.averageMonthlySpending || 0), 0) > 0 && (
+              <div className="flex items-center p-3 bg-emerald-100 rounded-lg border border-emerald-200">
+                <PiggyBank className="w-5 h-5 text-emerald-600 mr-3" />
+                <div className="text-sm">
+                  <span className="font-semibold text-emerald-800">
+                    Accantona €{budgetSummary.primaryCategoriesData
+                      .filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0)
+                      .reduce((sum, cat) => sum + (cat.averageMonthlySpending || 0), 0)
+                      .toFixed(2)} questo mese
+                  </span>
+                  <p className="text-emerald-600">basato sulla spesa media delle categorie essenziali.</p>
+                </div>
+              </div>
+            )}
+
+            {safeMonthlyBudgetUtilization > 85 && (
+              <div className="flex items-center p-3 bg-yellow-100 rounded-lg border border-yellow-200">
+                <TrendingUp className="w-5 h-5 text-yellow-600 mr-3" />
+                <div className="text-sm">
+                  <span className="font-semibold text-yellow-800">
+                    Budget utilizzato al {safeMonthlyBudgetUtilization.toFixed(1)}%
+                  </span>
+                  <p className="text-yellow-600">Monitora attentamente le prossime spese.</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

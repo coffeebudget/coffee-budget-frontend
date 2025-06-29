@@ -12,9 +12,9 @@ import AIAnalysisCard from "./components/AIAnalysisCard";
 import BudgetManagementCard from "./components/BudgetManagementCard";
 import FinancialOverview from "./components/FinancialOverview";
 import SmartAlerts from "./components/SmartAlerts";
-import SpendingTrendsHeatmap from "./components/SpendingTrendsHeatmap";
+import CategoryPerformance12M from "./components/CategoryPerformance12M";
 import BudgetProgressRings from "./components/BudgetProgressRings";
-import CashFlowWaterfall from "./components/CashFlowWaterfall";
+import CashFlowForecast from "./components/CashFlowForecast";
 
 export default function DashboardPage() {
   const { data: session } = useSession();
@@ -117,11 +117,11 @@ export default function DashboardPage() {
         {/* Budget Progress Rings */}
         <BudgetProgressRings className="mb-6" />
         
-        {/* Cash Flow Waterfall */}
-        <CashFlowWaterfall className="mb-6" />
+        {/* Category Performance 12M */}
+        <CategoryPerformance12M className="mb-6" />
         
-        {/* Spending Trends Heatmap */}
-        <SpendingTrendsHeatmap className="mb-6" />
+        {/* Cash Flow Forecast */}
+        <CashFlowForecast className="mb-6" />
       </div>
 
       {/* AI Analysis Card */}

@@ -325,6 +325,18 @@ export default function BudgetManagementCard() {
             </div>
           </div>
           
+          {/* Delta Semplificato */}
+          <div className="mb-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-600">Delta mensile:</span>
+              <span className={`text-sm font-bold ${
+                (safePrimaryBudgetConfigured - primaryAutoCalculated) >= 0 ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {(safePrimaryBudgetConfigured - primaryAutoCalculated) >= 0 ? '+' : ''}€{(safePrimaryBudgetConfigured - primaryAutoCalculated).toLocaleString()}
+              </span>
+            </div>
+          </div>
+          
           <div className="text-xs text-red-600">
             📊 {primaryExpenseCount} categorie essenziali (solo spese)
           </div>
@@ -361,6 +373,18 @@ export default function BudgetManagementCard() {
             </div>
             <div className="text-xs text-gray-500">
               {secondaryBudgetConfigured > 0 ? 'Limite impostato' : 'Non configurato'}
+            </div>
+          </div>
+          
+          {/* Delta Semplificato */}
+          <div className="mb-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-600">Delta mensile:</span>
+              <span className={`text-sm font-bold ${
+                (secondaryBudgetConfigured - secondaryAutoCalculated) >= 0 ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {(secondaryBudgetConfigured - secondaryAutoCalculated) >= 0 ? '+' : ''}€{(secondaryBudgetConfigured - secondaryAutoCalculated).toLocaleString()}
+              </span>
             </div>
           </div>
           
@@ -404,6 +428,18 @@ export default function BudgetManagementCard() {
             </div>
             <div className="text-xs text-gray-500">
               {optionalBudgetConfigured > 0 ? 'Limite volontario' : 'Non configurato'}
+            </div>
+          </div>
+          
+          {/* Delta Semplificato */}
+          <div className="mb-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-600">Delta mensile:</span>
+              <span className={`text-sm font-bold ${
+                (optionalBudgetConfigured - optionalAutoCalculated) >= 0 ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {(optionalBudgetConfigured - optionalAutoCalculated) >= 0 ? '+' : ''}€{(optionalBudgetConfigured - optionalAutoCalculated).toLocaleString()}
+              </span>
             </div>
           </div>
           

@@ -187,73 +187,57 @@ export default function BudgetManagementCard() {
     optionalExpenseCount
   } = calculateBudgetsByLevel();
 
-  // 🔧 FIX: Calcola utilizzo budget locale più accurato
-  const calculateLocalBudgetUtilization = () => {
-    // Calcola il budget totale configurato (tutti i livelli)
-    const totalConfiguredBudget = primaryBudgetConfigured + secondaryBudgetConfigured + optionalBudgetConfigured;
+  // 🔧 FIX: Calcola utilizzo budget allineato con i 3 box mostrati
+  const calculateAlignedBudgetUtilization = () => {
+    // Budget totale = ESATTAMENTE quello mostrato nei 3 box
+    const totalConfiguredBudget = safePrimaryBudgetConfigured + secondaryBudgetConfigured + optionalBudgetConfigured;
     
-    // Calcola la spesa totale del mese corrente (solo categorie con budget)
-    const expenseCategories = [
-      ...(primaryCategoriesData || []),
-      ...(allSecondaryCategories || []),
-      ...(allOptionalCategories || [])
-    ].filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0); // Solo spese
+    // Spesa totale = spesa reale delle stesse categorie che contribuiscono ai budget
+    const filterExpenseCategories = (categories: CategorySpending[]) => 
+      categories.filter(cat => (cat.averageMonthlyNetFlow || 0) <= 0);
     
-    const totalCurrentSpent = expenseCategories.reduce((sum, cat) => {
-      // Considera le categorie che hanno un budget configurato dall'utente
-      // Primary: monthlyBudget; Secondary: maxThreshold o monthlyBudget; Optional: monthlyBudget
-      const hasConfiguredBudget = cat.budgetLevel === 'secondary' ? 
-        (cat.maxThreshold || cat.monthlyBudget) : 
-        cat.monthlyBudget;
-      
-      return hasConfiguredBudget ? sum + cat.currentMonthSpent : sum;
+    // Primary: spesa MEDIA (stesso valore mostrato nei box "🤖 Spesa media")
+    const primaryExpenseCategories = filterExpenseCategories(primaryCategoriesData || []);
+    const primaryCurrentSpent = primaryExpenseCategories.reduce((sum, cat) => {
+      return sum + (cat.averageMonthlySpending || 0); // USARE SPESA MEDIA, non corrente
     }, 0);
     
+    // Secondary: spesa MEDIA (stesso valore mostrato nei box "🤖 Spesa media")
+    const secondaryExpenseCategories = filterExpenseCategories(allSecondaryCategories || []);
+    const secondaryCurrentSpent = secondaryExpenseCategories.reduce((sum, cat) => {
+      return sum + (cat.averageMonthlySpending || 0); // USARE SPESA MEDIA, non corrente
+    }, 0);
+    
+    // Optional: spesa MEDIA (stesso valore mostrato nei box "🤖 Spesa media")
+    const optionalExpenseCategories = filterExpenseCategories(allOptionalCategories || []);
+    const optionalCurrentSpent = optionalExpenseCategories.reduce((sum, cat) => {
+      return sum + (cat.averageMonthlySpending || 0); // USARE SPESA MEDIA, non corrente
+    }, 0);
+    
+    const totalCurrentSpent = primaryCurrentSpent + secondaryCurrentSpent + optionalCurrentSpent;
     const utilization = totalConfiguredBudget > 0 ? (totalCurrentSpent / totalConfiguredBudget) * 100 : 0;
     
     return {
       utilization: Math.round(utilization * 10) / 10, // 1 decimale
       totalConfiguredBudget,
       totalCurrentSpent,
+      primaryCurrentSpent,
+      secondaryCurrentSpent,
+      optionalCurrentSpent,
       hasAnyBudget: totalConfiguredBudget > 0
     };
   };
 
-  const localBudgetCalc = calculateLocalBudgetUtilization();
+  const alignedBudgetCalc = calculateAlignedBudgetUtilization();
   
-  // Usa il calcolo locale se più accurato, altrimenti quello del backend
-  const safeMonthlyBudgetUtilization = localBudgetCalc.hasAnyBudget ? 
-    localBudgetCalc.utilization : 
+  // Usa il calcolo allineato con i box mostrati
+  const safeMonthlyBudgetUtilization = alignedBudgetCalc.hasAnyBudget ? 
+    alignedBudgetCalc.utilization : 
     (Number(monthlyBudgetUtilization) || 0);
+    
 
-  // 🐞 DEBUG: Log dei dati per troubleshooting (rimuovi in produzione)
-  console.log('🔍 Budget Debug:', {
-    primaryAutoCalculated,
-    primaryBudgetConfigured: safePrimaryBudgetConfigured,
-    secondaryAutoCalculated,
-    secondaryBudgetConfigured,
-    optionalAutoCalculated,
-    optionalBudgetConfigured,
-    safeMonthlyBudgetUtilization,
-    localBudgetCalc,
-    backendBudgetUtilization: monthlyBudgetUtilization,
-    primaryExpenseCount,
-    secondaryExpenseCount,
-    optionalExpenseCount,
-    // 🔍 DEBUG DETTAGLIATO per categorie primary
-    primaryCategoriesData: primaryCategoriesData?.map(cat => ({
-      name: cat.categoryName,
-      budgetLevel: cat.budgetLevel,
-      monthlyBudget: cat.monthlyBudget,
-      maxThreshold: cat.maxThreshold,
-      warningThreshold: cat.warningThreshold,
-      averageMonthlySpending: cat.averageMonthlySpending,
-      averageMonthlyNetFlow: cat.averageMonthlyNetFlow,
-      currentMonthSpent: cat.currentMonthSpent
-    })),
-    allSecondaryCount: (allSecondaryCategories || []).length,
-    allOptionalCount: (allOptionalCategories || []).length
-  });
+
+
 
   return (
     <div className="bg-gradient-to-r from-blue-50 to-indigo-100 p-6 rounded-xl mb-8 border border-blue-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
@@ -432,7 +416,12 @@ export default function BudgetManagementCard() {
       {/* Budget Utilization Indicator */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
-          <div className="text-sm font-medium text-gray-700">Utilizzo Budget Complessivo</div>
+          <div className="text-sm font-medium text-gray-700">
+            Utilizzo Budget vs Spesa Media
+            <div className="text-xs text-gray-500">
+              €{alignedBudgetCalc.totalCurrentSpent?.toLocaleString()} spesa media / €{alignedBudgetCalc.totalConfiguredBudget?.toLocaleString()} budget
+            </div>
+          </div>
           <div className={`text-sm font-bold ${
             safeMonthlyBudgetUtilization > 90 ? 'text-red-600' : 
             safeMonthlyBudgetUtilization > 75 ? 'text-yellow-600' : 'text-green-600'
@@ -450,6 +439,8 @@ export default function BudgetManagementCard() {
           ></div>
         </div>
       </div>
+
+
 
       {/* Quick Insights */}
       <div className="space-y-3">

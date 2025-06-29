@@ -828,7 +828,7 @@ export async function fetchCommonKeywords(token: string) {
 }
 
 export async function bulkCategorizeByKeyword(token: string, keyword: string, categoryId: number) {
-  console.log("Bulk categorize request:", { keyword, categoryId }); // Debug log
+
   
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/bulk-categorize`, {
     method: "POST",

@@ -41,6 +41,8 @@ import React from "react";
 interface ImportOptions {
   skipDuplicateCheck?: boolean;
   createPendingForDuplicates?: boolean;
+  dateFrom?: string;
+  dateTo?: string;
 }
 
 interface ImportProgress {
@@ -66,6 +68,8 @@ export default function GocardlessImportOptions({ onImport, isImporting = false 
   const [options, setOptions] = useState<ImportOptions>({
     skipDuplicateCheck: false,
     createPendingForDuplicates: true,
+    dateFrom: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    dateTo: new Date().toISOString().split('T')[0],
   });
   
   const [progress, setProgress] = useState<ImportProgress>({
@@ -115,7 +119,9 @@ export default function GocardlessImportOptions({ onImport, isImporting = false 
   const handleQuickImport = async () => {
     await handleImport({ 
       skipDuplicateCheck: false, 
-      createPendingForDuplicates: true 
+      createPendingForDuplicates: true,
+      dateFrom: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      dateTo: new Date().toISOString().split('T')[0],
     });
   };
 
@@ -234,7 +240,7 @@ export default function GocardlessImportOptions({ onImport, isImporting = false 
             Advanced Options
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Import Options</DialogTitle>
             <DialogDescription>
@@ -242,48 +248,124 @@ export default function GocardlessImportOptions({ onImport, isImporting = false 
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="skip-duplicates">Skip Duplicate Check</Label>
-                <p className="text-sm text-muted-foreground">
-                  Import all transactions without checking for duplicates
-                </p>
+          <div className="space-y-6">
+            {/* Date Range Selection */}
+            <div className="space-y-3">
+              <Label className="text-base font-medium">Periodo di Import</Label>
+              <p className="text-sm text-muted-foreground">
+                Seleziona il periodo per l'import delle transazioni
+              </p>
+              
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  variant={!options.dateFrom && !options.dateTo ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setOptions(prev => ({ ...prev, dateFrom: undefined, dateTo: undefined }))}
+                >
+                  Tutto disponibile
+                </Button>
+                <Button
+                  variant={options.dateFrom === new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    const dateFrom = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                    const dateTo = new Date().toISOString().split('T')[0];
+                    setOptions(prev => ({ ...prev, dateFrom, dateTo }));
+                  }}
+                >
+                  Ultimi 7 giorni
+                </Button>
+                <Button
+                  variant={options.dateFrom === new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    const dateFrom = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                    const dateTo = new Date().toISOString().split('T')[0];
+                    setOptions(prev => ({ ...prev, dateFrom, dateTo }));
+                  }}
+                >
+                  Ultimi 14 giorni
+                </Button>
+                <Button
+                  variant={options.dateFrom === new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    const dateFrom = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                    const dateTo = new Date().toISOString().split('T')[0];
+                    setOptions(prev => ({ ...prev, dateFrom, dateTo }));
+                  }}
+                >
+                  Ultimi 30 giorni
+                </Button>
+                <Button
+                  variant={options.dateFrom === new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    const dateFrom = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                    const dateTo = new Date().toISOString().split('T')[0];
+                    setOptions(prev => ({ ...prev, dateFrom, dateTo }));
+                  }}
+                >
+                  Ultimi 90 giorni
+                </Button>
               </div>
-              <Switch
-                id="skip-duplicates"
-                checked={options.skipDuplicateCheck}
-                onCheckedChange={(checked) => 
-                  setOptions(prev => ({ ...prev, skipDuplicateCheck: checked }))
-                }
-              />
+              
+              {options.dateFrom && options.dateTo && (
+                <div className="flex items-center space-x-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <Info className="h-4 w-4 text-blue-600" />
+                  <p className="text-sm text-blue-800">
+                    Import dal {options.dateFrom} al {options.dateTo}
+                  </p>
+                </div>
+              )}
             </div>
-            
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="create-pending">Create Pending Duplicates</Label>
-                <p className="text-sm text-muted-foreground">
-                  Create pending duplicates for manual review instead of skipping
-                </p>
+
+            {/* Duplicate Handling Options */}
+            <div className="space-y-4 border-t pt-4">
+              <Label className="text-base font-medium">Gestione Duplicati</Label>
+              
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="skip-duplicates">Skip Duplicate Check</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Import all transactions without checking for duplicates
+                  </p>
+                </div>
+                <Switch
+                  id="skip-duplicates"
+                  checked={options.skipDuplicateCheck}
+                  onCheckedChange={(checked) => 
+                    setOptions(prev => ({ ...prev, skipDuplicateCheck: checked }))
+                  }
+                />
               </div>
-              <Switch
-                id="create-pending"
-                checked={options.createPendingForDuplicates}
-                onCheckedChange={(checked) => 
-                  setOptions(prev => ({ ...prev, createPendingForDuplicates: checked }))
-                }
-                disabled={options.skipDuplicateCheck}
-              />
+              
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="create-pending">Create Pending Duplicates</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Create pending duplicates for manual review instead of skipping
+                  </p>
+                </div>
+                <Switch
+                  id="create-pending"
+                  checked={options.createPendingForDuplicates}
+                  onCheckedChange={(checked) => 
+                    setOptions(prev => ({ ...prev, createPendingForDuplicates: checked }))
+                  }
+                  disabled={options.skipDuplicateCheck}
+                />
+              </div>
+              
+              {options.skipDuplicateCheck && (
+                <div className="flex items-center space-x-2 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <Info className="h-4 w-4 text-yellow-600" />
+                  <p className="text-sm text-yellow-800">
+                    Warning: This will import all transactions, including exact duplicates.
+                  </p>
+                </div>
+              )}
             </div>
-            
-            {options.skipDuplicateCheck && (
-              <div className="flex items-center space-x-2 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                <Info className="h-4 w-4 text-yellow-600" />
-                <p className="text-sm text-yellow-800">
-                  Warning: This will import all transactions, including exact duplicates.
-                </p>
-              </div>
-            )}
           </div>
           
           <div className="flex justify-end space-x-2 pt-4">

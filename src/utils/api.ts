@@ -410,7 +410,7 @@ export async function resolvePendingDuplicate(
 }
 
 export async function triggerDuplicateDetection(token: string) {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pending-duplicates/detect`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/pending-duplicates/detect-duplicates`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -19,7 +19,13 @@ type KeywordImpact = {
   uncategorizedCount: number;
   categorizedCount: number;
   affectedCategories: ImpactCategory[];
-  sampleTransactions: any[];
+  sampleTransactions: Array<{
+    id: number;
+    description: string;
+    amount: number;
+    executionDate: string;
+    category?: { name: string };
+  }>;
 };
 
 type ApplyOption = "none" | "uncategorized" | "all" | number[];
@@ -29,7 +35,6 @@ interface KeywordImpactPreviewProps {
   onClose: () => void;
   keyword: string;
   categoryName: string;
-  categoryId: number;
   keywordImpact: KeywordImpact | null;
   isLoading: boolean;
   onApply: (option: ApplyOption) => Promise<void>;
@@ -40,7 +45,6 @@ export default function KeywordImpactPreview({
   onClose,
   keyword,
   categoryName,
-  categoryId,
   keywordImpact,
   isLoading,
   onApply,
@@ -85,7 +89,7 @@ export default function KeywordImpactPreview({
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>
-            Impact of adding "{keyword}" to {categoryName}
+            Impact of adding &quot;{keyword}&quot; to {categoryName}
           </DialogTitle>
         </DialogHeader>
 
@@ -177,7 +181,7 @@ export default function KeywordImpactPreview({
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="none" id="none" />
-                    <Label htmlFor="none">Add keyword only, don't recategorize any transactions</Label>
+                    <Label htmlFor="none">Add keyword only, don&apos;t recategorize any transactions</Label>
                   </div>
                   
                   {(keywordImpact.uncategorizedCount || 0) > 0 && (
@@ -220,7 +224,7 @@ export default function KeywordImpactPreview({
                               id={`category-${category.id}`} 
                             />
                             <Label htmlFor={`category-${category.id}`}>
-                              Move {category.count} transactions from "{category.name}"
+                              Move {category.count} transactions from &quot;{category.name}&quot;
                             </Label>
                           </div>
                         ))

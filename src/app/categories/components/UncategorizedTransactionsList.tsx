@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Check, AlertCircle } from "lucide-react";
 import { Transaction, Category } from "@/utils/types";
 import { fetchUncategorizedTransactions } from "@/utils/api";
-import { showSuccessToast, showErrorToast } from "@/utils/toast-utils";
+
 
 interface UncategorizedTransactionsListProps {
   categories: Category[];
@@ -16,8 +16,6 @@ interface UncategorizedTransactionsListProps {
 }
 
 export default function UncategorizedTransactionsList({ 
-  categories,
-  onUpdateCategories
 }: UncategorizedTransactionsListProps) {
   const { data: session } = useSession();
   const token = session?.user?.accessToken || "";

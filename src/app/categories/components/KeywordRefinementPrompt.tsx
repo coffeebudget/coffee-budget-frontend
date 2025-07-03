@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useSession } from "next-auth/react";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Sparkles, Plus, Check } from "lucide-react";
+import { Loader2, Sparkles, Plus } from "lucide-react";
 import { Category } from "@/utils/types";
 
 interface KeywordRefinementPromptProps {
@@ -21,8 +20,7 @@ export default function KeywordRefinementPrompt({
   onDismiss,
   onKeywordSelected
 }: KeywordRefinementPromptProps) {
-  const { data: session } = useSession();
-  const token = session?.user?.accessToken || "";
+
   
   const [error, setError] = useState<string | null>(null);
   const [selectingKeyword, setSelectingKeyword] = useState<string | null>(null);
@@ -47,7 +45,7 @@ export default function KeywordRefinementPrompt({
       <CardHeader className="pb-2">
         <CardTitle className="text-lg flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-purple-500" />
-          <span className="text-purple-800">Improve "{category.name}" Category</span>
+          <span className="text-purple-800">Improve &quot;{category.name}&quot; Category</span>
         </CardTitle>
       </CardHeader>
       <CardContent>

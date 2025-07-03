@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, CheckCircle, AlertCircle } from "lucide-react";
@@ -143,7 +143,7 @@ export default function TransactionCategorizationSuggester({
           </DialogTitle>
           <DialogDescription>
             We found {similarTransactions.length} transactions similar to 
-            "{sourceTransaction.description}" that could be categorized as "{getCategoryName()}"
+            &quot;{sourceTransaction.description}&quot; that could be categorized as &quot;{getCategoryName()}&quot;
           </DialogDescription>
         </DialogHeader>
         

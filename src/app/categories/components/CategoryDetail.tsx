@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { X, Edit, Trash2 } from "lucide-react";
@@ -14,6 +14,25 @@ import KeywordRefinementPrompt from "./KeywordRefinementPrompt";
 import { getSuggestedKeywordsForCategory } from "@/utils/api";
 import { previewKeywordImpact, applyKeywordToCategory } from "@/utils/api";
 import KeywordImpactPreview from "./KeywordImpactPreview";
+
+interface KeywordImpact {
+  totalImpactedCount: number;
+  uncategorizedCount: number;
+  categorizedCount: number;
+  affectedCategories: Array<{
+    id: number;
+    name: string;
+    count: number;
+  }>;
+  sampleTransactions: Array<unknown>;
+}
+
+interface CategoryCount {
+  id?: number;
+  categoryId?: number;
+  name?: string;
+  count?: number;
+}
 
 interface CategoryDetailProps {
   category: Category;
@@ -39,7 +58,7 @@ export default function CategoryDetail({
   // Add state for preview functionality
   const [showPreview, setShowPreview] = useState(false);
   const [previewKeyword, setPreviewKeyword] = useState("");
-  const [keywordImpact, setKeywordImpact] = useState<any>(null);
+  const [keywordImpact, setKeywordImpact] = useState<KeywordImpact | null>(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
 
   useEffect(() => {
@@ -108,14 +127,15 @@ export default function CategoryDetail({
         // If categoryCounts is an object with category IDs as keys
         if (typeof impact.categoryCounts === 'object' && !Array.isArray(impact.categoryCounts)) {
           // Check for null key (uncategorized) or category with name "Uncategorized"
-          Object.entries(impact.categoryCounts).forEach(([key, value]: [string, any]) => {
-            if (key === 'null' || key === 'undefined' || value?.name === 'Uncategorized') {
-              uncategorizedCount = value.count || 0;
+          Object.entries(impact.categoryCounts).forEach(([key, value]) => {
+            const categoryCount = value as CategoryCount;
+            if (key === 'null' || key === 'undefined' || categoryCount?.name === 'Uncategorized') {
+              uncategorizedCount = categoryCount.count || 0;
             } else if (key !== 'null' && key !== 'undefined') {
               affectedCategories.push({
                 id: parseInt(key),
-                name: value.name || `Category ${key}`,
-                count: value.count || 0
+                name: categoryCount.name || `Category ${key}`,
+                count: categoryCount.count || 0
               });
             }
           });
@@ -123,13 +143,13 @@ export default function CategoryDetail({
         // If categoryCounts is an array
         else if (Array.isArray(impact.categoryCounts)) {
           const uncatItem = impact.categoryCounts.find(
-            (c: any) => c.name === 'Uncategorized' || c.id === null || c.categoryId === null
+            (c: CategoryCount) => c.name === 'Uncategorized' || c.id === null || c.categoryId === null
           );
           uncategorizedCount = uncatItem?.count || 0;
           
           affectedCategories = impact.categoryCounts
-            .filter((c: any) => c.id !== null && c.name !== 'Uncategorized')
-            .map((c: any) => ({
+            .filter((c: CategoryCount) => c.id !== null && c.name !== 'Uncategorized')
+            .map((c: CategoryCount) => ({
               id: c.id || c.categoryId,
               name: c.name || `Category ${c.id || c.categoryId}`,
               count: c.count || 0

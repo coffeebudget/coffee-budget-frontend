@@ -12,7 +12,6 @@ import {
   ArrowLeft,
   Save,
   RefreshCw,
-  Euro,
   Settings,
   Eye
 } from 'lucide-react';
@@ -618,8 +617,8 @@ export default function BudgetManagementPage() {
               <span className="font-semibold text-red-800">Primary</span>
             </div>
             <p className="text-sm text-red-700">
-              Spese essenziali per cui calcolare automaticamente l'accantonamento mensile. 
-              L'<strong>Auto Save</strong> è calcolato automaticamente come spesa media mensile.
+              Spese essenziali per cui calcolare automaticamente l&apos;accantonamento mensile. 
+              L&apos;<strong>Auto Save</strong> è calcolato automaticamente come spesa media mensile.
               Il <strong>Monthly Budget</strong> (opzionale) permette di personalizzare quanto spendere.
             </p>
           </div>
@@ -694,7 +693,7 @@ function CategoryBudgetCard({
     setHasChanges(false);
   }, [categorySpending]);
 
-  const handleChange = (field: keyof Category, value: any) => {
+  const handleChange = (field: keyof Category, value: string | number | null) => {
     setLocalCategory(prev => ({ ...prev, [field]: value }));
     setHasChanges(true);
   };

@@ -26,7 +26,7 @@ export default function CreditCardsPage() {
       try {
         const cards = await fetchCreditCards();
         setCreditCards(cards);
-      } catch (err) {
+      } catch {
         setError("Failed to load credit cards");
       }
       setLoading(false);
@@ -39,7 +39,7 @@ export default function CreditCardsPage() {
       const card = await createCreditCard(newCard);
       setCreditCards([...creditCards, card]);
       setActiveTab("list"); // Switch back to list tab after adding
-    } catch (err) {
+    } catch {
       setError("Error adding credit card");
     }
   };
@@ -55,9 +55,9 @@ export default function CreditCardsPage() {
       setCreditCards(creditCards.map(c => c.id === updatedCard.id ? card : c));
       setCurrentCardData(null);
       setActiveTab("list"); // Switch back to list tab after updating
-    } catch (err) {
+    } catch (error) {
       setError("Error updating credit card");
-      console.error(err);
+      console.error(error);
     }
   };
 
@@ -75,7 +75,7 @@ export default function CreditCardsPage() {
     try {
       await deleteCreditCard(id);
       setCreditCards(creditCards.filter((card) => card.id !== id));
-    } catch (err) {
+    } catch {
       setError("Error deleting credit card");
     }
   };
@@ -138,7 +138,6 @@ export default function CreditCardsPage() {
             ) : (
               <CreditCards 
                 creditCards={creditCards} 
-                setCreditCards={setCreditCards}
                 onEdit={handleEditCard}
                 onDelete={handleDeleteCard}
               />

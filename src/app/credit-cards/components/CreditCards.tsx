@@ -16,12 +16,11 @@ import {
 
 interface CreditCardsProps {
   creditCards: CreditCard[];
-  setCreditCards: React.Dispatch<React.SetStateAction<CreditCard[]>>;
   onEdit: (card: CreditCard) => void;
   onDelete: (id: number) => void;
 }
 
-export default function CreditCards({ creditCards, setCreditCards, onEdit, onDelete }: CreditCardsProps) {
+export default function CreditCards({ creditCards, onEdit, onDelete }: CreditCardsProps) {
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
   const handleDeleteClick = (id: number) => {
@@ -40,9 +39,9 @@ export default function CreditCards({ creditCards, setCreditCards, onEdit, onDel
           <div className="flex flex-col items-center justify-center p-8 text-center">
             <AlertCircle className="h-12 w-12 text-gray-300 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-1">No Credit Cards</h3>
-            <p className="text-gray-500 mb-4">You haven't added any credit cards yet.</p>
+            <p className="text-gray-500 mb-4">You haven&apos;t added any credit cards yet.</p>
             <p className="text-sm text-gray-500">
-              Click "Add Card" to create your first credit card.
+              Click &quot;Add Card&quot; to create your first credit card.
             </p>
           </div>
         </CardContent>
@@ -70,12 +69,12 @@ export default function CreditCards({ creditCards, setCreditCards, onEdit, onDel
                 <TableCell className="text-right">
                   ${typeof card.creditLimit === 'number' 
                       ? card.creditLimit.toFixed(2) 
-                      : parseFloat(card.creditLimit as any).toFixed(2)}
+                      : parseFloat(String(card.creditLimit)).toFixed(2)}
                 </TableCell>
                 <TableCell className="text-right">
                   ${typeof card.availableCredit === 'number' 
                       ? card.availableCredit.toFixed(2) 
-                      : parseFloat(card.availableCredit as any).toFixed(2)}
+                      : parseFloat(String(card.availableCredit)).toFixed(2)}
                 </TableCell>
                 <TableCell className="text-center">{card.billingDay}</TableCell>
                 <TableCell>

@@ -2,14 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { 
-  Download, 
-  AlertTriangle, 
-  CheckCircle2, 
+  Download,
   Settings,
   Info,
   Loader2,
@@ -28,12 +23,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { Switch } from '@/components/ui/switch';
 import toast from 'react-hot-toast';
 import React from "react";
@@ -57,8 +46,18 @@ interface ImportProgress {
   logs: string[];
 }
 
+interface ImportResult {
+  summary?: {
+    totalAccounts?: number;
+    totalNewTransactions?: number;
+    totalDuplicates?: number;
+    totalPendingDuplicates?: number;
+    balancesSynchronized?: number;
+  };
+}
+
 interface GocardlessImportOptionsProps {
-  onImport: (options: ImportOptions) => Promise<any>;
+  onImport: (options: ImportOptions) => Promise<ImportResult>;
   isImporting?: boolean;
 }
 
@@ -188,8 +187,8 @@ export default function GocardlessImportOptions({ onImport, isImporting = false 
           `✅ Import completed in ${duration}s`,
           `📊 Processed ${result?.summary?.totalAccounts || 0} accounts`,
           `📈 Imported ${result?.summary?.totalNewTransactions || 0} new transactions`,
-          ...(result?.summary?.totalPendingDuplicates > 0 ? [`⏳ Created ${result?.summary?.totalPendingDuplicates} pending duplicates for review`] : []),
-          ...(result?.summary?.totalDuplicates > 0 ? [`🔄 Handled ${result?.summary?.totalDuplicates} duplicates`] : []),
+          ...((result?.summary?.totalPendingDuplicates || 0) > 0 ? [`⏳ Created ${result?.summary?.totalPendingDuplicates} pending duplicates for review`] : []),
+          ...((result?.summary?.totalDuplicates || 0) > 0 ? [`🔄 Handled ${result?.summary?.totalDuplicates} duplicates`] : []),
           `💰 Synchronized ${result?.summary?.balancesSynchronized || 0} account balances`
         ]
       }));
@@ -253,7 +252,7 @@ export default function GocardlessImportOptions({ onImport, isImporting = false 
             <div className="space-y-3">
               <Label className="text-base font-medium">Periodo di Import</Label>
               <p className="text-sm text-muted-foreground">
-                Seleziona il periodo per l'import delle transazioni
+                Seleziona il periodo per l&apos;import delle transazioni
               </p>
               
               <div className="grid grid-cols-2 gap-2">

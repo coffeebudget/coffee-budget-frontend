@@ -7,10 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, X, Save, HelpCircle, AlertCircle, Trash } from "lucide-react";
+import { Loader2, Plus, X, Save, HelpCircle } from "lucide-react";
 import { Category } from "@/utils/types";
 import { 
-  addKeywordToCategory, 
   removeKeywordFromCategory, 
   previewKeywordImpact,
   applyKeywordToCategory
@@ -19,8 +18,32 @@ import KeywordSuggestions from "./KeywordSuggestions";
 import KeywordImpactPreview from "./KeywordImpactPreview";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { showSuccessToast, showErrorToast } from "@/utils/toast-utils";
+
+interface KeywordImpact {
+  totalImpactedCount: number;
+  uncategorizedCount: number;
+  categorizedCount: number;
+  affectedCategories: Array<{
+    id: number;
+    name: string;
+    count: number;
+  }>;
+  sampleTransactions: Array<{
+    id: number;
+    description: string;
+    amount: number;
+    executionDate: string;
+    category?: { name: string };
+  }>;
+}
+
+interface CategoryCount {
+  id?: number;
+  categoryId?: number;
+  name?: string;
+  count?: number;
+}
 
 interface CategoryFormProps {
   onCategoryChange: (category: Category, isNew: boolean) => Promise<void>;
@@ -42,14 +65,14 @@ export default function CategoryForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [removingKeyword, setRemovingKeyword] = useState<string | null>(null);
-  const [addingKeyword, setAddingKeyword] = useState<string | null>(null);
+
   const [excludeFromExpenseAnalytics, setExcludeFromExpenseAnalytics] = useState(false);
   const [analyticsExclusionReason, setAnalyticsExclusionReason] = useState("");
   
   // New state for keyword impact preview
   const [showPreview, setShowPreview] = useState(false);
   const [previewKeyword, setPreviewKeyword] = useState("");
-  const [keywordImpact, setKeywordImpact] = useState<any>(null);
+  const [keywordImpact, setKeywordImpact] = useState<KeywordImpact | null>(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
 
   // Initialize form with category data if editing
@@ -158,14 +181,15 @@ export default function CategoryForm({
         // If categoryCounts is an object with category IDs as keys
         if (typeof impact.categoryCounts === 'object' && !Array.isArray(impact.categoryCounts)) {
           // Check for null key (uncategorized) or category with name "Uncategorized"
-          Object.entries(impact.categoryCounts).forEach(([key, value]: [string, any]) => {
-            if (key === 'null' || key === 'undefined' || value?.name === 'Uncategorized') {
-              uncategorizedCount = value.count || 0;
+          Object.entries(impact.categoryCounts).forEach(([key, value]) => {
+            const categoryCount = value as CategoryCount;
+            if (key === 'null' || key === 'undefined' || categoryCount?.name === 'Uncategorized') {
+              uncategorizedCount = categoryCount.count || 0;
             } else if (key !== 'null' && key !== 'undefined') {
               affectedCategories.push({
                 id: parseInt(key),
-                name: value.name || `Category ${key}`,
-                count: value.count || 0
+                name: categoryCount.name || `Category ${key}`,
+                count: categoryCount.count || 0
               });
             }
           });
@@ -173,13 +197,13 @@ export default function CategoryForm({
         // If categoryCounts is an array
         else if (Array.isArray(impact.categoryCounts)) {
           const uncatItem = impact.categoryCounts.find(
-            (c: any) => c.name === 'Uncategorized' || c.id === null || c.categoryId === null
+            (c: CategoryCount) => c.name === 'Uncategorized' || c.id === null || c.categoryId === null
           );
           uncategorizedCount = uncatItem?.count || 0;
           
           affectedCategories = impact.categoryCounts
-            .filter((c: any) => c.id !== null && c.name !== 'Uncategorized')
-            .map((c: any) => ({
+            .filter((c: CategoryCount) => c.id !== null && c.name !== 'Uncategorized')
+            .map((c: CategoryCount) => ({
               id: c.id || c.categoryId,
               name: c.name || `Category ${c.id || c.categoryId}`,
               count: c.count || 0
@@ -278,42 +302,7 @@ export default function CategoryForm({
     }
   };
 
-  const handleAddExternalKeyword = async (keyword: string) => {
-    if (!categoryToEdit?.id) {
-      // For new categories, just add to state
-      if (!keywords.includes(keyword.trim())) {
-        setKeywords([...keywords, keyword.trim()]);
-        setNewKeyword("");
-      }
-      return;
-    }
-    
-    // For existing categories, call API
-    setAddingKeyword(keyword);
-    setError(null);
-    
-    try {
-      await addKeywordToCategory(token, categoryToEdit.id, keyword);
-      
-      // Only add if not already in the list
-      if (!keywords.includes(keyword)) {
-        const updatedKeywords = [...keywords, keyword];
-        setKeywords(updatedKeywords);
-        
-        // Update the category in parent component
-        const updatedCategory = {
-          ...categoryToEdit,
-          keywords: updatedKeywords
-        };
-        await onCategoryChange(updatedCategory, false);
-      }
-    } catch (err) {
-      console.error(err);
-      setError("Failed to add keyword");
-    } finally {
-      setAddingKeyword(null);
-    }
-  };
+
 
   return (
     <Card className="w-full">
@@ -454,7 +443,6 @@ export default function CategoryForm({
             onClose={handleClosePreview}
             keyword={previewKeyword}
             categoryName={categoryToEdit.name || ""}
-            categoryId={categoryToEdit.id}
             keywordImpact={keywordImpact}
             isLoading={loadingPreview}
             onApply={handleApplyKeyword}

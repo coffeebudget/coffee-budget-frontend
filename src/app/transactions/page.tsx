@@ -13,7 +13,7 @@ import {
   fetchBankAccounts,
   fetchCreditCards
 } from "@/utils/api-client";
-import { bulkAiCategorize } from "@/utils/api";
+import { bulkKeywordCategorize } from "@/utils/api";
 import { useSession } from "next-auth/react";
 import AddTransactionForm from "@/app/transactions/components/AddTransactionForm";
 import TransactionList from "@/app/transactions/components/TransactionList";
@@ -45,8 +45,8 @@ export default function TransactionsPage() {
   const [showImportSummary, setShowImportSummary] = useState(false);
   const [importedCount, setImportedCount] = useState(0);
   
-  // Bulk AI categorization state
-  const [bulkAiProcessing, setBulkAiProcessing] = useState(false);
+  // Bulk keyword categorization state
+  const [bulkKeywordProcessing, setBulkKeywordProcessing] = useState(false);
   
   // Filters state - Initialize with empty dates to avoid hydration issues
   const [filters, setFilters] = useState({
@@ -256,12 +256,12 @@ export default function TransactionsPage() {
     }
   };
 
-  const handleBulkAiCategorize = async () => {
+  const handleBulkKeywordCategorize = async () => {
     if (!token) return;
     
-    setBulkAiProcessing(true);
+    setBulkKeywordProcessing(true);
     try {
-      const result = await bulkAiCategorize(token);
+      const result = await bulkKeywordCategorize(token);
       
       // Refresh the transactions to show the new suggestions
       await loadData();
@@ -275,11 +275,11 @@ export default function TransactionsPage() {
       );
     } catch (err) {
       console.error(err);
-      const errorMessage = err instanceof Error ? err.message : "Failed to run bulk AI categorization";
+      const errorMessage = err instanceof Error ? err.message : "Failed to run bulk keyword categorization";
       setError(errorMessage);
       showErrorToast(errorMessage);
     } finally {
-      setBulkAiProcessing(false);
+      setBulkKeywordProcessing(false);
     }
   };
 
@@ -363,16 +363,16 @@ export default function TransactionsPage() {
             {/* Bulk Keyword Categorization */}
             <div className="mb-4">
               <Button
-                onClick={handleBulkAiCategorize}
-                disabled={bulkAiProcessing}
+                onClick={handleBulkKeywordCategorize}
+                disabled={bulkKeywordProcessing}
                 className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700"
               >
-                {bulkAiProcessing ? (
+                {bulkKeywordProcessing ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Brain className="h-4 w-4" />
                 )}
-                {bulkAiProcessing ? 'Processing...' : 'Keyword Categorize All Uncategorized'}
+                {bulkKeywordProcessing ? 'Processing...' : 'Keyword Categorize All Uncategorized'}
               </Button>
               <p className="text-sm text-gray-600 mt-1">
                 Smart categorization using keyword matching only. Free and fast!

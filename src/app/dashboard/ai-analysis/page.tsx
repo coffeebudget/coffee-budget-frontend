@@ -4,10 +4,8 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Brain, 
-  TrendingUp, 
   ArrowLeft,
   Loader2,
   Lightbulb,
@@ -80,7 +78,7 @@ export default function AIAnalysisPage() {
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AIAnalysisResult | null>(null);
-  const [period, setPeriod] = useState("30"); // days
+  const [period] = useState("30"); // days
   const [showPrompt, setShowPrompt] = useState(false);
 
   useEffect(() => {
@@ -547,7 +545,7 @@ Non usare code fences o testo aggiuntivo, solo JSON puro.
                 <div className="text-center py-8">
                   <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-400" />
                   <p className="text-gray-600 mb-2">
-                    Visualizza il prompt che verrà inviato all'AI per l'analisi del tuo budget.
+                    Visualizza il prompt che verrà inviato all&apos;AI per l&apos;analisi del tuo budget.
                   </p>
                   <p className="text-sm text-gray-500">
                     Questo ti permette di vedere esattamente quali dati vengono condivisi con il servizio AI.

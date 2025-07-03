@@ -23,6 +23,7 @@ export default function CategoriesPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
+
   useEffect(() => {
     if (!token) return;
 
@@ -167,7 +168,7 @@ export default function CategoriesPage() {
               variant="outline" 
               size="sm"
               onClick={handleResetToDefaults}
-              disabled={loading}
+              disabled={loading || isResetting || isDeleting}
               className="flex items-center gap-1"
             >
               <RefreshCw className="h-4 w-4" />

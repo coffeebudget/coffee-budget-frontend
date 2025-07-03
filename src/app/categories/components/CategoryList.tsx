@@ -42,7 +42,7 @@ export default function CategoryList({ categories, onEdit, onDelete }: CategoryL
     try {
       onDelete(id);
       setConfirmDelete(null);
-    } catch (err) {
+    } catch {
       setError("Error deleting category");
     } finally {
       setLoadingId(null);
@@ -56,9 +56,9 @@ export default function CategoryList({ categories, onEdit, onDelete }: CategoryL
           <div className="flex flex-col items-center justify-center p-8 text-center">
             <AlertCircle className="h-12 w-12 text-gray-300 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-1">No Categories</h3>
-            <p className="text-gray-500 mb-4">You haven't added any categories yet.</p>
+            <p className="text-gray-500 mb-4">You haven&apos;t added any categories yet.</p>
             <p className="text-sm text-gray-500">
-              Click "Add Category" to create your first category.
+              Click &quot;Add Category&quot; to create your first category.
             </p>
           </div>
         </CardContent>

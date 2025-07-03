@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, X, Trash2, AlertCircle } from "lucide-react";
 import { Category } from "@/utils/types";
-import { fetchCommonKeywords, removeKeywordFromCategory, fetchCategories } from "@/utils/api";
+import { fetchCommonKeywords, removeKeywordFromCategory } from "@/utils/api";
 import { showSuccessToast, showErrorToast } from "@/utils/toast-utils";
 
 interface SmartTrainingDashboardProps {
@@ -24,7 +24,13 @@ export default function SmartTrainingDashboard({
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [keywordStats, setKeywordStats] = useState<any[]>([]);
+  const [keywordStats, setKeywordStats] = useState<Array<{
+    keyword: string;
+    categoryId: number;
+    categoryName: string;
+    count: number;
+    lastUsed: number;
+  }>>([]);
   const [removingKeyword, setRemovingKeyword] = useState<string | null>(null);
   const [removingDuplicates, setRemovingDuplicates] = useState(false);
 
@@ -101,7 +107,7 @@ export default function SmartTrainingDashboard({
       
       // Find duplicates (same keyword in multiple categories)
       const duplicates = Array.from(keywordMap.entries())
-        .filter(([_, data]) => data.categories.size > 1);
+        .filter(([, data]) => data.categories.size > 1);
       
       // Remove duplicates
       let removedCount = 0;

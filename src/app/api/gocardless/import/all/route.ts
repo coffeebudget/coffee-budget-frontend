@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     try {
       const body = await request.json();
       options = body || {};
-    } catch (error) {
+    } catch {
       // If no body or invalid JSON, use empty options
       options = {};
     }

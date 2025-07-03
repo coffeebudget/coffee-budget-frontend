@@ -1,6 +1,6 @@
 # CoffeeBudget Frontend
 
-AI-powered personal finance tracking application with intelligent transaction categorization.
+Smart personal finance tracking application with keyword-based transaction categorization.
 
 ## Features
 
@@ -10,12 +10,12 @@ AI-powered personal finance tracking application with intelligent transaction ca
 - Expense analytics and reporting
 - Recurring transaction detection
 
-## AI-Powered Capabilities
+## Smart Categorization Features
 
-- **Automatic Categorization**: Intelligently categorizes transactions based on descriptions
-- **Keyword Learning**: Extracts and learns keywords from transaction descriptions
+- **Keyword-Based Categorization**: Categorizes transactions using user-defined keywords
+- **Smart Keyword Management**: Easy keyword addition and refinement for categories
 - **Bulk Processing**: Categorize multiple transactions with similar patterns at once
-- **Continuous Improvement**: System gets smarter as you use it
+- **User Control**: Full control over categorization rules and keywords
 
 ## Tech Stack
 

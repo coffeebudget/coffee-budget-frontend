@@ -30,7 +30,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],  
   callbacks: {
-    async jwt({ token, account, profile }) {
+    async jwt({ token, account }) {
   
       if (account?.access_token) {
         token.accessToken = account.access_token; // ✅ Store the correct access token
@@ -48,7 +48,7 @@ export const authOptions: NextAuthOptions = {
           
           if (!userData) {
             // User doesn't exist, create new user
-            const newUser = await createUser(token.sub as string, session.user.email as string, token.accessToken as string);
+            await createUser(token.sub as string, session.user.email as string, token.accessToken as string);
           } 
         } catch (error) {
           console.error('Error handling user:', error);

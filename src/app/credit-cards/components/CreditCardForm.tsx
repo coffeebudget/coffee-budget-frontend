@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
 import { CreditCard, BankAccount } from "@/utils/types";
 import { fetchBankAccounts } from "@/utils/api-client";
 import { Input } from "@/components/ui/input";
@@ -24,8 +23,7 @@ export default function CreditCardForm({
   isEditMode = false,
   onCancel
 }: CreditCardFormProps) {
-  const { data: session } = useSession();
-  const token = session?.user?.accessToken || "";
+
 
   const [name, setName] = useState(initialData?.name || "");
   const [billingDay, setBillingDay] = useState(initialData?.billingDay || 1);
@@ -41,7 +39,7 @@ export default function CreditCardForm({
       try {
         const accounts = await fetchBankAccounts();
         setBankAccounts(accounts);
-      } catch (err) {
+      } catch {
         setError("Failed to load bank accounts");
       }
     };

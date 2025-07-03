@@ -157,9 +157,9 @@ export const updateTransaction = async (token: string, id: number, transaction: 
   return res.json();
 }
 
-export async function bulkAiCategorize(token: string) {
+export async function bulkKeywordCategorize(token: string) {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/transactions/bulk-ai-categorize`,
+    `${process.env.NEXT_PUBLIC_API_URL}/transactions/bulk-categorize`,
     {
       method: 'POST',
       headers: {

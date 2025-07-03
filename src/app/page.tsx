@@ -127,12 +127,12 @@ export default function Home() {
               <Tag className="h-8 w-8 text-green-500 mb-2" />
               <CardTitle>Smart Categorization</CardTitle>
               <CardDescription>
-                AI-powered transaction categorization with keywords
+                Keyword-based transaction categorization with user control
               </CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-gray-600">
-                Our system learns from your patterns and suggests keywords to automatically categorize future transactions.
+                Define keywords for each category and let our system automatically categorize transactions based on your rules.
               </p>
             </CardContent>
           </Card>

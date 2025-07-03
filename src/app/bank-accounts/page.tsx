@@ -10,9 +10,8 @@ import { BankAccount } from "@/utils/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, WalletIcon, PlusCircle, X, Link, RefreshCw, Download } from "lucide-react";
+import { Loader2, WalletIcon, PlusCircle, X, Link, RefreshCw } from "lucide-react";
 import { toast } from "react-hot-toast";
-import GocardlessConnectionManager from "./components/GocardlessConnectionManager";
 import GocardlessImportOptions from "./components/GocardlessImportOptions";
 
 export default function BankAccountsPage() {
@@ -131,7 +130,7 @@ export default function BankAccountsPage() {
       if (summary.totalNewTransactions > 0 || summary.totalPendingDuplicates > 0) {
         // Create a detailed success toast with better formatting
         toast.success(
-          (t) => (
+          () => (
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <span className="text-lg">🎉</span>
@@ -187,7 +186,7 @@ export default function BankAccountsPage() {
         if (summary.totalPendingDuplicates > 0) {
           setTimeout(() => {
             toast(
-              (t) => (
+              (toastInstance) => (
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">👀</span>
                   <div>
@@ -199,7 +198,7 @@ export default function BankAccountsPage() {
                   <button
                     onClick={() => {
                       window.location.href = '/pending-duplicates';
-                      toast.dismiss(t.id);
+                      toast.dismiss(toastInstance.id);
                     }}
                     className="ml-auto px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors"
                   >

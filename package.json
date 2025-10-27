@@ -84,11 +84,5 @@
     "workerDirectory": [
       "public"
     ]
-  },
-  "jest": {
-    "testEnvironment": "jsdom",
-    "setupFilesAfterEnv": [
-      "<rootDir>/jest.setup.ts"
-    ]
   }
 }

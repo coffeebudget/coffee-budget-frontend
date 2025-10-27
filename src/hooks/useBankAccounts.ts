@@ -16,6 +16,7 @@ export interface BankAccount {
   userId: number;
   createdAt: string;
   updatedAt: string;
+  gocardlessAccountId?: string; // Add GoCardless account ID for integration
 }
 
 export interface BankAccountInput {

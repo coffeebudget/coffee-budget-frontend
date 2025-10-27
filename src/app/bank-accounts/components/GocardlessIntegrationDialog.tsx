@@ -57,6 +57,8 @@ export default function GocardlessIntegrationDialog({
 }: GocardlessIntegrationDialogProps) {
   const [step, setStep] = useState<'select-bank' | 'mapping'>('select-bank');
   const [institutions, setInstitutions] = useState<Institution[]>([]);
+  const [filteredInstitutions, setFilteredInstitutions] = useState<Institution[]>([]);
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedInstitution, setSelectedInstitution] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [institutionsLoading, setInstitutionsLoading] = useState(false);
@@ -83,6 +85,8 @@ export default function GocardlessIntegrationDialog({
     if (!open) {
       setStep('select-bank');
       setSelectedInstitution('');
+      setSearchTerm('');
+      setFilteredInstitutions([]);
       setAccountMappings([]);
       setError(null);
       closePopup();
@@ -138,6 +142,7 @@ export default function GocardlessIntegrationDialog({
       
       const data = await response.json();
       setInstitutions(data);
+      setFilteredInstitutions(data);
     } catch (err) {
       console.error('Error loading institutions:', err);
       setError('Failed to load banks. Please try again.');
@@ -315,45 +320,86 @@ export default function GocardlessIntegrationDialog({
                   <span className="ml-2">Loading banks...</span>
                 </div>
               ) : institutions.length > 0 ? (
-                <div className="space-y-3">
-                  {institutions.map((institution) => (
-                    <Card 
-                      key={institution.id} 
-                      className={`cursor-pointer transition-colors ${
-                        selectedInstitution === institution.id 
-                          ? 'bg-blue-50 border-blue-300' 
-                          : 'hover:bg-gray-50'
-                      }`}
-                      onClick={() => setSelectedInstitution(institution.id)}
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
+                <div className="space-y-4">
+                  {/* Search Input */}
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search for your bank..."
+                      value={searchTerm}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      onChange={(e) => {
+                        const term = e.target.value;
+                        setSearchTerm(term);
+                        
+                        if (term.trim() === '') {
+                          setFilteredInstitutions(institutions);
+                        } else {
+                          const filtered = institutions.filter(institution => 
+                            institution.name.toLowerCase().includes(term.toLowerCase()) ||
+                            institution.bic.toLowerCase().includes(term.toLowerCase())
+                          );
+                          setFilteredInstitutions(filtered);
+                        }
+                      }}
+                    />
+                  </div>
+                  
+                  {/* Bank Selection Dropdown */}
+                  <Select value={selectedInstitution} onValueChange={setSelectedInstitution}>
+                    <SelectTrigger className="w-full h-12">
+                      <SelectValue placeholder="Choose your bank from the list..." />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-80">
+                      {filteredInstitutions.map((institution) => (
+                        <SelectItem key={institution.id} value={institution.id}>
+                          <div className="flex items-center gap-3 w-full">
                             <img 
                               src={institution.logo} 
                               alt={institution.name}
-                              className="w-8 h-8 object-contain"
+                              className="w-6 h-6 object-contain flex-shrink-0"
                               onError={(e) => {
                                 (e.target as HTMLImageElement).style.display = 'none';
                               }}
                             />
-                            <div>
-                              <h4 className="font-medium">{institution.name}</h4>
-                              <p className="text-sm text-gray-500">BIC: {institution.bic}</p>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium truncate">{institution.name}</div>
+                              <div className="text-sm text-gray-500">BIC: {institution.bic}</div>
                             </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline">
-                              {institution.transaction_total_days} days history
+                            <Badge variant="outline" className="ml-2 flex-shrink-0">
+                              {institution.transaction_total_days}d
                             </Badge>
-                            {selectedInstitution === institution.id && (
-                              <CheckCircle className="h-5 w-5 text-blue-500" />
-                            )}
                           </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  {/* Selected Bank Preview */}
+                  {selectedInstitution && (
+                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <img 
+                          src={institutions.find(i => i.id === selectedInstitution)?.logo} 
+                          alt="Selected bank"
+                          className="w-8 h-8 object-contain"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                        <div>
+                          <h4 className="font-medium text-blue-900">
+                            {institutions.find(i => i.id === selectedInstitution)?.name}
+                          </h4>
+                          <p className="text-sm text-blue-700">
+                            BIC: {institutions.find(i => i.id === selectedInstitution)?.bic} • 
+                            {institutions.find(i => i.id === selectedInstitution)?.transaction_total_days} days history
+                          </p>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        <CheckCircle className="h-5 w-5 text-blue-500 ml-auto" />
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="text-center p-8">

@@ -1,0 +1,432 @@
+# Coffee Budget Frontend - Cursor Rules
+
+## Frontend Context
+This is the Next.js frontend application for the Coffee Budget personal finance application.
+
+## Architecture
+- **Framework**: Next.js 15+ with React 18+
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS with Shadcn UI components
+- **Authentication**: NextAuth.js with Auth0
+- **State Management**: React hooks and context
+- **Testing**: Jest with React Testing Library
+
+## Project Structure
+```
+src/
+├── app/                    # Next.js 13+ app directory
+│   ├── api/               # API routes
+│   ├── dashboard/         # Dashboard pages
+│   ├── transactions/      # Transaction pages
+│   └── auth/              # Authentication pages
+├── components/            # Reusable UI components
+├── hooks/                 # Custom React hooks
+├── lib/                   # Utility functions
+├── types/                 # TypeScript type definitions
+└── utils/                 # Helper functions
+```
+
+## Current Development Phase
+
+### **Phase 1: COMPLETED ✅**
+- **Backend Testing**: 100% test success rate achieved
+- **Documentation**: Comprehensive testing standards created
+- **Coverage Analysis**: Clear improvement strategy established
+
+### **Phase 2: IN PROGRESS 🎯**
+- **Backend Refactoring**: Focus on transactions.service.ts
+- **Frontend Integration**: May need updates for backend changes
+- **Testing**: Frontend testing standards to be established
+
+## Key Components
+
+### **Authentication**
+- **Provider**: NextAuth.js with Auth0
+- **Configuration**: `src/app/api/auth/[...nextauth]/route.ts`
+- **Middleware**: `src/middleware.ts` for route protection
+- **Context**: User authentication state management
+
+### **Dashboard**
+- **Location**: `src/app/dashboard/`
+- **Features**: Transaction overview, balance display, category analysis
+- **API Integration**: Backend API calls for data fetching
+- **Real-time Updates**: Transaction and balance updates
+
+### **Transactions**
+- **Location**: `src/app/transactions/`
+- **Features**: Transaction CRUD, import, categorization
+- **API Integration**: Backend transaction endpoints
+- **File Upload**: CSV import functionality
+
+### **Components**
+- **Location**: `src/components/`
+- **Library**: Shadcn UI components
+- **Styling**: Tailwind CSS classes
+- **Accessibility**: ARIA labels and keyboard navigation
+
+## Development Guidelines
+
+### **Test-Driven Development (TDD) Approach**
+- **RED-GREEN-REFACTOR**: Write failing test → Make it pass → Refactor
+- **Test First**: Always write tests before implementation
+- **Small Steps**: Make minimal changes to pass tests
+- **Continuous Testing**: Run tests frequently during development
+- **Test Coverage**: Aim for 90%+ coverage on new code
+
+### **TDD Workflow for Frontend**
+1. **Write failing test** - Define component/function behavior you want
+2. **Run test** - Confirm it fails (RED)
+3. **Write minimal code** - Just enough to pass test
+4. **Run test** - Confirm it passes (GREEN)
+5. **Refactor code** - Improve while keeping tests green
+6. **Repeat** - Continue with next feature/behavior
+
+### **Code Standards**
+- **TypeScript**: Strict mode enabled, prefer explicit types
+- **ESLint**: Use project configuration, avoid disabling rules
+- **Prettier**: Use project configuration for formatting
+- **Naming**: camelCase for variables/functions, PascalCase for components
+- **Imports**: Use absolute paths from `src/` root
+
+### **Component Patterns**
+```typescript
+// ✅ Functional component with TypeScript
+interface ComponentProps {
+  title: string;
+  onAction: () => void;
+  children?: React.ReactNode;
+}
+
+export function Component({ title, onAction, children }: ComponentProps) {
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold">{title}</h1>
+      {children}
+    </div>
+  );
+}
+```
+
+### **API Integration**
+```typescript
+// ✅ API route with proper error handling
+export async function GET(request: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const data = await fetchData(session.user.id);
+    return NextResponse.json(data);
+  } catch (error) {
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
+```
+
+### **State Management**
+```typescript
+// ✅ Custom hook for data fetching
+export function useTransactions() {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchTransactions()
+      .then(setTransactions)
+      .catch(setError)
+      .finally(() => setLoading(false));
+  }, []);
+
+  return { transactions, loading, error };
+}
+```
+
+## Testing Standards
+
+### **Component Testing**
+```typescript
+// ✅ Component test with React Testing Library
+import { render, screen, fireEvent } from '@testing-library/react';
+import { Component } from './Component';
+
+describe('Component', () => {
+  it('should render with title', () => {
+    render(<Component title="Test Title" onAction={jest.fn()} />);
+    expect(screen.getByText('Test Title')).toBeInTheDocument();
+  });
+
+  it('should call onAction when clicked', () => {
+    const onAction = jest.fn();
+    render(<Component title="Test" onAction={onAction} />);
+    
+    fireEvent.click(screen.getByRole('button'));
+    expect(onAction).toHaveBeenCalled();
+  });
+});
+```
+
+### **API Route Testing**
+```typescript
+// ✅ API route test
+import { GET } from './route';
+import { NextRequest } from 'next/server';
+
+describe('/api/transactions', () => {
+  it('should return transactions for authenticated user', async () => {
+    const request = new NextRequest('http://localhost:3000/api/transactions');
+    const response = await GET(request);
+    const data = await response.json();
+    
+    expect(response.status).toBe(200);
+    expect(data).toHaveProperty('transactions');
+  });
+});
+```
+
+## Common Patterns
+
+### **Page Components**
+```typescript
+// ✅ Page component with metadata
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Transactions - Coffee Budget',
+  description: 'Manage your transactions',
+};
+
+export default function TransactionsPage() {
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-6">Transactions</h1>
+      {/* Page content */}
+    </div>
+  );
+}
+```
+
+### **Form Components**
+```typescript
+// ✅ Form component with validation
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+const schema = z.object({
+  description: z.string().min(1, 'Description is required'),
+  amount: z.number().positive('Amount must be positive'),
+});
+
+export function TransactionForm() {
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    resolver: zodResolver(schema),
+  });
+
+  const onSubmit = (data: z.infer<typeof schema>) => {
+    // Handle form submission
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      {/* Form fields */}
+    </form>
+  );
+}
+```
+
+### **Data Fetching**
+```typescript
+// ✅ Server component with data fetching
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+
+export default async function DashboardPage() {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    redirect('/auth/signin');
+  }
+
+  const transactions = await fetchTransactions(session.user.id);
+  
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      {/* Render transactions */}
+    </div>
+  );
+}
+```
+
+## Styling Guidelines
+
+### **Tailwind CSS**
+```typescript
+// ✅ Consistent spacing and typography
+<div className="container mx-auto p-4 max-w-4xl">
+  <h1 className="text-3xl font-bold text-gray-900 mb-6">
+    Page Title
+  </h1>
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {/* Grid items */}
+  </div>
+</div>
+```
+
+### **Shadcn UI Components**
+```typescript
+// ✅ Using Shadcn UI components
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+export function TransactionCard({ transaction }: { transaction: Transaction }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{transaction.description}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-2xl font-bold">${transaction.amount}</p>
+        <Button variant="outline" size="sm">
+          Edit
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+## API Integration
+
+### **Backend Communication**
+```typescript
+// ✅ API client with error handling
+class ApiClient {
+  private baseUrl = process.env.NEXT_PUBLIC_API_URL;
+
+  async get<T>(endpoint: string): Promise<T> {
+    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  async post<T>(endpoint: string, data: any): Promise<T> {
+    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+
+    return response.json();
+  }
+}
+```
+
+### **Error Handling**
+```typescript
+// ✅ Error boundary component
+'use client';
+
+import { useEffect } from 'react';
+
+export function ErrorBoundary({ error, reset }: { error: Error; reset: () => void }) {
+  useEffect(() => {
+    console.error('Application error:', error);
+  }, [error]);
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen">
+      <h2 className="text-2xl font-bold mb-4">Something went wrong!</h2>
+      <Button onClick={reset}>Try again</Button>
+    </div>
+  );
+}
+```
+
+## Development Workflow
+
+### **Before Making Changes**
+1. **Check backend status** - Ensure backend tests are passing
+2. **Review API changes** - Understand any backend modifications
+3. **Update types** - Ensure TypeScript types are current
+
+### **During Development**
+1. **Follow component patterns** - Use established conventions
+2. **Maintain accessibility** - Include ARIA labels and keyboard navigation
+3. **Use responsive design** - Mobile-first approach with Tailwind
+4. **Test user flows** - Ensure complete user journeys work
+
+### **After Making Changes**
+1. **Test user flows** - Verify all functionality works
+2. **Check responsive design** - Test on different screen sizes
+3. **Update documentation** - Keep guides current
+4. **Verify API integration** - Ensure backend communication works
+
+## AI Assistant Guidelines
+
+### **TDD Approach for All Development**
+1. **Always start with tests** - Write failing test first (RED)
+2. **Write minimal implementation** - Just enough to pass test (GREEN)
+3. **Refactor while green** - Improve code while tests pass (REFACTOR)
+4. **Run tests frequently** - After every small change
+5. **Maintain test coverage** - Aim for 90%+ on new code
+
+### **When Helping with Components**
+1. **Use TypeScript** - Always include proper types
+2. **Follow Tailwind patterns** - Use consistent spacing and typography
+3. **Include accessibility** - Add ARIA labels and keyboard navigation
+4. **Test user flows** - Ensure complete functionality
+5. **Use Shadcn UI** - Leverage existing component library
+6. **Write tests first** - Define component behavior before implementation
+
+### **When Helping with API Integration**
+1. **Handle errors gracefully** - Include proper error handling
+2. **Use TypeScript types** - Ensure type safety
+3. **Follow REST patterns** - Use standard HTTP methods
+4. **Include loading states** - Show user feedback
+5. **Test edge cases** - Handle network errors and timeouts
+6. **Write tests first** - Define API behavior before implementation
+
+### **When Helping with Styling**
+1. **Use Tailwind classes** - Avoid custom CSS when possible
+2. **Follow responsive design** - Mobile-first approach
+3. **Maintain consistency** - Use design system patterns
+4. **Test accessibility** - Ensure proper contrast and navigation
+5. **Use Shadcn components** - Leverage existing UI library
+6. **Test visual changes** - Ensure styling works across devices
+
+## Current Focus: Backend Integration
+
+### **Phase 2 Backend Changes**
+- **Service Refactoring**: Backend services being restructured
+- **API Endpoints**: May change as services are refactored
+- **Type Updates**: TypeScript types may need updates
+- **Integration Testing**: Frontend integration with new backend structure
+
+### **Frontend Preparation**
+1. **Monitor backend changes** - Stay updated on service refactoring
+2. **Update API calls** - Adapt to new backend structure
+3. **Update types** - Ensure TypeScript types are current
+4. **Test integration** - Verify frontend works with new backend
+
+---
+
+*This file provides focused context for frontend development and backend integration.*
+*Last updated: January 2025*
+*Version: 1.0*

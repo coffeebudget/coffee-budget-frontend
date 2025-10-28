@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import RecurringTransactionAlert from '../RecurringTransactionAlert';
-import * as api from '@/utils/api';
+import * as api from '../../../../utils/api';
 import { SessionProvider } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import assert from 'assert';
@@ -13,10 +13,10 @@ jest.mock('next/navigation', () => ({
 }));
 
 // Mock imports need to be before using the mock data
-import { mockUnconfirmedPatterns, mockLinkedTransactions } from '@/mocks/recurringPatternsMock';
+import { mockUnconfirmedPatterns, mockLinkedTransactions } from '../../../../../mocks/recurringPatternsMock';
 
 // Mock the API functions directly
-jest.mock('@/utils/api', () => ({
+jest.mock('../../../../utils/api', () => ({
   fetchUnconfirmedPatterns: jest.fn().mockResolvedValue([
     {
       id: 1,

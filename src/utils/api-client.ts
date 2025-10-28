@@ -86,12 +86,15 @@ export async function createTransaction(transactionData: any) {
  * Update an existing transaction
  */
 export async function updateTransaction(id: number, transactionData: Transaction) {
+  // Remove the id field from the transaction object before sending
+  const { id: _, ...updateData } = transactionData;
+  
   const response = await fetch(`/api/transactions/${id}`, {
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(transactionData),
+    body: JSON.stringify(updateData),
   });
   return handleResponse(response);
 }

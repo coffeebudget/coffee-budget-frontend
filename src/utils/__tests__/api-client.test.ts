@@ -214,9 +214,34 @@ describe('API Client Functions', () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(transactionData),
+          body: JSON.stringify({ description: 'Updated Transaction', amount: 200, categoryId: 2 }),
         });
         expect(result).toEqual(mockUpdatedTransaction);
+      });
+
+      it('should not include id field in request body', async () => {
+        const transactionData = {
+          id: 1,
+          description: 'Test Transaction',
+          amount: 100,
+          categoryId: 2
+        };
+
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: () => Promise.resolve({ ...transactionData, updatedAt: '2024-01-01T00:00:00Z' })
+        } as Response);
+
+        await updateTransaction(1, transactionData);
+
+        expect(mockFetch).toHaveBeenCalledWith('/api/transactions/1', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ description: 'Test Transaction', amount: 100, categoryId: 2 }),
+        });
       });
     });
 

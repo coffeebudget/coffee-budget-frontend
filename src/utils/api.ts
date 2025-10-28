@@ -144,13 +144,16 @@ export async function deleteTag(token: string, id: number) {
 // =============================================================================
 
 export const updateTransaction = async (token: string, id: number, transaction: Transaction) => {
+  // Remove the id field from the transaction object before sending
+  const { id: _, ...updateData } = transaction;
+  
   const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/transactions/${id}`, {
     method: 'PATCH',
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(transaction),
+    body: JSON.stringify(updateData),
   });
 
   if (!res.ok) throw new Error('Failed to update transaction');

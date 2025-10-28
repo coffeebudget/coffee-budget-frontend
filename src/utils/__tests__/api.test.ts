@@ -379,7 +379,7 @@ describe('API Functions', () => {
             Authorization: `Bearer ${mockToken}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(transactionData),
+          body: JSON.stringify({ description: 'Updated Transaction', amount: 200, categoryId: 2 }),
         });
         expect(result).toEqual(mockUpdatedTransaction);
       });
@@ -391,6 +391,32 @@ describe('API Functions', () => {
         } as Response);
 
         await expect(updateTransaction(mockToken, 999, { id: 999, description: 'Test' })).rejects.toThrow('Failed to update transaction');
+      });
+
+      it('should not include id field in request body', async () => {
+        const transactionData = {
+          id: 1,
+          description: 'Test Transaction',
+          amount: 100,
+          categoryId: 2
+        };
+
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          headers: new Headers({ 'content-type': 'application/json' }),
+          json: () => Promise.resolve({ ...transactionData, updatedAt: '2024-01-01T00:00:00Z' })
+        } as Response);
+
+        await updateTransaction(mockToken, 1, transactionData);
+
+        expect(mockFetch).toHaveBeenCalledWith('http://localhost:3001/transactions/1', {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${mockToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ description: 'Test Transaction', amount: 100, categoryId: 2 }),
+        });
       });
     });
 

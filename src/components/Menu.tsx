@@ -56,16 +56,17 @@ export default function Menu() {
             <NavigationMenuList className="flex gap-4">
               {links.map(({ href, label }) => (
                 <NavigationMenuItem key={href}>
-                  <Link href={href} legacyBehavior passHref>
-                    <NavigationMenuLink
+                  <NavigationMenuLink asChild>
+                    <Link
+                      href={href}
                       className={cn(
                         'text-sm font-medium transition-colors hover:text-primary',
                         pathname === href ? 'text-primary underline' : 'text-muted-foreground'
                       )}
                     >
                       {label}
-                    </NavigationMenuLink>
-                  </Link>
+                    </Link>
+                  </NavigationMenuLink>
                 </NavigationMenuItem>
               ))}
             </NavigationMenuList>

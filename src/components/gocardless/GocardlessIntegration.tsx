@@ -361,8 +361,30 @@ export default function GocardlessIntegration() {
 
       if (response.ok) {
         const data = await response.json();
+        // Enhanced success message with better visibility
         toast.success(
-          `Import completed! ${data.summary.totalNewTransactions} new transactions imported, ${data.summary.totalDuplicates} duplicates skipped.`
+          `🎉 Import Successful! ${data.summary.totalNewTransactions} new transactions imported, ${data.summary.totalDuplicates} duplicates skipped.`,
+          {
+            duration: 10000, // Longer duration
+            position: 'top-center', // More prominent position
+            style: {
+              background: '#10b981',
+              color: '#ffffff',
+              border: '2px solid #059669',
+              borderRadius: '12px',
+              fontSize: '16px',
+              fontWeight: '600',
+              padding: '20px 24px',
+              maxWidth: '600px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              zIndex: 10000,
+            },
+            icon: '✅',
+            iconTheme: {
+              primary: '#ffffff',
+              secondary: '#10b981',
+            },
+          }
         );
         // Refresh connected accounts to show updated data
         await loadConnectedAccounts();

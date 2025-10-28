@@ -128,13 +128,13 @@ export default function BankAccountsPage() {
       const { summary } = data;
       
       if (summary.totalNewTransactions > 0 || summary.totalPendingDuplicates > 0) {
-        // Create a detailed success toast with better formatting
+        // Create a detailed success toast with better formatting and enhanced visibility
         toast.success(
           () => (
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <span className="text-lg">🎉</span>
-                <span className="font-semibold text-lg">GoCardless Import Completed!</span>
+                <span className="text-2xl">🎉</span>
+                <span className="font-bold text-xl">GoCardless Import Completed!</span>
               </div>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div className="flex items-center gap-1">
@@ -174,10 +174,24 @@ export default function BankAccountsPage() {
             </div>
           ),
           {
-            duration: 12000,
+            duration: 15000, // Longer duration for better visibility
+            position: 'top-center', // More prominent position
             style: {
-              maxWidth: '600px',
-              padding: '20px',
+              maxWidth: '700px',
+              padding: '24px',
+              background: '#10b981',
+              color: '#ffffff',
+              border: '2px solid #059669',
+              borderRadius: '12px',
+              fontSize: '16px',
+              fontWeight: '600',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              zIndex: 10000,
+            },
+            icon: '✅',
+            iconTheme: {
+              primary: '#ffffff',
+              secondary: '#10b981',
             },
           }
         );

@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { setupCustomMatchers } from './src/test-utils/matchers';
+import { setupCustomMatchers } from './matchers';
 
 // Setup custom matchers
 setupCustomMatchers();

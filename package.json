@@ -10,10 +10,15 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:ci": "jest --ci --coverage --watchAll=false",
+    "test:debug": "jest --detectOpenHandles --forceExit",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "cypress:open": "start-server-and-test dev http://localhost:3000 'cypress open'",
-    "cypress:run": "start-server-and-test dev http://localhost:3000 'cypress run'"
+    "cypress:run": "start-server-and-test dev http://localhost:3000 'cypress run'",
+    "cypress:debug": "cypress open --config video=false",
+    "test:e2e": "npm run cypress:run",
+    "test:all": "npm run test:ci && npm run test:e2e"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.3.2",

@@ -43,22 +43,23 @@ export default function Menu() {
   const links = isLoggedIn ? [...publicLinks, ...protectedLinks] : publicLinks;
 
   return (
-    <nav className="border-b bg-background">
+    <nav className="border-b bg-background" data-testid="main-navigation">
       <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
         {/* Left - Logo or Home */}
-        <Link href="/" className="text-lg font-semibold text-primary">
+        <Link href="/" className="text-lg font-semibold text-primary" data-testid="logo-link">
           Coffee Budget ☕
         </Link>
 
         {/* Desktop Nav */}
-        <div className="hidden desktop:flex items-center">
+        <div className="hidden desktop:flex items-center" data-testid="desktop-navigation">
           <NavigationMenu>
-            <NavigationMenuList className="flex gap-4">
+            <NavigationMenuList className="flex gap-4" data-testid="navigation-menu-list">
               {links.map(({ href, label }) => (
                 <NavigationMenuItem key={href}>
                   <NavigationMenuLink asChild>
                     <Link
                       href={href}
+                      data-testid={`nav-link-${href.replace('/', '') || 'home'}`}
                       className={cn(
                         'text-sm font-medium transition-colors hover:text-primary',
                         pathname === href ? 'text-primary underline' : 'text-muted-foreground'
@@ -73,13 +74,14 @@ export default function Menu() {
           </NavigationMenu>
           
           {/* Auth buttons for desktop */}
-          <div className="ml-6 flex items-center">
+          <div className="ml-6 flex items-center" data-testid="desktop-auth-buttons">
             {isLoggedIn ? (
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={() => signOut()}
                 className="flex items-center gap-1"
+                data-testid="logout-button"
               >
                 <LogOut className="h-4 w-4" />
                 Logout
@@ -90,6 +92,7 @@ export default function Menu() {
                 size="sm" 
                 onClick={() => signIn("auth0")}
                 className="flex items-center gap-1"
+                data-testid="login-button"
               >
                 <LogIn className="h-4 w-4" />
                 Login
@@ -99,20 +102,21 @@ export default function Menu() {
         </div>
 
         {/* Mobile Menu (hamburger) */}
-        <div className="desktop:hidden">
+        <div className="desktop:hidden" data-testid="mobile-navigation">
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="outline" size="icon">
+              <Button variant="outline" size="icon" data-testid="mobile-menu-button">
                 <MenuIcon className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[250px]">
+            <SheetContent side="left" className="w-[250px]" data-testid="mobile-menu-sheet">
               <SheetTitle className="sr-only">Navigation</SheetTitle>
-              <nav className="mt-4 space-y-2">
+              <nav className="mt-4 space-y-2" data-testid="mobile-navigation-menu">
                 {links.map(({ href, label }) => (
                   <Link
                     key={href}
                     href={href}
+                    data-testid={`mobile-nav-link-${href.replace('/', '') || 'home'}`}
                     className={cn(
                       'block px-2 py-2 rounded hover:bg-accent text-sm font-medium',
                       pathname === href ? 'text-primary' : 'text-muted-foreground'
@@ -123,11 +127,12 @@ export default function Menu() {
                 ))}
                 
                 {/* Auth button for mobile */}
-                <div className="pt-4 mt-4 border-t">
+                <div className="pt-4 mt-4 border-t" data-testid="mobile-auth-buttons">
                   {isLoggedIn ? (
                     <button
                       onClick={() => signOut()}
                       className="w-full px-2 py-2 flex items-center gap-2 text-red-600 hover:bg-red-50 rounded text-sm font-medium"
+                      data-testid="mobile-logout-button"
                     >
                       <LogOut className="h-4 w-4" />
                       Logout
@@ -136,6 +141,7 @@ export default function Menu() {
                     <button
                       onClick={() => signIn("auth0")}
                       className="w-full px-2 py-2 flex items-center gap-2 text-blue-600 hover:bg-blue-50 rounded text-sm font-medium"
+                      data-testid="mobile-login-button"
                     >
                       <LogIn className="h-4 w-4" />
                       Login

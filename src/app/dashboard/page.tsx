@@ -15,6 +15,7 @@ import SmartAlerts from "./components/SmartAlerts";
 import CategoryPerformance12M from "./components/CategoryPerformance12M";
 import BudgetProgressRings from "./components/BudgetProgressRings";
 import CashFlowForecast from "./components/CashFlowForecast";
+import RecurringTransactionAlert from "./components/RecurringTransactionAlert";
 
 export default function DashboardPage() {
   const { data: session } = useSession();
@@ -106,6 +107,9 @@ export default function DashboardPage() {
       
       {/* Smart Alerts */}
       <SmartAlerts className="mb-6" />
+      
+      {/* Recurring Transaction Alert */}
+      <RecurringTransactionAlert />
       
       {/* Budget Management Card */}
       <BudgetManagementCard />

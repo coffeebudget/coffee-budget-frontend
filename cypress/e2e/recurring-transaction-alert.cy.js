@@ -1,19 +1,13 @@
 describe('Recurring Transaction Alert', () => {
   beforeEach(() => {
-    // Stub API responses
+    // Use the mockLoggedIn command to set up authentication
+    cy.mockLoggedIn();
+    
+    // Stub the specific API endpoint for unconfirmed patterns
     cy.intercept('GET', '**/recurring-transactions/unconfirmed-patterns', {
       statusCode: 200,
       body: [{ id: 1 }, { id: 2 }] // Mock 2 unconfirmed patterns
     }).as('getPatterns');
-    
-    cy.intercept('GET', '**/api/auth/session', {
-      statusCode: 200,
-      body: {
-        user: {
-          accessToken: 'mock-token'
-        }
-      }
-    }).as('getSession');
     
     // Visit dashboard page
     cy.visit('/dashboard');

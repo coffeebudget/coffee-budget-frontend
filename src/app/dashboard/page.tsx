@@ -107,9 +107,6 @@ export default function DashboardPage() {
       {/* Smart Alerts */}
       <SmartAlerts className="mb-6" />
       
-      {/* Recurring Transaction Alert */}
-      <RecurringTransactionAlert />
-      
       {/* Budget Management Card */}
       <BudgetManagementCard />
 

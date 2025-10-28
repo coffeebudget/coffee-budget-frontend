@@ -2,7 +2,6 @@ import React from 'react';
 import { render, RenderOptions } from '@testing-library/react';
 import { SessionProvider } from 'next-auth/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from '@/components/theme-provider';
 
 // Mock session for testing
 export const mockSession = {
@@ -11,9 +10,9 @@ export const mockSession = {
     email: 'test@example.com',
     name: 'Test User',
     image: 'https://example.com/avatar.jpg',
+    accessToken: 'mock-access-token',
   },
   expires: '2024-12-31T23:59:59.999Z',
-  accessToken: 'mock-access-token',
 };
 
 // Create a test query client with disabled retries
@@ -43,9 +42,7 @@ export const renderWithProviders = (
   const AllTheProviders = ({ children }: { children: React.ReactNode }) => (
     <SessionProvider session={session}>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-          {children}
-        </ThemeProvider>
+        {children}
       </QueryClientProvider>
     </SessionProvider>
   );

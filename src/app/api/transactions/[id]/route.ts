@@ -5,7 +5,7 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 // GET /api/transactions/[id] - Get a specific transaction
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -15,8 +15,7 @@ export async function GET(
     }
     
     const token = session.user.accessToken;
-    const p = await params;
-    const id = p.id;
+    const { id } = await params;
     
     if (!id || isNaN(Number(id))) {
       return NextResponse.json(
@@ -60,7 +59,7 @@ export async function GET(
 // PATCH /api/transactions/[id] - Update a transaction
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -70,8 +69,7 @@ export async function PATCH(
     }
     
     const token = session.user.accessToken;
-    const p = await params;
-    const id = p.id;
+    const { id } = await params;
     
     if (!id || isNaN(Number(id))) {
       return NextResponse.json(
@@ -112,7 +110,7 @@ export async function PATCH(
 // DELETE /api/transactions/[id] - Delete a transaction
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -122,8 +120,7 @@ export async function DELETE(
     }
     
     const token = session.user.accessToken;
-    const p = await params;
-    const id = p.id;
+    const { id } = await params;
     
     if (!id || isNaN(Number(id))) {
       return NextResponse.json(

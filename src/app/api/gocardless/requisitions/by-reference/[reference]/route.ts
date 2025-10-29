@@ -5,7 +5,7 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 // GET endpoint to fetch requisition by reference
 export async function GET(
   request: NextRequest,
-  { params }: { params: { reference: string } }
+  { params }: { params: Promise<{ reference: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -18,7 +18,7 @@ export async function GET(
     }
 
     const token = session.user.accessToken;
-    const reference = params.reference;
+    const { reference } = await params;
     
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/gocardless/requisitions/by-reference/${reference}`,

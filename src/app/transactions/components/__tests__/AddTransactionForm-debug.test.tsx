@@ -3,11 +3,12 @@ import { renderWithProviders } from '../../../../test-utils';
 
 // Simple test to debug the import issue
 describe('AddTransactionForm Debug', () => {
-  it('should import AddTransactionForm component', () => {
+  it('should import AddTransactionForm component', async () => {
     // Try to import the component
     let AddTransactionForm;
     try {
-      AddTransactionForm = require('../AddTransactionForm').default;
+      const importedModule = await import('../AddTransactionForm');
+      AddTransactionForm = importedModule.default;
       console.log('AddTransactionForm imported successfully:', typeof AddTransactionForm);
     } catch (error) {
       console.error('Import error:', error);
@@ -23,8 +24,9 @@ describe('AddTransactionForm Debug', () => {
     expect(container.firstChild).toBeInTheDocument();
   });
 
-  it('should render AddTransactionForm with minimal props', () => {
-    const AddTransactionForm = require('../AddTransactionForm').default;
+  it('should render AddTransactionForm with minimal props', async () => {
+    const importedModule = await import('../AddTransactionForm');
+    const AddTransactionForm = importedModule.default;
     const mockOnAddTransaction = jest.fn();
     
     const { container } = renderWithProviders(

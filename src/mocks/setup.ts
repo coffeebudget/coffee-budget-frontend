@@ -21,5 +21,4 @@ afterAll(() => {
   server.close();
 });
 
-// Export server for manual control in tests
-export { server };
+// Server is already exported above

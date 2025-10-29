@@ -31,5 +31,5 @@
     "src/types/**/*.d.ts",
     "src/components/**/*"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "cypress"]
 }

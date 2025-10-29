@@ -175,7 +175,7 @@ afterEach(() => {
 
 // Global test utilities
 declare global {
-  var testUtils: {
+  let testUtils: {
     mockFetch: (response: any, status?: number) => void;
     mockFetchError: (error: string) => void;
     resetMocks: () => void;
@@ -183,7 +183,7 @@ declare global {
 }
 
 // Setup global test utilities
-global.testUtils = {
+(global as any).testUtils = {
   mockFetch: (response: any, status = 200) => {
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: status >= 200 && status < 300,

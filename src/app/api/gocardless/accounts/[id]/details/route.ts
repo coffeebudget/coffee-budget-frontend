@@ -5,7 +5,7 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 // GET endpoint to fetch account details by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -18,7 +18,7 @@ export async function GET(
     }
 
     const token = session.user.accessToken;
-    const { id } = params;
+    const { id } = await params;
     
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/gocardless/accounts/${id}/details`,

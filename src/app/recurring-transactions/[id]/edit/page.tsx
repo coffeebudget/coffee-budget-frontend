@@ -4,8 +4,9 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { getRecurringTransactionById } from '@/utils/api';
 import EditRecurringTransactionForm from '@/app/recurring-transactions/components/EditRecurringTransactionForm';
 
-export default async function EditRecurringTransactionPage({ params }: { params: { id: string } }) {
-    const id = Number(params.id); // 🔍 ensures we parse only once
+export default async function EditRecurringTransactionPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id: idString } = await params;
+    const id = Number(idString); // 🔍 ensures we parse only once
   
     const session = await getServerSession(authOptions);
     const token = session?.user?.accessToken;

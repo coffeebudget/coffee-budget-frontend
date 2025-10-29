@@ -5,7 +5,7 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 // GET /api/credit-cards/[id] - Get a specific credit card
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -15,7 +15,7 @@ export async function GET(
     }
     
     const token = session.user.accessToken;
-    const id = params.id;
+    const { id } = await params;
     
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/credit-cards/${id}`, {
       headers: {
@@ -44,7 +44,7 @@ export async function GET(
 // PATCH /api/credit-cards/[id] - Update a credit card
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -54,7 +54,7 @@ export async function PATCH(
     }
     
     const token = session.user.accessToken;
-    const id = params.id;
+    const { id } = await params;
     const cardData = await request.json();
     
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/credit-cards/${id}`, {
@@ -87,7 +87,7 @@ export async function PATCH(
 // DELETE /api/credit-cards/[id] - Delete a credit card
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -97,7 +97,7 @@ export async function DELETE(
     }
     
     const token = session.user.accessToken;
-    const id = params.id;
+    const { id } = await params;
     
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/credit-cards/${id}`, {
       method: "DELETE",

@@ -1,5 +1,6 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import '@testing-library/jest-dom';
 
 // Common testing helpers for consistent test operations
 
@@ -18,7 +19,12 @@ export const waitForElement = async (testId: string, timeout = 5000) => {
  */
 export const waitForElementToDisappear = async (testId: string, timeout = 5000) => {
   return await waitFor(
-    () => expect(screen.queryByTestId(testId)).not.toBeInTheDocument(),
+    () => {
+      const element = screen.queryByTestId(testId);
+      if (element) {
+        throw new Error(`Element with testId "${testId}" is still present`);
+      }
+    },
     { timeout }
   );
 };
@@ -135,7 +141,12 @@ export const waitForText = async (text: string | RegExp, timeout = 5000) => {
  */
 export const waitForTextToDisappear = async (text: string | RegExp, timeout = 5000) => {
   return await waitFor(
-    () => expect(screen.queryByText(text)).not.toBeInTheDocument(),
+    () => {
+      const element = screen.queryByText(text);
+      if (element) {
+        throw new Error(`Text "${text}" is still present`);
+      }
+    },
     { timeout }
   );
 };
@@ -163,7 +174,7 @@ export const restoreConsole = () => {
 export const createMockFunction = <T extends (...args: any[]) => any>(
   implementation?: T
 ): jest.MockedFunction<T> => {
-  return jest.fn(implementation) as jest.MockedFunction<T>;
+  return jest.fn(implementation) as unknown as jest.MockedFunction<T>;
 };
 
 /**

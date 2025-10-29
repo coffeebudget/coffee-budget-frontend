@@ -5,10 +5,10 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 // GET endpoint to fetch a single bank account by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = params.id;
+    const { id } = await params;
     if (!id || isNaN(Number(id))) {
       return NextResponse.json(
         { error: "Invalid bank account ID" },
@@ -58,7 +58,7 @@ export async function GET(
 // PATCH endpoint to update bank account (e.g., associate with GoCardless)
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -71,7 +71,7 @@ export async function PATCH(
     }
 
     const token = session.user.accessToken;
-    const accountId = params.id;
+    const { id: accountId } = await params;
     const body = await request.json();
     
     const response = await fetch(
@@ -109,10 +109,10 @@ export async function PATCH(
 // DELETE endpoint to delete a bank account by ID
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = params.id;
+    const { id } = await params;
     if (!id || isNaN(Number(id))) {
       return NextResponse.json(
         { error: "Invalid bank account ID" },

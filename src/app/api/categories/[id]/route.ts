@@ -4,7 +4,7 @@ import { authOptions } from '../../auth/[...nextauth]/route';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -13,7 +13,8 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/${params.id}`, {
+    const { id } = await params;
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/${id}`, {
       headers: {
         'Authorization': `Bearer ${session.user.accessToken}`,
         'Content-Type': 'application/json',
@@ -42,7 +43,7 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -51,6 +52,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id } = await params;
     const body = await request.json();
     
     // Extract only the budget-related fields we want to update
@@ -69,9 +71,9 @@ export async function PATCH(
       }
     });
 
-    console.log('Updating category', params.id, 'with data:', budgetData);
+    console.log('Updating category', id, 'with data:', budgetData);
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/${params.id}`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/${id}`, {
       method: 'PATCH',
       headers: {
         'Authorization': `Bearer ${session.user.accessToken}`,
@@ -102,7 +104,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -111,7 +113,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/${params.id}`, {
+    const { id } = await params;
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/${id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${session.user.accessToken}`,

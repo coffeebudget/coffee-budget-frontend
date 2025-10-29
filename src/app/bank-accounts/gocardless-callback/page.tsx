@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,7 +38,7 @@ interface PopupMessage {
   };
 }
 
-export default function GocardlessCallback() {
+function GocardlessCallbackContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -285,5 +285,25 @@ export default function GocardlessCallback() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function GocardlessCallback() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Loading...</h3>
+            <p className="text-muted-foreground text-center">
+              Please wait while we process your request...
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    }>
+      <GocardlessCallbackContent />
+    </Suspense>
   );
 } 

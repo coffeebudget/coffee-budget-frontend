@@ -24,7 +24,13 @@ interface KeywordImpact {
     name: string;
     count: number;
   }>;
-  sampleTransactions: Array<unknown>;
+  sampleTransactions: Array<{
+    id: number;
+    description: string;
+    amount: number;
+    executionDate: string;
+    category?: { name: string; };
+  }>;
 }
 
 interface CategoryCount {
@@ -303,7 +309,6 @@ export default function CategoryDetail({
         onClose={handleClosePreview}
         keyword={previewKeyword}
         categoryName={category.name || ""}
-        categoryId={category.id}
         keywordImpact={keywordImpact}
         isLoading={loadingPreview}
         onApply={handleApplyKeyword}

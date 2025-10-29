@@ -1,8 +1,5 @@
-'use client';
-
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useSession, signIn, signOut } from "next-auth/react";
 import { cn } from '@/lib/utils';
 import {
   NavigationMenu,
@@ -16,8 +13,14 @@ import {
   SheetTrigger,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { Menu as MenuIcon, LogOut, LogIn, User } from 'lucide-react';
+import { Menu as MenuIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import dynamic from 'next/dynamic';
+
+const AuthButtons = dynamic(() => import('./AuthButtons'), {
+  ssr: false,
+  loading: () => <div className="text-sm text-muted-foreground">Loading...</div>
+});
 
 const protectedLinks = [
   { href: '/dashboard', label: 'Dashboard' },
@@ -36,11 +39,9 @@ const publicLinks = [
 
 export default function Menu() {
   const pathname = usePathname();
-  const { data: session } = useSession();
-  const isLoggedIn = !!session;
   
-  // Links to display based on authentication status
-  const links = isLoggedIn ? [...publicLinks, ...protectedLinks] : publicLinks;
+  // For now, show all links - authentication will be handled by AuthButtons
+  const links = [...publicLinks, ...protectedLinks];
 
   return (
     <nav className="border-b bg-background" data-testid="main-navigation">
@@ -75,29 +76,7 @@ export default function Menu() {
           
           {/* Auth buttons for desktop */}
           <div className="ml-6 flex items-center" data-testid="desktop-auth-buttons">
-            {isLoggedIn ? (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => signOut()}
-                className="flex items-center gap-1"
-                data-testid="logout-button"
-              >
-                <LogOut className="h-4 w-4" />
-                Logout
-              </Button>
-            ) : (
-              <Button 
-                variant="default" 
-                size="sm" 
-                onClick={() => signIn("auth0")}
-                className="flex items-center gap-1"
-                data-testid="login-button"
-              >
-                <LogIn className="h-4 w-4" />
-                Login
-              </Button>
-            )}
+            <AuthButtons />
           </div>
         </div>
 
@@ -128,25 +107,7 @@ export default function Menu() {
                 
                 {/* Auth button for mobile */}
                 <div className="pt-4 mt-4 border-t" data-testid="mobile-auth-buttons">
-                  {isLoggedIn ? (
-                    <button
-                      onClick={() => signOut()}
-                      className="w-full px-2 py-2 flex items-center gap-2 text-red-600 hover:bg-red-50 rounded text-sm font-medium"
-                      data-testid="mobile-logout-button"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Logout
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => signIn("auth0")}
-                      className="w-full px-2 py-2 flex items-center gap-2 text-blue-600 hover:bg-blue-50 rounded text-sm font-medium"
-                      data-testid="mobile-login-button"
-                    >
-                      <LogIn className="h-4 w-4" />
-                      Login
-                    </button>
-                  )}
+                  <AuthButtons isMobile />
                 </div>
               </nav>
             </SheetContent>

@@ -101,7 +101,7 @@ export const handlers = [
     const body = await request.json();
     const newTransaction = {
       id: mockTransactions.length + 1,
-      ...body,
+      ...(body && typeof body === 'object' ? body : {}),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -127,7 +127,7 @@ export const handlers = [
     
     const updatedTransaction = {
       ...transaction,
-      ...body,
+      ...(body && typeof body === 'object' ? body : {}),
       updatedAt: new Date().toISOString(),
     };
     
@@ -184,7 +184,7 @@ export const handlers = [
     const body = await request.json();
     const newCategory = {
       id: mockCategories.length + 1,
-      ...body,
+      ...(body && typeof body === 'object' ? body : {}),
       userId: 1,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -211,7 +211,7 @@ export const handlers = [
     
     const updatedCategory = {
       ...category,
-      ...body,
+      ...(body && typeof body === 'object' ? body : {}),
       updatedAt: new Date().toISOString(),
     };
     
@@ -268,7 +268,7 @@ export const handlers = [
     const body = await request.json();
     const newBankAccount = {
       id: mockBankAccounts.length + 1,
-      ...body,
+      ...(body && typeof body === 'object' ? body : {}),
       userId: 1,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -295,7 +295,7 @@ export const handlers = [
     
     const updatedBankAccount = {
       ...bankAccount,
-      ...body,
+      ...(body && typeof body === 'object' ? body : {}),
       updatedAt: new Date().toISOString(),
     };
     
@@ -335,7 +335,7 @@ export const handlers = [
     const body = await request.json();
     const updatedUser = {
       ...mockUsers[0],
-      ...body,
+      ...(body && typeof body === 'object' ? body : {}),
       updatedAt: new Date().toISOString(),
     };
     

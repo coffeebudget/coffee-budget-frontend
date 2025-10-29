@@ -3,7 +3,7 @@
 // Custom Cypress commands for consistent testing
 
 // Mock logged in user
-Cypress.Commands.add('mockLoggedIn', (user = {}) => {
+Cypress.Commands.add('mockLoggedIn', (user: any = {}) => {
   const defaultUser = {
     id: '1',
     email: 'test@example.com',
@@ -11,7 +11,7 @@ Cypress.Commands.add('mockLoggedIn', (user = {}) => {
     image: 'https://example.com/avatar.jpg',
   };
   
-  const mockUser = { ...defaultUser, ...user };
+  const mockUser = { ...defaultUser, ...(user || {}) };
   
   cy.window().then((win) => {
     // Mock localStorage for session

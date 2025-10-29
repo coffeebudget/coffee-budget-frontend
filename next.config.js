@@ -1,6 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Exclude Cypress files from build
+  webpack: (config) => {
+    config.module.rules.push({
+      test: /cypress/,
+      use: 'ignore-loader',
+    });
+    return config;
+  },
   // 🔒 SECURITY: Enhanced security headers
   async headers() {
     return [

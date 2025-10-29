@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom';
+import React from 'react';
 import { setupCustomMatchers } from './src/test-utils/matchers';
 
 // Setup custom matchers
@@ -53,7 +54,7 @@ jest.mock('next/image', () => ({
   __esModule: true,
   default: (props: any) => {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img {...props} />;
+    return React.createElement('img', props);
   },
 }));
 
@@ -61,11 +62,7 @@ jest.mock('next/image', () => ({
 jest.mock('next/link', () => ({
   __esModule: true,
   default: ({ children, href, ...props }: any) => {
-    return (
-      <a href={href} {...props}>
-        {children}
-      </a>
-    );
+    return React.createElement('a', { href, ...props }, children);
   },
 }));
 
@@ -173,33 +170,4 @@ afterEach(() => {
   (global.fetch as jest.Mock).mockClear();
 });
 
-// Global test utilities
-declare global {
-  var testUtils: {
-    mockFetch: (response: any, status?: number) => void;
-    mockFetchError: (error: string) => void;
-    resetMocks: () => void;
-  };
-}
-
-// Setup global test utilities
-global.testUtils = {
-  mockFetch: (response: any, status = 200) => {
-    (global.fetch as jest.Mock).mockResolvedValue({
-      ok: status >= 200 && status < 300,
-      status,
-      json: () => Promise.resolve(response),
-      text: () => Promise.resolve(JSON.stringify(response)),
-    });
-  },
-  
-  mockFetchError: (error: string) => {
-    (global.fetch as jest.Mock).mockRejectedValue(new Error(error));
-  },
-  
-  resetMocks: () => {
-    jest.clearAllMocks();
-    localStorageMock.clear();
-    sessionStorageMock.clear();
-  },
-};
+// Global test utilities are defined in src/test-utils/setup.tsx

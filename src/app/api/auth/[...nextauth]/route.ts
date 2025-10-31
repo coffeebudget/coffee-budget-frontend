@@ -28,30 +28,74 @@ export const authOptions: NextAuthOptions = {
         },
       },
     }),
-  ],  
+  ],
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === 'production' 
+        ? '__Secure-next-auth.session-token' 
+        : 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+    callbackUrl: {
+      name: process.env.NODE_ENV === 'production'
+        ? '__Secure-next-auth.callback-url'
+        : 'next-auth.callback-url',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+    csrfToken: {
+      name: process.env.NODE_ENV === 'production'
+        ? '__Secure-next-auth.csrf-token'
+        : 'next-auth.csrf-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+  },
   callbacks: {
     async jwt({ token, account }) {
-  
       if (account?.access_token) {
-        token.accessToken = account.access_token; // ✅ Store the correct access token
+        token.accessToken = account.access_token;
       }
       return token;
     },
     async session({ session, token }) {
-  
       if (session.user && token.sub && token.accessToken) {
         session.user.id = token.sub;
         session.user.accessToken = token.accessToken as string;
 
+        // Don't block session creation on user fetch/create errors
+        // This will be handled async or on first API call
         try {
           const userData = await fetchUserByAuth0Id(token.sub as string, token.accessToken as string);
           
           if (!userData) {
-            // User doesn't exist, create new user
-            await createUser(token.sub as string, session.user.email as string, token.accessToken as string);
+            // User doesn't exist, create new user (non-blocking)
+            createUser(token.sub as string, session.user.email as string, token.accessToken as string)
+              .catch(error => {
+                console.error('Error creating user (non-blocking):', error);
+              });
           } 
         } catch (error) {
-          console.error('Error handling user:', error);
+          // Log error but don't fail the session
+          console.error('Error fetching user (non-blocking):', error);
+          // Session will still be created, user creation will happen on first API call
         }
       }
       return session;

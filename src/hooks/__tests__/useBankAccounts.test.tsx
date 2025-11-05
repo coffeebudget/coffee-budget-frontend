@@ -5,7 +5,10 @@ import { useBankAccounts } from '../useBankAccounts';
 import * as apiClient from '../../utils/api-client';
 
 // Mock dependencies
-jest.mock('next-auth/react');
+jest.mock('next-auth/react', () => ({
+  useSession: jest.fn(),
+  SessionProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
 jest.mock('react-hot-toast');
 jest.mock('../../utils/api-client');
 

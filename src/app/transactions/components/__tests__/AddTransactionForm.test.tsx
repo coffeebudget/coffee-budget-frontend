@@ -90,6 +90,7 @@ jest.mock('next-auth/react', () => ({
     },
     status: 'authenticated',
   }),
+  SessionProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 // Mock API functions

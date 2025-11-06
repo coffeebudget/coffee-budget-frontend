@@ -1,6 +1,12 @@
 import '@testing-library/jest-dom';
 import React from 'react';
 import { setupCustomMatchers } from './src/test-utils/matchers';
+import { TextEncoder, TextDecoder } from 'util';
+import 'whatwg-fetch';
+
+// Polyfill TextEncoder/TextDecoder for MSW
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
 
 // Setup custom matchers
 setupCustomMatchers();

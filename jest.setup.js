@@ -1,5 +1,10 @@
 import '@testing-library/jest-dom';
 import React from 'react';
+import { TextEncoder, TextDecoder } from 'util';
+
+// Polyfill TextEncoder/TextDecoder for MSW
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
 
 // Mock Next.js router
 jest.mock('next/router', () => ({

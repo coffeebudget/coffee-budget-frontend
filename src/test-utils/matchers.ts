@@ -3,7 +3,7 @@ import { expect } from '@jest/globals';
 // Custom matchers for better testing assertions
 export const customMatchers = {
   toBeInTheDocument: (received: any) => {
-    const pass = received && received.ownerDocument && received.ownerDocument.body.contains(received);
+    const pass = Boolean(received && received.ownerDocument && received.ownerDocument.body.contains(received));
     return {
       pass,
       message: () => pass

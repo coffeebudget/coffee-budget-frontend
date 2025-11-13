@@ -6,7 +6,7 @@ import 'whatwg-fetch';
 
 // Polyfill TextEncoder/TextDecoder for MSW
 global.TextEncoder = TextEncoder;
-global.TextDecoder = TextDecoder;
+global.TextDecoder = TextDecoder as any;
 
 // Setup custom matchers
 setupCustomMatchers();

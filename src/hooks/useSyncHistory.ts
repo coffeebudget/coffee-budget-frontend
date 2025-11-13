@@ -18,7 +18,7 @@ export function useSyncHistory(
     queryKey: ['sync-history', page, limit, status],
     queryFn: () =>
       fetchSyncHistory(
-        session!.accessToken as string,
+        session!.user!.accessToken as string,
         page,
         limit,
         status
@@ -33,7 +33,7 @@ export function useSyncStatistics(days: number = 30) {
 
   return useQuery({
     queryKey: ['sync-statistics', days],
-    queryFn: () => fetchSyncStatistics(session!.accessToken as string, days),
+    queryFn: () => fetchSyncStatistics(session!.user!.accessToken as string, days),
     enabled: !!session,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -44,7 +44,7 @@ export function useSyncReportDetail(id: number) {
 
   return useQuery({
     queryKey: ['sync-report', id],
-    queryFn: () => fetchSyncReportById(session!.accessToken as string, id),
+    queryFn: () => fetchSyncReportById(session!.user!.accessToken as string, id),
     enabled: !!session && !!id,
     staleTime: 60 * 1000, // 1 minute
   });

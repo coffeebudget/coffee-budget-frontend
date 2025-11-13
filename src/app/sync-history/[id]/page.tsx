@@ -9,12 +9,13 @@ import { ArrowLeft } from 'lucide-react';
 export default async function SyncDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const session = await getServerSession(authOptions);
   if (!session) redirect('/auth/signin');
 
-  const id = parseInt(params.id);
+  const { id: idParam } = await params;
+  const id = parseInt(idParam);
 
   return (
     <div className="container mx-auto p-4 max-w-6xl">

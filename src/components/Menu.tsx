@@ -1,5 +1,8 @@
+'use client';
+
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import {
   NavigationMenu,
@@ -40,6 +43,12 @@ const publicLinks = [
 
 export default function Menu() {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch by only using pathname after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   // For now, show all links - authentication will be handled by AuthButtons
   const links = [...publicLinks, ...protectedLinks];
@@ -64,7 +73,7 @@ export default function Menu() {
                       data-testid={`nav-link-${href.replace('/', '') || 'home'}`}
                       className={cn(
                         'text-sm font-medium transition-colors hover:text-primary',
-                        pathname === href ? 'text-primary underline' : 'text-muted-foreground'
+                        mounted && pathname === href ? 'text-primary underline' : 'text-muted-foreground'
                       )}
                     >
                       {label}
@@ -99,7 +108,7 @@ export default function Menu() {
                     data-testid={`mobile-nav-link-${href.replace('/', '') || 'home'}`}
                     className={cn(
                       'block px-2 py-2 rounded hover:bg-accent text-sm font-medium',
-                      pathname === href ? 'text-primary' : 'text-muted-foreground'
+                      mounted && pathname === href ? 'text-primary' : 'text-muted-foreground'
                     )}
                   >
                     {label}

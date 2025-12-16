@@ -30,6 +30,8 @@ const protectedLinks = [
   { href: '/bank-accounts', label: 'Bank Accounts' },
   { href: '/credit-cards', label: 'Credit Cards' },
   { href: '/payment-accounts', label: 'Payment Accounts' },
+  { href: '/payment-activities', label: 'Payment Activities' },
+  { href: '/payment-reconciliation', label: 'Reconciliation' },
   { href: '/transactions', label: 'Transactions' },
   { href: '/recurring-transactions', label: 'Recurring' },
   { href: '/pending-duplicates', label: 'Duplicates' },

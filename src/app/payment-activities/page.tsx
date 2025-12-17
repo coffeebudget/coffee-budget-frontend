@@ -42,7 +42,8 @@ export default function PaymentActivitiesPage() {
       fetchPaymentActivities(selectedAccountId);
       fetchReconciliationStats(selectedAccountId);
     }
-  }, [selectedAccountId, fetchPaymentActivities, fetchReconciliationStats]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedAccountId]);
 
   const handleImport = async () => {
     if (!selectedAccountId) return;

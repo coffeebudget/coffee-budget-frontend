@@ -69,10 +69,27 @@ export const authOptions: NextAuthOptions = {
     },
   },
   callbacks: {
-    async jwt({ token, account }) {
+    async jwt({ token, account, user }) {
       // On initial sign-in, account will be present and we save the access token
       if (account?.access_token) {
+        console.log('✅ Saving access_token to JWT token');
         token.accessToken = account.access_token;
+
+        // Fetch or create user ONLY on initial sign-in (when account is present)
+        try {
+          const userData = await fetchUserByAuth0Id(token.sub as string, account.access_token);
+
+          if (!userData) {
+            // User doesn't exist, create new user
+            await createUser(token.sub as string, user?.email as string || '', account.access_token);
+            console.log('✅ New user created on initial sign-in');
+          } else {
+            console.log('✅ Existing user found on initial sign-in');
+          }
+        } catch (error) {
+          console.error('Error fetching/creating user on sign-in:', error);
+          // Continue anyway - user will be created on first API call if needed
+        }
       }
       // On subsequent calls, the token already has accessToken, so we just return it
       return token;
@@ -81,24 +98,6 @@ export const authOptions: NextAuthOptions = {
       if (session.user && token.sub && token.accessToken) {
         session.user.id = token.sub;
         session.user.accessToken = token.accessToken as string;
-
-        // Don't block session creation on user fetch/create errors
-        // This will be handled async or on first API call
-        try {
-          const userData = await fetchUserByAuth0Id(token.sub as string, token.accessToken as string);
-          
-          if (!userData) {
-            // User doesn't exist, create new user (non-blocking)
-            createUser(token.sub as string, session.user.email as string, token.accessToken as string)
-              .catch(error => {
-                console.error('Error creating user (non-blocking):', error);
-              });
-          } 
-        } catch (error) {
-          // Log error but don't fail the session
-          console.error('Error fetching user (non-blocking):', error);
-          // Session will still be created, user creation will happen on first API call
-        }
       }
       return session;
     },

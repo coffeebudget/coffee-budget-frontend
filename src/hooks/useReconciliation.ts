@@ -85,7 +85,7 @@ export function useReconciliation() {
    */
   const markAsReviewed = async (activityId: number) => {
     return updateReconciliation(activityId, {
-      reconciliationStatus: 'reviewed',
+      reconciliationStatus: 'failed',
     });
   };
 

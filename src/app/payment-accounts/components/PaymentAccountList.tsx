@@ -57,11 +57,11 @@ export default function PaymentAccountList({
         endDate: endDate.toISOString().split('T')[0],
       });
 
-      if (result.newActivitiesCount > 0) {
+      if (result.imported > 0) {
         toast.success(
           `🎉 Import completed for ${account.displayName}!\n\n` +
-          `📈 ${result.newActivitiesCount} new activities imported\n` +
-          `🔄 ${result.duplicatesCount || 0} duplicates skipped`,
+          `📈 ${result.imported} new activities imported\n` +
+          `🔄 ${result.skipped || 0} duplicates skipped`,
           {
             duration: 6000,
             style: {
@@ -69,9 +69,9 @@ export default function PaymentAccountList({
             }
           }
         );
-      } else if (result.duplicatesCount && result.duplicatesCount > 0) {
+      } else if (result.skipped && result.skipped > 0) {
         toast('ℹ️ Import completed - no new activities\n\n' +
-          `🔄 ${result.duplicatesCount} activities were already imported`,
+          `🔄 ${result.skipped} activities were already imported`,
           {
             duration: 4000,
             icon: '📋',

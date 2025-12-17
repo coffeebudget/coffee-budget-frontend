@@ -1,13 +1,15 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 
-export default function PaymentGocardlessCallbackPage() {
+function CallbackHandler() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
+    if (!searchParams) return;
+
     const requisitionId = searchParams.get('ref');
     const error = searchParams.get('error');
 
@@ -60,5 +62,19 @@ export default function PaymentGocardlessCallbackPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function PaymentGocardlessCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-gray-50">
+          <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
+        </div>
+      }
+    >
+      <CallbackHandler />
+    </Suspense>
   );
 }

@@ -456,8 +456,8 @@ export default function PaymentReconciliationPage() {
                                   </div>
                                 </div>
                                 <Button
-                                  onClick={() => handleMatch(transaction.id)}
-                                  disabled={matching}
+                                  onClick={() => transaction.id && handleMatch(transaction.id)}
+                                  disabled={matching || !transaction.id}
                                   className="w-full"
                                   size="sm"
                                 >

@@ -119,7 +119,7 @@ export function usePaymentActivities() {
       );
 
       // Refresh activities after import
-      if (result.success && result.imported > 0) {
+      if (result.imported > 0) {
         await fetchPaymentActivities(importData.paymentAccountId);
       }
 

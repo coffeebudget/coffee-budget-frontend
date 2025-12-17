@@ -6,7 +6,7 @@ import { usePaymentAccounts } from "@/hooks/usePaymentAccounts";
 import PaymentAccountForm from "./components/PaymentAccountForm";
 import PaymentAccountList from "./components/PaymentAccountList";
 import PaymentGocardlessIntegrationDialog from "./components/PaymentGocardlessIntegrationDialog";
-import { PaymentAccount } from "@/types/payment-types";
+import { PaymentAccount, CreatePaymentAccountDto } from "@/types/payment-types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -62,6 +62,16 @@ export default function PaymentAccountsPage() {
       const errorMessage = err instanceof Error ? err.message : "Error updating payment account";
       setError(errorMessage);
       toast.error(errorMessage);
+    }
+  };
+
+  const handleSubmitAccount = async (account: Omit<PaymentAccount, 'id' | 'userId' | 'createdAt' | 'updatedAt'> | CreatePaymentAccountDto) => {
+    if (currentAccountData) {
+      // Update existing account
+      await handleUpdateAccount({ ...account, id: currentAccountData.id } as Omit<PaymentAccount, 'userId' | 'createdAt' | 'updatedAt'>);
+    } else {
+      // Create new account
+      await handleAddAccount(account as Omit<PaymentAccount, 'id' | 'userId' | 'createdAt' | 'updatedAt'>);
     }
   };
 
@@ -166,7 +176,7 @@ export default function PaymentAccountsPage() {
           <TabsContent value="add" className="mt-0">
             <Card className="w-full max-w-3xl mx-auto">
               <PaymentAccountForm
-                onSubmit={currentAccountData ? handleUpdateAccount : handleAddAccount}
+                onSubmit={handleSubmitAccount}
                 initialData={currentAccountData}
                 isEditMode={!!currentAccountData}
                 onCancel={handleCancelEdit}

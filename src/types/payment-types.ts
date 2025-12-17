@@ -101,6 +101,7 @@ export interface PaymentActivity {
 export interface PaymentActivityFilters {
   paymentAccountId?: number;
   reconciliationStatus?: ReconciliationStatus;
+  activityType?: PaymentActivityType;
   startDate?: string;
   endDate?: string;
   searchTerm?: string;
@@ -148,12 +149,9 @@ export interface ImportPaymentActivitiesDto {
 }
 
 export interface ImportResult {
-  success: boolean;
   imported: number;
   skipped: number;
-  failed: number;
-  errors?: string[];
-  activities?: PaymentActivity[];
+  errors: string[];
 }
 
 // ============================================================================

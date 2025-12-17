@@ -30,12 +30,12 @@ export function calculateReconciliationConfidence(
   );
 
   const dateScore = calculateDateProximity(
-    paymentActivity.activityDate,
+    paymentActivity.executionDate,
     transaction.date
   );
 
   const descriptionScore = calculateDescriptionSimilarity(
-    paymentActivity.description,
+    paymentActivity.description || '',
     transaction.description
   );
 
@@ -198,7 +198,7 @@ function getMatchReasons(
   }
 
   // Date proximity
-  const date1 = new Date(paymentActivity.activityDate);
+  const date1 = new Date(paymentActivity.executionDate);
   const date2 = new Date(transaction.date);
   const diffDays = Math.floor(
     Math.abs(date1.getTime() - date2.getTime()) / (1000 * 60 * 60 * 24)
@@ -213,19 +213,20 @@ function getMatchReasons(
   }
 
   // Description similarity
-  const desc1 = paymentActivity.description.toLowerCase();
+  const desc1 = (paymentActivity.description || '').toLowerCase();
   const desc2 = transaction.description.toLowerCase();
 
-  if (desc1 === desc2) {
+  if (desc1 && desc2 && desc1 === desc2) {
     reasons.push('Identical description');
-  } else if (desc1.includes(desc2) || desc2.includes(desc1)) {
+  } else if (desc1 && desc2 && (desc1.includes(desc2) || desc2.includes(desc1))) {
     reasons.push('Similar description');
   }
 
-  // Provider metadata (if available)
+  // Provider metadata (if available in rawData)
+  const payerEmail = paymentActivity.rawData?.payerEmail;
   if (
-    paymentActivity.payerEmail &&
-    transaction.metadata?.email === paymentActivity.payerEmail
+    payerEmail &&
+    transaction.metadata?.email === payerEmail
   ) {
     reasons.push('Email match');
   }
@@ -333,7 +334,7 @@ export function calculateStats(activities: PaymentActivity[]): {
   pending: number;
   reconciled: number;
   failed: number;
-  reviewed: number;
+  manual: number;
   pendingPercentage: number;
   reconciledPercentage: number;
   failedPercentage: number;
@@ -342,14 +343,14 @@ export function calculateStats(activities: PaymentActivity[]): {
   const pending = filterByStatus(activities, 'pending').length;
   const reconciled = filterByStatus(activities, 'reconciled').length;
   const failed = filterByStatus(activities, 'failed').length;
-  const reviewed = filterByStatus(activities, 'reviewed').length;
+  const manual = filterByStatus(activities, 'manual').length;
 
   return {
     total,
     pending,
     reconciled,
     failed,
-    reviewed,
+    manual,
     pendingPercentage: total > 0 ? Math.round((pending / total) * 100) : 0,
     reconciledPercentage: total > 0 ? Math.round((reconciled / total) * 100) : 0,
     failedPercentage: total > 0 ? Math.round((failed / total) * 100) : 0,

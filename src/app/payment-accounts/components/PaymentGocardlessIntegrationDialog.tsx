@@ -199,7 +199,11 @@ export default function PaymentGocardlessIntegrationDialog({
         throw new Error(errorData.message || 'Failed to initiate connection');
       }
 
-      const { authUrl } = await response.json();
+      const { authUrl, requisitionId } = await response.json();
+
+      // Store requisitionId in sessionStorage for callback
+      sessionStorage.setItem('gocardless_requisition_id', requisitionId);
+      sessionStorage.setItem('gocardless_payment_account_id', selectedPaymentAccount.toString());
 
       // Open OAuth popup
       const width = 600;

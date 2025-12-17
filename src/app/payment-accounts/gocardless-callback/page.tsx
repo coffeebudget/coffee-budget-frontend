@@ -10,11 +10,16 @@ function CallbackHandler() {
   useEffect(() => {
     if (!searchParams) return;
 
-    const requisitionId = searchParams.get('ref');
+    // Get the actual requisitionId from sessionStorage (stored before redirect)
+    const requisitionId = sessionStorage.getItem('gocardless_requisition_id');
     const error = searchParams.get('error');
 
     if (window.opener) {
       if (error) {
+        // Clean up sessionStorage on error
+        sessionStorage.removeItem('gocardless_requisition_id');
+        sessionStorage.removeItem('gocardless_payment_account_id');
+
         window.opener.postMessage(
           {
             type: 'GOCARDLESS_ERROR',
@@ -23,6 +28,10 @@ function CallbackHandler() {
           window.location.origin
         );
       } else if (requisitionId) {
+        // Clean up sessionStorage on success
+        sessionStorage.removeItem('gocardless_requisition_id');
+        sessionStorage.removeItem('gocardless_payment_account_id');
+
         window.opener.postMessage(
           {
             type: 'GOCARDLESS_SUCCESS',
@@ -46,6 +55,8 @@ function CallbackHandler() {
       }, 1000);
     } else {
       // If no opener, redirect to payment accounts page
+      sessionStorage.removeItem('gocardless_requisition_id');
+      sessionStorage.removeItem('gocardless_payment_account_id');
       window.location.href = '/payment-accounts';
     }
   }, [searchParams]);

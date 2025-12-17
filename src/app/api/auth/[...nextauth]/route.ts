@@ -70,9 +70,11 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, account }) {
+      // On initial sign-in, account will be present and we save the access token
       if (account?.access_token) {
         token.accessToken = account.access_token;
       }
+      // On subsequent calls, the token already has accessToken, so we just return it
       return token;
     },
     async session({ session, token }) {

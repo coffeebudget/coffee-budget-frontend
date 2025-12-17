@@ -1,39 +1,54 @@
-import { getServerSession } from "next-auth";
-import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { NextResponse } from 'next/server';
 
-// POST endpoint to initiate GoCardless connection for a payment account
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || !session.user?.accessToken) {
+    console.log('Session in GoCardless connect:', {
+      hasSession: !!session,
+      hasAccessToken: !!session?.user?.accessToken,
+      userEmail: session?.user?.email
+    });
+
+    if (!session?.user?.accessToken) {
       return NextResponse.json(
-        { error: "Unauthorized" },
+        { message: 'Unauthorized - Please sign out and sign back in to refresh your session' },
         { status: 401 }
       );
     }
 
-    const token = session.user.accessToken;
-    const connectionRequest = await request.json();
+    const body = await request.json();
+    const { paymentAccountId, institutionId, redirectUrl } = body;
+
+    if (!paymentAccountId || !institutionId || !redirectUrl) {
+      return NextResponse.json(
+        { message: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
 
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/payment-accounts/gocardless/connect`,
       {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.user.accessToken}`,
         },
-        body: JSON.stringify(connectionRequest),
+        body: JSON.stringify({
+          paymentAccountId,
+          institutionId,
+          redirectUrl,
+        }),
       }
     );
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error("Failed to initiate GoCardless connection:", errorData);
       return NextResponse.json(
-        { error: errorData.message || "Failed to initiate GoCardless connection" },
+        { message: errorData.message || 'Failed to initiate GoCardless connection' },
         { status: response.status }
       );
     }
@@ -41,9 +56,9 @@ export async function POST(request: NextRequest) {
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error("Error in payment-accounts/gocardless/connect API route:", error);
+    console.error('Error in GoCardless connect proxy:', error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { message: 'Internal server error' },
       { status: 500 }
     );
   }

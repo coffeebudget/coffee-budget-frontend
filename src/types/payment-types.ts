@@ -23,7 +23,7 @@ export const RECONCILIATION_STATUSES = {
   PENDING: 'pending',
   RECONCILED: 'reconciled',
   FAILED: 'failed',
-  REVIEWED: 'reviewed',
+  MANUAL: 'manual',
 } as const;
 
 export type ReconciliationStatus = typeof RECONCILIATION_STATUSES[keyof typeof RECONCILIATION_STATUSES];
@@ -82,22 +82,18 @@ export interface PaymentActivity {
   paymentAccountId: number;
   paymentAccount?: PaymentAccount;
   externalId: string; // Unique ID from payment provider
-  activityType: PaymentActivityType;
-  amount: number;
-  currency: string;
-  description: string;
-  activityDate: string;
-  payerName?: string;
-  payerEmail?: string;
-  recipientName?: string;
-  recipientEmail?: string;
-  providerMetadata: Record<string, any>; // JSON field for provider-specific data
-  reconciliationStatus: ReconciliationStatus;
+  merchantName?: string; // Merchant name from payment provider
+  merchantCategory?: string; // Merchant category
+  merchantCategoryCode?: string; // ISO 18245 MCC code
+  amount: number; // Transaction amount (negative for expenses)
+  executionDate: string; // Date when payment was executed
+  description?: string; // Original description from payment provider
   reconciledTransactionId?: number;
   reconciledTransaction?: any; // Transaction type
+  reconciliationStatus: ReconciliationStatus;
   reconciliationConfidence?: number; // 0-100
-  reconciliationFailureReason?: string;
-  userId: number;
+  reconciledAt?: string; // Timestamp when reconciliation was completed
+  rawData: Record<string, any>; // Provider-specific raw data
   createdAt: string;
   updatedAt: string;
 }
@@ -105,7 +101,6 @@ export interface PaymentActivity {
 export interface PaymentActivityFilters {
   paymentAccountId?: number;
   reconciliationStatus?: ReconciliationStatus;
-  activityType?: PaymentActivityType;
   startDate?: string;
   endDate?: string;
   searchTerm?: string;
@@ -127,7 +122,7 @@ export interface ReconciliationStats {
   pending: number;
   reconciled: number;
   failed: number;
-  reviewed: number;
+  manual: number;
   reconciledPercentage: number;
   pendingPercentage: number;
   failedPercentage: number;
@@ -292,7 +287,7 @@ export function getStatusBadgeColor(status: ReconciliationStatus): string {
     [RECONCILIATION_STATUSES.PENDING]: 'bg-yellow-100 text-yellow-800',
     [RECONCILIATION_STATUSES.RECONCILED]: 'bg-green-100 text-green-800',
     [RECONCILIATION_STATUSES.FAILED]: 'bg-red-100 text-red-800',
-    [RECONCILIATION_STATUSES.REVIEWED]: 'bg-blue-100 text-blue-800',
+    [RECONCILIATION_STATUSES.MANUAL]: 'bg-blue-100 text-blue-800',
   };
   return statusColors[status] || 'bg-gray-100 text-gray-800';
 }

@@ -1,7 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Exclude Cypress files from build
+
+  // Turbopack configuration (stable in Next.js 15)
+  turbopack: {
+    rules: {
+      '*.cy.{js,jsx,ts,tsx}': {
+        loaders: [],
+        as: '*.js',
+      },
+    },
+  },
+
+  // Webpack configuration (used during production build)
   webpack: (config) => {
     config.module.rules.push({
       test: /cypress/,
@@ -9,6 +20,7 @@ const nextConfig = {
     });
     return config;
   },
+
   // 🔒 SECURITY: Enhanced security headers
   async headers() {
     return [

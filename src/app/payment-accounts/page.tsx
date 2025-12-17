@@ -5,11 +5,12 @@ import { useSession } from "next-auth/react";
 import { usePaymentAccounts } from "@/hooks/usePaymentAccounts";
 import PaymentAccountForm from "./components/PaymentAccountForm";
 import PaymentAccountList from "./components/PaymentAccountList";
+import PaymentGocardlessIntegrationDialog from "./components/PaymentGocardlessIntegrationDialog";
 import { PaymentAccount } from "@/types/payment-types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, CreditCard, PlusCircle, X } from "lucide-react";
+import { Loader2, CreditCard, PlusCircle, X, Link } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 export default function PaymentAccountsPage() {
@@ -27,6 +28,7 @@ export default function PaymentAccountsPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("list");
   const [currentAccountData, setCurrentAccountData] = useState<PaymentAccount | null>(null);
+  const [showGocardlessDialog, setShowGocardlessDialog] = useState(false);
 
   useEffect(() => {
     fetchPaymentAccounts();
@@ -121,6 +123,16 @@ export default function PaymentAccountsPage() {
             </TabsList>
 
             <div className="flex items-center gap-2 flex-wrap">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowGocardlessDialog(true)}
+                className="flex items-center gap-1"
+                disabled={paymentAccounts.length === 0}
+              >
+                <Link className="h-4 w-4" />
+                Connect to GoCardless
+              </Button>
               {currentAccountData && (
                 <Button
                   variant="outline"
@@ -169,6 +181,14 @@ export default function PaymentAccountsPage() {
           </div>
         )}
       </div>
+
+      {/* GoCardless Integration Dialog */}
+      <PaymentGocardlessIntegrationDialog
+        open={showGocardlessDialog}
+        onOpenChange={setShowGocardlessDialog}
+        paymentAccounts={paymentAccounts}
+        onAccountsUpdated={fetchPaymentAccounts}
+      />
     </div>
   );
 }

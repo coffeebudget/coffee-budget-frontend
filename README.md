@@ -19,11 +19,30 @@ Smart personal finance tracking application with keyword-based transaction categ
 
 ## Tech Stack
 
-- Next.js
-- React
+- Next.js 15 (App Router)
+- React 19
 - TypeScript
 - Tailwind CSS
 - Shadcn UI Components
+- NextAuth.js (Auth0)
+- TanStack Query (React Query)
+
+## 📚 Documentation
+
+### User Documentation (This Repo)
+- [Cypress Setup](./docs/cypress-setup.md) - E2E testing configuration
+- [Security Token Validation](./docs/security-token-validation.md) - Token handling guide
+
+### Development Documentation (Main Repo)
+- **[Complete Documentation Hub](../docs/README.md)** - Central documentation index
+- [Service Architecture](../docs/comprehensive-logic-documentation/SERVICE-ARCHITECTURE.md) - Full system architecture
+- [Development Process](../docs/STRICT-DEVELOPMENT-PROCESS.md) - Mandatory development workflow
+- [Testing Standards](../docs/development/TESTING-STANDARDS.md) - Frontend testing best practices
+- [Frontend Session Notes](../docs/development/session-notes/frontend/) - Development session logs
+- [Frontend Testing Docs](../docs/development/testing/) - Comprehensive testing guide
+- [UI Components](../docs/features/) - Feature-specific UI documentation
+
+**All development planning, architecture docs, and task management are in the main repository at `../docs/`**
 
 ## Getting Started
 

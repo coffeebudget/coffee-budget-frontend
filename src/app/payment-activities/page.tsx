@@ -7,7 +7,7 @@ import { usePaymentActivities } from "@/hooks/usePaymentActivities";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, Activity, Filter, Download } from "lucide-react";
+import { Loader2, Activity, Filter, Download, Link2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import {
   Select,
@@ -16,6 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import ReconciliationDialog from "./components/ReconciliationDialog";
+import type { PaymentActivity } from "@/types/payment-types";
 
 export default function PaymentActivitiesPage() {
   const { data: session } = useSession();
@@ -32,6 +34,8 @@ export default function PaymentActivitiesPage() {
 
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState("all");
+  const [reconciliationDialogOpen, setReconciliationDialogOpen] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState<PaymentActivity | null>(null);
 
   useEffect(() => {
     fetchPaymentAccounts();
@@ -53,6 +57,24 @@ export default function PaymentActivitiesPage() {
     if (result) {
       await fetchReconciliationStats(selectedAccountId);
     }
+  };
+
+  const handleReconcile = (activity: PaymentActivity) => {
+    setSelectedActivity(activity);
+    setReconciliationDialogOpen(true);
+  };
+
+  const handleReconciliationComplete = async () => {
+    setReconciliationDialogOpen(false);
+    setSelectedActivity(null);
+
+    // Refresh activities and stats after reconciliation
+    if (selectedAccountId) {
+      await fetchPaymentActivities(selectedAccountId);
+      await fetchReconciliationStats(selectedAccountId);
+    }
+
+    toast.success('Payment activity reconciled successfully');
   };
 
   const filteredActivities = paymentActivities.filter((activity) => {
@@ -224,10 +246,23 @@ export default function PaymentActivitiesPage() {
                           )}
                         </div>
 
-                        <div className="text-right ml-4">
+                        <div className="flex flex-col items-end ml-4 gap-2">
                           <p className={`text-2xl font-bold ${activity.amount < 0 ? 'text-red-600' : 'text-green-600'}`}>
                             {activity.amount < 0 ? '-' : '+'}€{Math.abs(activity.amount).toFixed(2)}
                           </p>
+
+                          {/* Show Reconcile button for pending/failed activities */}
+                          {(activity.reconciliationStatus === 'pending' || activity.reconciliationStatus === 'failed') && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleReconcile(activity)}
+                              className="flex items-center gap-1"
+                            >
+                              <Link2 className="h-3 w-3" />
+                              Reconcile
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </Card>
@@ -252,6 +287,14 @@ export default function PaymentActivitiesPage() {
           </Card>
         </div>
       )}
+
+      {/* Reconciliation Dialog */}
+      <ReconciliationDialog
+        open={reconciliationDialogOpen}
+        onOpenChange={setReconciliationDialogOpen}
+        paymentActivity={selectedActivity}
+        onReconciled={handleReconciliationComplete}
+      />
     </div>
   );
 }

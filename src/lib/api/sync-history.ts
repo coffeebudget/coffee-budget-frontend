@@ -3,6 +3,7 @@ import {
   SyncStatistics,
   DetailedSyncReport,
   SyncStatus,
+  SyncSource,
 } from '@/types/sync-history';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -11,7 +12,8 @@ export async function fetchSyncHistory(
   token: string,
   page: number = 1,
   limit: number = 10,
-  status?: SyncStatus
+  status?: SyncStatus,
+  source?: SyncSource
 ): Promise<PaginatedSyncReports> {
   const params = new URLSearchParams({
     page: page.toString(),
@@ -20,6 +22,10 @@ export async function fetchSyncHistory(
 
   if (status) {
     params.append('status', status);
+  }
+
+  if (source) {
+    params.append('source', source);
   }
 
   const response = await fetch(`${API_URL}/sync-history?${params}`, {
@@ -38,10 +44,19 @@ export async function fetchSyncHistory(
 
 export async function fetchSyncStatistics(
   token: string,
-  days: number = 30
+  days: number = 30,
+  source?: SyncSource
 ): Promise<SyncStatistics> {
+  const params = new URLSearchParams({
+    days: days.toString(),
+  });
+
+  if (source) {
+    params.append('source', source);
+  }
+
   const response = await fetch(
-    `${API_URL}/sync-history/statistics?days=${days}`,
+    `${API_URL}/sync-history/statistics?${params}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,

@@ -5,35 +5,37 @@ import {
   fetchSyncStatistics,
   fetchSyncReportById,
 } from '@/lib/api/sync-history';
-import { SyncStatus } from '@/types/sync-history';
+import { SyncStatus, SyncSource } from '@/types/sync-history';
 
 export function useSyncHistory(
   page: number = 1,
   limit: number = 10,
-  status?: SyncStatus
+  status?: SyncStatus,
+  source?: SyncSource
 ) {
   const { data: session } = useSession();
 
   return useQuery({
-    queryKey: ['sync-history', page, limit, status],
+    queryKey: ['sync-history', page, limit, status, source],
     queryFn: () =>
       fetchSyncHistory(
         session!.user!.accessToken as string,
         page,
         limit,
-        status
+        status,
+        source
       ),
     enabled: !!session,
     staleTime: 60 * 1000, // 1 minute
   });
 }
 
-export function useSyncStatistics(days: number = 30) {
+export function useSyncStatistics(days: number = 30, source?: SyncSource) {
   const { data: session } = useSession();
 
   return useQuery({
-    queryKey: ['sync-statistics', days],
-    queryFn: () => fetchSyncStatistics(session!.user!.accessToken as string, days),
+    queryKey: ['sync-statistics', days, source],
+    queryFn: () => fetchSyncStatistics(session!.user!.accessToken as string, days, source),
     enabled: !!session,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

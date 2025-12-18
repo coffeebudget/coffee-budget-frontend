@@ -4,6 +4,19 @@ export enum SyncStatus {
   FAILED = 'failed',
 }
 
+export enum SyncSource {
+  GOCARDLESS = 'gocardless',
+  PAYPAL = 'paypal',
+  STRIPE = 'stripe',
+  PLAID = 'plaid',
+  MANUAL = 'manual',
+}
+
+export enum SyncSourceType {
+  BANK_ACCOUNT = 'bank_account',
+  PAYMENT_ACCOUNT = 'payment_account',
+}
+
 export interface SyncReport {
   id: number;
   status: SyncStatus;
@@ -17,6 +30,10 @@ export interface SyncReport {
   totalPendingDuplicates: number;
   syncType: string;
   errorMessage: string | null;
+  source: SyncSource;
+  sourceType: SyncSourceType;
+  sourceId: number | null;
+  sourceName: string | null;
 }
 
 export interface AccountResult {

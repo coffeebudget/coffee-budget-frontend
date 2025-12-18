@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { SyncStatisticsCard } from './SyncStatisticsCard';
-import { SyncStatistics } from '../../types/sync-history';
+import { SyncStatistics, SyncSource } from '../../types/sync-history';
 
 // Mock the useSyncStatistics hook
 jest.mock('../../hooks/useSyncHistory');
@@ -73,5 +73,54 @@ describe('SyncStatisticsCard', () => {
     render(<SyncStatisticsCard />);
 
     expect(screen.getByText('Error loading statistics')).toBeInTheDocument();
+  });
+
+  it('should display source badge when source prop is provided', () => {
+    jest.spyOn(useSyncHistoryHook, 'useSyncStatistics').mockReturnValue({
+      data: mockStats,
+      isLoading: false,
+      error: null,
+    } as any);
+
+    render(<SyncStatisticsCard source={SyncSource.PAYPAL} />);
+
+    expect(screen.getByText('PayPal')).toBeInTheDocument();
+  });
+
+  it('should not display source badge when source prop is not provided', () => {
+    jest.spyOn(useSyncHistoryHook, 'useSyncStatistics').mockReturnValue({
+      data: mockStats,
+      isLoading: false,
+      error: null,
+    } as any);
+
+    render(<SyncStatisticsCard />);
+
+    expect(screen.queryByText('PayPal')).not.toBeInTheDocument();
+    expect(screen.queryByText('GoCardless')).not.toBeInTheDocument();
+  });
+
+  it('should call useSyncStatistics with source parameter', () => {
+    const mockUseSyncStatistics = jest.spyOn(useSyncHistoryHook, 'useSyncStatistics').mockReturnValue({
+      data: mockStats,
+      isLoading: false,
+      error: null,
+    } as any);
+
+    render(<SyncStatisticsCard days={7} source={SyncSource.GOCARDLESS} />);
+
+    expect(mockUseSyncStatistics).toHaveBeenCalledWith(7, SyncSource.GOCARDLESS);
+  });
+
+  it('should call useSyncStatistics without source parameter when not provided', () => {
+    const mockUseSyncStatistics = jest.spyOn(useSyncHistoryHook, 'useSyncStatistics').mockReturnValue({
+      data: mockStats,
+      isLoading: false,
+      error: null,
+    } as any);
+
+    render(<SyncStatisticsCard days={30} />);
+
+    expect(mockUseSyncStatistics).toHaveBeenCalledWith(30, undefined);
   });
 });

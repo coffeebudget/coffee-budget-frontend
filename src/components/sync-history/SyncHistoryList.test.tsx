@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { SyncHistoryList } from './SyncHistoryList';
-import { SyncStatus, PaginatedSyncReports } from '../../types/sync-history';
+import { SyncStatus, SyncSource, PaginatedSyncReports } from '../../types/sync-history';
 
 // Mock the useSyncHistory hook
 jest.mock('../../hooks/useSyncHistory');
@@ -20,6 +20,8 @@ describe('SyncHistoryList', () => {
       {
         id: 1,
         status: SyncStatus.SUCCESS,
+        source: SyncSource.GOCARDLESS,
+        sourceName: 'Halifax Bank',
         syncStartedAt: '2025-11-11T09:00:00Z',
         syncCompletedAt: '2025-11-11T09:15:00Z',
         totalAccounts: 3,
@@ -34,6 +36,8 @@ describe('SyncHistoryList', () => {
       {
         id: 2,
         status: SyncStatus.PARTIAL,
+        source: SyncSource.PAYPAL,
+        sourceName: 'PayPal Business',
         syncStartedAt: '2025-11-10T09:00:00Z',
         syncCompletedAt: '2025-11-10T09:15:00Z',
         totalAccounts: 3,
@@ -169,5 +173,88 @@ describe('SyncHistoryList', () => {
 
     const detailLinks = screen.getAllByText('View Details');
     expect(detailLinks).toHaveLength(2);
+  });
+
+  it('should render source filter buttons', () => {
+    jest.spyOn(useSyncHistoryHook, 'useSyncHistory').mockReturnValue({
+      data: mockPaginatedData,
+      isLoading: false,
+      error: null,
+    } as any);
+
+    render(<SyncHistoryList />);
+
+    expect(screen.getByRole('button', { name: 'All Sources' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'GoCardless' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'PayPal' })).toBeInTheDocument();
+  });
+
+  it('should display source badges for each sync report', () => {
+    jest.spyOn(useSyncHistoryHook, 'useSyncHistory').mockReturnValue({
+      data: mockPaginatedData,
+      isLoading: false,
+      error: null,
+    } as any);
+
+    render(<SyncHistoryList />);
+
+    // Check for GoCardless and PayPal badges (not filter buttons)
+    const gocardlessBadges = screen.getAllByText('GoCardless');
+    const paypalBadges = screen.getAllByText('PayPal');
+
+    // Should have at least one of each (from the sync reports, not filters)
+    expect(gocardlessBadges.length).toBeGreaterThan(1);
+    expect(paypalBadges.length).toBeGreaterThan(1);
+  });
+
+  it('should display source names when available', () => {
+    jest.spyOn(useSyncHistoryHook, 'useSyncHistory').mockReturnValue({
+      data: mockPaginatedData,
+      isLoading: false,
+      error: null,
+    } as any);
+
+    render(<SyncHistoryList />);
+
+    expect(screen.getByText('Halifax Bank')).toBeInTheDocument();
+    expect(screen.getByText('PayPal Business')).toBeInTheDocument();
+  });
+
+  it('should call useSyncHistory with source filter when source filter is clicked', () => {
+    const mockUseSyncHistory = jest.spyOn(useSyncHistoryHook, 'useSyncHistory').mockReturnValue({
+      data: mockPaginatedData,
+      isLoading: false,
+      error: null,
+    } as any);
+
+    render(<SyncHistoryList />);
+
+    // Click PayPal filter
+    const paypalFilterButton = screen.getByRole('button', { name: 'PayPal' });
+    fireEvent.click(paypalFilterButton);
+
+    // Verify hook was called with PayPal source filter
+    expect(mockUseSyncHistory).toHaveBeenLastCalledWith(1, 10, undefined, SyncSource.PAYPAL);
+  });
+
+  it('should call useSyncHistory with no source filter when All Sources is clicked', () => {
+    const mockUseSyncHistory = jest.spyOn(useSyncHistoryHook, 'useSyncHistory').mockReturnValue({
+      data: mockPaginatedData,
+      isLoading: false,
+      error: null,
+    } as any);
+
+    render(<SyncHistoryList />);
+
+    // Click GoCardless filter first
+    const gocardlessFilterButton = screen.getByRole('button', { name: 'GoCardless' });
+    fireEvent.click(gocardlessFilterButton);
+
+    // Then click All Sources
+    const allSourcesButton = screen.getByRole('button', { name: 'All Sources' });
+    fireEvent.click(allSourcesButton);
+
+    // Verify hook was called with undefined source filter
+    expect(mockUseSyncHistory).toHaveBeenLastCalledWith(1, 10, undefined, undefined);
   });
 });

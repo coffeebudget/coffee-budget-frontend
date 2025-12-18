@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { SyncDetailView } from './SyncDetailView';
-import { DetailedSyncReport, SyncStatus } from '../../types/sync-history';
+import { DetailedSyncReport, SyncStatus, SyncSource } from '../../types/sync-history';
 
 // Mock the useSyncReportDetail hook
 jest.mock('../../hooks/useSyncHistory');
@@ -10,6 +10,8 @@ describe('SyncDetailView', () => {
   const mockDetailedReport: DetailedSyncReport = {
     id: 1,
     status: SyncStatus.SUCCESS,
+    source: SyncSource.GOCARDLESS,
+    sourceName: 'Halifax Bank',
     syncStartedAt: '2025-11-11T09:00:00Z',
     syncCompletedAt: '2025-11-11T09:15:00Z',
     totalAccounts: 3,
@@ -179,5 +181,69 @@ describe('SyncDetailView', () => {
     render(<SyncDetailView id={1} />);
 
     expect(screen.queryByText('Import Logs')).not.toBeInTheDocument();
+  });
+
+  it('should display source badge in header', () => {
+    jest.spyOn(useSyncHistoryHook, 'useSyncReportDetail').mockReturnValue({
+      data: mockDetailedReport,
+      isLoading: false,
+      error: null,
+    } as any);
+
+    render(<SyncDetailView id={1} />);
+
+    // Should display both status and source badges
+    expect(screen.getByText('Success')).toBeInTheDocument();
+    expect(screen.getByText('GoCardless')).toBeInTheDocument();
+  });
+
+  it('should display source name when available', () => {
+    jest.spyOn(useSyncHistoryHook, 'useSyncReportDetail').mockReturnValue({
+      data: mockDetailedReport,
+      isLoading: false,
+      error: null,
+    } as any);
+
+    render(<SyncDetailView id={1} />);
+
+    expect(screen.getByText('Source')).toBeInTheDocument();
+    expect(screen.getByText('Halifax Bank')).toBeInTheDocument();
+  });
+
+  it('should not display source name section when not available', () => {
+    const reportWithoutSourceName = {
+      ...mockDetailedReport,
+      sourceName: null,
+    };
+
+    jest.spyOn(useSyncHistoryHook, 'useSyncReportDetail').mockReturnValue({
+      data: reportWithoutSourceName,
+      isLoading: false,
+      error: null,
+    } as any);
+
+    render(<SyncDetailView id={1} />);
+
+    // Source label should not appear when sourceName is null
+    expect(screen.queryByText('Source')).not.toBeInTheDocument();
+  });
+
+  it('should display PayPal source badge correctly', () => {
+    const paypalReport = {
+      ...mockDetailedReport,
+      source: SyncSource.PAYPAL,
+      sourceName: 'PayPal Business Account',
+    };
+
+    jest.spyOn(useSyncHistoryHook, 'useSyncReportDetail').mockReturnValue({
+      data: paypalReport,
+      isLoading: false,
+      error: null,
+    } as any);
+
+    render(<SyncDetailView id={1} />);
+
+    expect(screen.getByText('PayPal')).toBeInTheDocument();
+    expect(screen.getByText('PayPal Business Account')).toBeInTheDocument();
   });
 });

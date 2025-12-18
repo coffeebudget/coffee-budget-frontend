@@ -2,6 +2,7 @@
 import { useSyncReportDetail } from '@/hooks/useSyncHistory';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SyncStatusBadge } from './SyncStatusBadge';
+import { SyncSourceBadge } from './SyncSourceBadge';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 
 interface SyncDetailViewProps {
@@ -34,10 +35,20 @@ export function SyncDetailView({ id }: SyncDetailViewProps) {
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle>Sync Report #{report.id}</CardTitle>
-            <SyncStatusBadge status={report.status} />
+            <div className="flex gap-2">
+              <SyncStatusBadge status={report.status} />
+              <SyncSourceBadge source={report.source} />
+            </div>
           </div>
         </CardHeader>
         <CardContent>
+          {report.sourceName && (
+            <div className="mb-4 pb-4 border-b">
+              <p className="text-sm text-gray-500">Source</p>
+              <p className="font-medium">{report.sourceName}</p>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <p className="text-sm text-gray-500">Started</p>

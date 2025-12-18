@@ -1,14 +1,17 @@
 'use client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSyncStatistics } from '@/hooks/useSyncHistory';
+import { SyncSource } from '@/types/sync-history';
+import { SyncSourceBadge } from './SyncSourceBadge';
 import { Loader2 } from 'lucide-react';
 
 interface SyncStatisticsCardProps {
   days?: number;
+  source?: SyncSource;
 }
 
-export function SyncStatisticsCard({ days = 30 }: SyncStatisticsCardProps) {
-  const { data: stats, isLoading, error } = useSyncStatistics(days);
+export function SyncStatisticsCard({ days = 30, source }: SyncStatisticsCardProps) {
+  const { data: stats, isLoading, error } = useSyncStatistics(days, source);
 
   if (isLoading) {
     return (
@@ -33,7 +36,10 @@ export function SyncStatisticsCard({ days = 30 }: SyncStatisticsCardProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Sync Statistics (Last {days} Days)</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle>Sync Statistics (Last {days} Days)</CardTitle>
+          {source && <SyncSourceBadge source={source} />}
+        </div>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

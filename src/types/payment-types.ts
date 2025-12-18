@@ -24,6 +24,7 @@ export const RECONCILIATION_STATUSES = {
   RECONCILED: 'reconciled',
   FAILED: 'failed',
   MANUAL: 'manual',
+  NOT_APPLICABLE: 'not_applicable',
 } as const;
 
 export type ReconciliationStatus = typeof RECONCILIATION_STATUSES[keyof typeof RECONCILIATION_STATUSES];
@@ -124,9 +125,11 @@ export interface ReconciliationStats {
   reconciled: number;
   failed: number;
   manual: number;
+  notApplicable: number;
   reconciledPercentage: number;
   pendingPercentage: number;
   failedPercentage: number;
+  notApplicablePercentage: number;
 }
 
 export interface ReconciliationMatch {
@@ -286,8 +289,23 @@ export function getStatusBadgeColor(status: ReconciliationStatus): string {
     [RECONCILIATION_STATUSES.RECONCILED]: 'bg-green-100 text-green-800',
     [RECONCILIATION_STATUSES.FAILED]: 'bg-red-100 text-red-800',
     [RECONCILIATION_STATUSES.MANUAL]: 'bg-blue-100 text-blue-800',
+    [RECONCILIATION_STATUSES.NOT_APPLICABLE]: 'bg-gray-100 text-gray-600',
   };
   return statusColors[status] || 'bg-gray-100 text-gray-800';
+}
+
+/**
+ * Get human-readable label for reconciliation status
+ */
+export function getStatusLabel(status: ReconciliationStatus): string {
+  const statusLabels: Record<ReconciliationStatus, string> = {
+    [RECONCILIATION_STATUSES.PENDING]: 'Pending',
+    [RECONCILIATION_STATUSES.RECONCILED]: 'Reconciled',
+    [RECONCILIATION_STATUSES.FAILED]: 'Failed',
+    [RECONCILIATION_STATUSES.MANUAL]: 'Manual',
+    [RECONCILIATION_STATUSES.NOT_APPLICABLE]: 'Not Applicable',
+  };
+  return statusLabels[status] || status;
 }
 
 /**

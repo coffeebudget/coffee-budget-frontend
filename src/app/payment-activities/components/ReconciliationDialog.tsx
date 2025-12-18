@@ -90,9 +90,15 @@ export default function ReconciliationDialog({
         const relevant = allTransactions.filter((t: Transaction) => {
           const transactionDate = new Date(t.executionDate);
           const inDateRange = transactionDate >= startDate && transactionDate <= endDate;
-          const similarAmount = Math.abs(Math.abs(t.amount) - Math.abs(paymentActivity.amount)) < 1; // Within €1
-          
-          return inDateRange || similarAmount;
+
+          // Calculate ±10% amount tolerance
+          const activityAmount = Math.abs(paymentActivity.amount);
+          const transactionAmount = Math.abs(t.amount);
+          const tolerance = activityAmount * 0.10; // 10% tolerance
+          const amountDiff = Math.abs(transactionAmount - activityAmount);
+          const similarAmount = amountDiff <= tolerance;
+
+          return inDateRange && similarAmount; // Both conditions must be true
         });
 
         setTransactions(relevant.length > 0 ? relevant : allTransactions);

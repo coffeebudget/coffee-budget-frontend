@@ -9,11 +9,21 @@ import { SyncStatus, SyncSource } from '@/types/sync-history';
 import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
-export function SyncHistoryList() {
+interface SyncHistoryListProps {
+  sourceFilter?: SyncSource;
+  onSourceFilterChange?: (source: SyncSource | undefined) => void;
+}
+
+export function SyncHistoryList({ sourceFilter, onSourceFilterChange }: SyncHistoryListProps) {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<SyncStatus | undefined>();
-  const [sourceFilter, setSourceFilter] = useState<SyncSource | undefined>();
   const { data, isLoading, error } = useSyncHistory(page, 10, statusFilter, sourceFilter);
+
+  const handleSourceFilterChange = (source: SyncSource | undefined) => {
+    if (onSourceFilterChange) {
+      onSourceFilterChange(source);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -70,21 +80,21 @@ export function SyncHistoryList() {
           <div className="flex gap-2">
             <Button
               variant={!sourceFilter ? 'default' : 'outline'}
-              onClick={() => setSourceFilter(undefined)}
+              onClick={() => handleSourceFilterChange(undefined)}
               size="sm"
             >
               All Sources
             </Button>
             <Button
               variant={sourceFilter === SyncSource.GOCARDLESS ? 'default' : 'outline'}
-              onClick={() => setSourceFilter(SyncSource.GOCARDLESS)}
+              onClick={() => handleSourceFilterChange(SyncSource.GOCARDLESS)}
               size="sm"
             >
               GoCardless
             </Button>
             <Button
               variant={sourceFilter === SyncSource.PAYPAL ? 'default' : 'outline'}
-              onClick={() => setSourceFilter(SyncSource.PAYPAL)}
+              onClick={() => handleSourceFilterChange(SyncSource.PAYPAL)}
               size="sm"
             >
               PayPal

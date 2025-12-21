@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { usePaymentAccounts } from "@/hooks/usePaymentAccounts";
 import { usePaymentActivities } from "@/hooks/usePaymentActivities";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, Activity, Filter, Download, Link2 } from "lucide-react";
+import { Loader2, Activity, Download, Link2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import {
   Select,
@@ -17,7 +17,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import ReconciliationDialog from "./components/ReconciliationDialog";
-import type { PaymentActivity } from "@/types/payment-types";
+import { PaymentActivityFilters } from "./components/PaymentActivityFilters";
+import type { PaymentActivity, PaymentActivityFilters as FiltersType } from "@/types/payment-types";
 
 export default function PaymentActivitiesPage() {
   const { data: session } = useSession();
@@ -36,16 +37,21 @@ export default function PaymentActivitiesPage() {
   const [activeTab, setActiveTab] = useState("all");
   const [reconciliationDialogOpen, setReconciliationDialogOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<PaymentActivity | null>(null);
+  const [filters, setFilters] = useState<FiltersType>({});
 
   useEffect(() => {
     fetchPaymentAccounts();
   }, []);
 
-  useEffect(() => {
+  const loadActivities = useCallback(() => {
     if (selectedAccountId) {
-      fetchPaymentActivities(selectedAccountId);
+      fetchPaymentActivities(selectedAccountId, filters);
       fetchReconciliationStats(selectedAccountId);
     }
+  }, [selectedAccountId, filters, fetchPaymentActivities, fetchReconciliationStats]);
+
+  useEffect(() => {
+    loadActivities();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAccountId]);
 
@@ -75,6 +81,17 @@ export default function PaymentActivitiesPage() {
     }
 
     toast.success('Payment activity reconciled successfully');
+  };
+
+  const handleApplyFilters = () => {
+    loadActivities();
+  };
+
+  const handleClearFilters = () => {
+    setFilters({});
+    if (selectedAccountId) {
+      fetchPaymentActivities(selectedAccountId, {});
+    }
   };
 
   const filteredActivities = paymentActivities.filter((activity) => {
@@ -165,6 +182,18 @@ export default function PaymentActivitiesPage() {
           )}
         </Card>
       </div>
+
+      {/* Filters */}
+      {selectedAccountId && (
+        <div className="max-w-7xl mx-auto mb-6">
+          <PaymentActivityFilters
+            filters={filters}
+            onFiltersChange={setFilters}
+            onApply={handleApplyFilters}
+            onClear={handleClearFilters}
+          />
+        </div>
+      )}
 
       {/* Activities List with Tabs */}
       {selectedAccountId && (

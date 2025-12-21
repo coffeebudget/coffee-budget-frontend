@@ -106,6 +106,8 @@ export interface PaymentActivityFilters {
   startDate?: string;
   endDate?: string;
   searchTerm?: string;
+  minAmount?: number;
+  maxAmount?: number;
 }
 
 // ============================================================================

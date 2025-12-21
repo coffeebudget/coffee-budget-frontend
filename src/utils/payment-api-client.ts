@@ -131,6 +131,12 @@ export async function fetchPaymentActivities(
     if (filters.searchTerm) {
       queryParams.append('searchTerm', filters.searchTerm);
     }
+    if (filters.minAmount !== undefined) {
+      queryParams.append('minAmount', filters.minAmount.toString());
+    }
+    if (filters.maxAmount !== undefined) {
+      queryParams.append('maxAmount', filters.maxAmount.toString());
+    }
   }
 
   const url = `/api/payment-activities/payment-account/${paymentAccountId}${

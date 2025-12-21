@@ -7,7 +7,7 @@ import { usePaymentActivities } from "@/hooks/usePaymentActivities";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, Activity, Download, Link2 } from "lucide-react";
+import { Activity, Download, Filter } from "lucide-react";
 import { toast } from "react-hot-toast";
 import {
   Select,
@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/select";
 import ReconciliationDialog from "./components/ReconciliationDialog";
 import { PaymentActivityFilters } from "./components/PaymentActivityFilters";
+import { PaymentActivityList } from "./components/PaymentActivityList";
+import { ReconciliationStatsCard } from "./components/ReconciliationStatsCard";
 import type { PaymentActivity, PaymentActivityFilters as FiltersType } from "@/types/payment-types";
 
 export default function PaymentActivitiesPage() {
@@ -160,26 +162,7 @@ export default function PaymentActivitiesPage() {
             )}
           </div>
 
-          {stats && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <p className="text-sm text-gray-600">Total</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-              </div>
-              <div className="bg-yellow-50 p-3 rounded-lg">
-                <p className="text-sm text-yellow-700">Pending</p>
-                <p className="text-2xl font-bold text-yellow-900">{stats.pending}</p>
-              </div>
-              <div className="bg-green-50 p-3 rounded-lg">
-                <p className="text-sm text-green-700">Reconciled</p>
-                <p className="text-2xl font-bold text-green-900">{stats.reconciled}</p>
-              </div>
-              <div className="bg-red-50 p-3 rounded-lg">
-                <p className="text-sm text-red-700">Failed</p>
-                <p className="text-2xl font-bold text-red-900">{stats.failed}</p>
-              </div>
-            </div>
-          )}
+          {stats && <ReconciliationStatsCard stats={stats} />}
         </Card>
       </div>
 
@@ -216,88 +199,12 @@ export default function PaymentActivitiesPage() {
             </TabsList>
 
             <TabsContent value={activeTab} className="mt-4">
-              {isLoading ? (
-                <div className="flex items-center justify-center h-32">
-                  <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-                  <span className="ml-2 text-gray-600">Loading payment activities...</span>
-                </div>
-              ) : filteredActivities.length === 0 ? (
-                <Card className="p-8 text-center">
-                  <p className="text-gray-500">No payment activities found.</p>
-                  <Button onClick={handleImport} className="mt-4">
-                    <Download className="h-4 w-4 mr-2" />
-                    Import Activities
-                  </Button>
-                </Card>
-              ) : (
-                <div className="space-y-4">
-                  {filteredActivities.map((activity) => (
-                    <Card key={activity.id} className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold text-gray-900">
-                              {activity.merchantName || activity.description || 'Payment Activity'}
-                            </h3>
-                            <span
-                              className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                activity.reconciliationStatus === 'reconciled'
-                                  ? 'bg-green-100 text-green-800'
-                                  : activity.reconciliationStatus === 'pending'
-                                  ? 'bg-yellow-100 text-yellow-800'
-                                  : activity.reconciliationStatus === 'failed'
-                                  ? 'bg-red-100 text-red-800'
-                                  : 'bg-blue-100 text-blue-800'
-                              }`}
-                            >
-                              {activity.reconciliationStatus}
-                            </span>
-                          </div>
-
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm text-gray-600">
-                            <div>
-                              <span className="font-medium">Date:</span> {new Date(activity.executionDate).toLocaleDateString()}
-                            </div>
-                            {activity.merchantCategory && (
-                              <div>
-                                <span className="font-medium">Category:</span> {activity.merchantCategory}
-                              </div>
-                            )}
-                            {activity.reconciliationConfidence && (
-                              <div>
-                                <span className="font-medium">Confidence:</span> {activity.reconciliationConfidence}%
-                              </div>
-                            )}
-                          </div>
-
-                          {activity.description && (
-                            <p className="text-sm text-gray-500 mt-2">{activity.description}</p>
-                          )}
-                        </div>
-
-                        <div className="flex flex-col items-end ml-4 gap-2">
-                          <p className={`text-2xl font-bold ${activity.amount < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                            {activity.amount < 0 ? '-' : '+'}€{Math.abs(activity.amount).toFixed(2)}
-                          </p>
-
-                          {/* Show Reconcile button for pending/failed activities */}
-                          {(activity.reconciliationStatus === 'pending' || activity.reconciliationStatus === 'failed') && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleReconcile(activity)}
-                              className="flex items-center gap-1"
-                            >
-                              <Link2 className="h-3 w-3" />
-                              Reconcile
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              )}
+              <PaymentActivityList
+                activities={filteredActivities}
+                isLoading={isLoading}
+                onReconcile={handleReconcile}
+                onImport={handleImport}
+              />
             </TabsContent>
           </Tabs>
 

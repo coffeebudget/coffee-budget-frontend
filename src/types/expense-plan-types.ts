@@ -53,6 +53,8 @@ export const EXPENSE_PLAN_TRANSACTION_TYPES = [
 
 export const FUNDING_STATUSES = ['funded', 'almost_ready', 'on_track', 'behind'] as const;
 
+export const DISTRIBUTION_STRATEGIES = ['priority', 'proportional', 'fixed'] as const;
+
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPE DEFINITIONS
 // ═══════════════════════════════════════════════════════════════════════════
@@ -65,6 +67,7 @@ export type ContributionSource = (typeof CONTRIBUTION_SOURCES)[number];
 export type InitialBalanceSource = (typeof INITIAL_BALANCE_SOURCES)[number];
 export type ExpensePlanTransactionType = (typeof EXPENSE_PLAN_TRANSACTION_TYPES)[number];
 export type FundingStatus = (typeof FUNDING_STATUSES)[number];
+export type DistributionStrategy = (typeof DISTRIBUTION_STRATEGIES)[number];
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN INTERFACES
@@ -143,6 +146,58 @@ export interface ExpensePlanTransaction {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// INCOME DISTRIBUTION INTERFACES
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface IncomeDistributionRule {
+  id: number;
+  userId: number;
+  name: string;
+  expectedAmount: number | null;
+  amountTolerance: number;
+  descriptionPattern: string | null;
+  categoryId: number | null;
+  category?: {
+    id: number;
+    name: string;
+    icon?: string | null;
+  } | null;
+  bankAccountId: number | null;
+  bankAccount?: {
+    id: number;
+    name: string;
+  } | null;
+  autoDistribute: boolean;
+  distributionStrategy: DistributionStrategy;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PendingDistribution {
+  transactionId: number;
+  transaction: {
+    id: number;
+    description: string;
+    amount: number;
+    executionDate: string;
+    bankAccount?: {
+      id: number;
+      name: string;
+    } | null;
+  };
+  matchingRule: IncomeDistributionRule;
+  suggestedDistribution: DistributionSuggestion[];
+}
+
+export interface DistributionSuggestion {
+  planId: number;
+  planName: string;
+  amount: number;
+  reason: string;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // DTO INTERFACES
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -218,6 +273,46 @@ export interface BulkFundDto {
 
 export interface LinkTransactionDto {
   transactionId: number;
+}
+
+// Income Distribution DTOs
+export interface CreateIncomeDistributionRuleDto {
+  name: string;
+  expectedAmount?: number;
+  amountTolerance?: number;
+  descriptionPattern?: string;
+  categoryId?: number;
+  bankAccountId?: number;
+  autoDistribute?: boolean;
+  distributionStrategy?: DistributionStrategy;
+}
+
+export interface UpdateIncomeDistributionRuleDto {
+  name?: string;
+  expectedAmount?: number | null;
+  amountTolerance?: number;
+  descriptionPattern?: string | null;
+  categoryId?: number | null;
+  bankAccountId?: number | null;
+  autoDistribute?: boolean;
+  distributionStrategy?: DistributionStrategy;
+  isActive?: boolean;
+}
+
+export interface ManualDistributionDto {
+  amount: number;
+  strategy?: DistributionStrategy;
+  note?: string;
+}
+
+export interface ManualDistributionResult {
+  distributed: {
+    planId: number;
+    planName: string;
+    amount: number;
+  }[];
+  totalDistributed: number;
+  remainder: number;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -492,4 +587,22 @@ export function getDefaultFormData(): ExpensePlanFormData {
     initialBalanceSource: 'zero',
     initialBalanceCustom: '',
   };
+}
+
+export function getDistributionStrategyLabel(strategy: DistributionStrategy): string {
+  const labels: Record<DistributionStrategy, string> = {
+    priority: 'Priority Order',
+    proportional: 'Proportional',
+    fixed: 'Fixed Amounts',
+  };
+  return labels[strategy] || strategy;
+}
+
+export function getDistributionStrategyDescription(strategy: DistributionStrategy): string {
+  const descriptions: Record<DistributionStrategy, string> = {
+    priority: 'Funds essential plans first, then important, then discretionary',
+    proportional: 'Distributes income proportionally based on each plan\'s target amount',
+    fixed: 'Distributes exactly the monthly contribution amount to each plan',
+  };
+  return descriptions[strategy] || '';
 }

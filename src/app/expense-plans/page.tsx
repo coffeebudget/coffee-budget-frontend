@@ -38,6 +38,7 @@ import {
 import ExpensePlanCard from "./components/ExpensePlanCard";
 import ExpensePlanFormDialog from "./components/ExpensePlanFormDialog";
 import ContributeWithdrawDialog from "./components/ContributeWithdrawDialog";
+import IncomeDistributionSetup from "./components/IncomeDistributionSetup";
 
 export default function ExpensePlansPage() {
   const { data: session } = useSession();
@@ -47,7 +48,7 @@ export default function ExpensePlansPage() {
   const quickFundMutation = useQuickFundExpensePlan();
   const bulkQuickFundMutation = useBulkQuickFundExpensePlans();
 
-  const [activeTab, setActiveTab] = useState<ExpensePlanStatus | "all">("all");
+  const [activeTab, setActiveTab] = useState<ExpensePlanStatus | "all" | "distribution">("all");
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<ExpensePlan | null>(null);
   const [contributeDialogOpen, setContributeDialogOpen] = useState(false);
@@ -218,47 +219,56 @@ export default function ExpensePlansPage() {
 
       {/* Tabs & Content */}
       <div className="max-w-7xl mx-auto">
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ExpensePlanStatus | "all")}>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ExpensePlanStatus | "all" | "distribution")}>
           <TabsList className="mb-4">
             <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="active">Active</TabsTrigger>
             <TabsTrigger value="paused">Paused</TabsTrigger>
             <TabsTrigger value="completed">Completed</TabsTrigger>
+            <TabsTrigger value="distribution">Income Distribution</TabsTrigger>
           </TabsList>
 
-          <TabsContent value={activeTab}>
-            {isLoading ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-              </div>
-            ) : error ? (
-              <Card className="p-6 text-center text-red-500">
-                Failed to load expense plans. Please try again.
-              </Card>
-            ) : filteredPlans.length === 0 ? (
-              <Card className="p-6 text-center text-gray-500">
-                <PiggyBank className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p className="mb-4">No expense plans found.</p>
-                <Button onClick={handleCreatePlan} variant="outline">
-                  Create your first plan
-                </Button>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredPlans.map((plan) => (
-                  <ExpensePlanCard
-                    key={plan.id}
-                    plan={plan}
-                    onEdit={handleEditPlan}
-                    onDelete={handleDeletePlan}
-                    onQuickFund={handleQuickFund}
-                    onContribute={handleContribute}
-                    onWithdraw={handleWithdraw}
-                    isQuickFunding={quickFundMutation.isPending}
-                  />
-                ))}
-              </div>
-            )}
+          {/* Plans Tabs */}
+          {activeTab !== "distribution" && (
+            <TabsContent value={activeTab} forceMount>
+              {isLoading ? (
+                <div className="flex justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                </div>
+              ) : error ? (
+                <Card className="p-6 text-center text-red-500">
+                  Failed to load expense plans. Please try again.
+                </Card>
+              ) : filteredPlans.length === 0 ? (
+                <Card className="p-6 text-center text-gray-500">
+                  <PiggyBank className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                  <p className="mb-4">No expense plans found.</p>
+                  <Button onClick={handleCreatePlan} variant="outline">
+                    Create your first plan
+                  </Button>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredPlans.map((plan) => (
+                    <ExpensePlanCard
+                      key={plan.id}
+                      plan={plan}
+                      onEdit={handleEditPlan}
+                      onDelete={handleDeletePlan}
+                      onQuickFund={handleQuickFund}
+                      onContribute={handleContribute}
+                      onWithdraw={handleWithdraw}
+                      isQuickFunding={quickFundMutation.isPending}
+                    />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          )}
+
+          {/* Income Distribution Tab */}
+          <TabsContent value="distribution">
+            <IncomeDistributionSetup />
           </TabsContent>
         </Tabs>
       </div>

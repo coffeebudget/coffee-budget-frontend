@@ -10,6 +10,7 @@ import ExpenseDistributionChart from "./components/ExpenseDistributionChart";
 import MonthlySummaryChart from "./components/MonthlySummaryChart";
 import AIAnalysisCard from "./components/AIAnalysisCard";
 import BudgetManagementCard from "./components/BudgetManagementCard";
+import ExpensePlanDashboardCard from "./components/ExpensePlanDashboardCard";
 import FinancialOverview from "./components/FinancialOverview";
 import SmartAlerts from "./components/SmartAlerts";
 import CategoryPerformance12M from "./components/CategoryPerformance12M";
@@ -109,6 +110,9 @@ export default function DashboardPage() {
       
       {/* Budget Management Card */}
       <BudgetManagementCard />
+
+      {/* Expense Plans Card */}
+      <ExpensePlanDashboardCard />
 
       {/* Advanced Visualizations Section */}
       <div className="mb-8">

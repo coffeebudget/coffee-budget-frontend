@@ -2,8 +2,8 @@ import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
-// PATCH endpoint to update reconciliation for a payment activity
-export async function PATCH(
+// PUT endpoint to update reconciliation for a payment activity
+export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -30,7 +30,7 @@ export async function PATCH(
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/payment-activities/${id}/reconciliation`,
       {
-        method: "PATCH",
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,

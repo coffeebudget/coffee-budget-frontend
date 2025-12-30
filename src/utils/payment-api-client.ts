@@ -183,7 +183,7 @@ export async function updatePaymentActivityReconciliation(
   reconciliationData: UpdateReconciliationDto
 ): Promise<PaymentActivity> {
   const response = await fetch(`/api/payment-activities/${id}/reconciliation`, {
-    method: 'PATCH',
+    method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
     },

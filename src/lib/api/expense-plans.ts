@@ -20,6 +20,7 @@ import {
   BulkFundResult,
   BulkQuickFundResult,
   ExpensePlanStatus,
+  CoverageSummaryResponse,
 } from '@/types/expense-plan-types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -316,4 +317,14 @@ export async function fetchExpenseTimeline(
   );
 
   return handleResponse<TimelineEntry[]>(response);
+}
+
+export async function fetchCoverageSummary(
+  token: string
+): Promise<CoverageSummaryResponse> {
+  const response = await fetch(`${API_URL}/expense-plans/summary/coverage`, {
+    headers: getHeaders(token),
+  });
+
+  return handleResponse<CoverageSummaryResponse>(response);
 }

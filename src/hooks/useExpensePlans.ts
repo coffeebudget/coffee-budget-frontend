@@ -27,6 +27,7 @@ import {
   unlinkTransactionFromExpensePlan,
   fetchMonthlyDepositSummary,
   fetchExpenseTimeline,
+  fetchCoverageSummary,
 } from '@/lib/api/expense-plans';
 import {
   ExpensePlanStatus,
@@ -110,6 +111,18 @@ export function useExpenseTimeline(months: number = 12) {
     queryKey: ['expense-timeline', months],
     queryFn: () =>
       fetchExpenseTimeline(session!.user!.accessToken as string, months),
+    enabled: !!session,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+export function useCoverageSummary() {
+  const { data: session } = useSession();
+
+  return useQuery({
+    queryKey: ['expense-plans-coverage'],
+    queryFn: () =>
+      fetchCoverageSummary(session!.user!.accessToken as string),
     enabled: !!session,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

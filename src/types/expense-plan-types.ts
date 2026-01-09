@@ -55,6 +55,8 @@ export const FUNDING_STATUSES = ['funded', 'almost_ready', 'on_track', 'behind']
 
 export const DISTRIBUTION_STRATEGIES = ['priority', 'proportional', 'fixed'] as const;
 
+export const PAYMENT_ACCOUNT_TYPES = ['bank_account'] as const; // Future: 'credit_card'
+
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPE DEFINITIONS
 // ═══════════════════════════════════════════════════════════════════════════
@@ -68,6 +70,7 @@ export type InitialBalanceSource = (typeof INITIAL_BALANCE_SOURCES)[number];
 export type ExpensePlanTransactionType = (typeof EXPENSE_PLAN_TRANSACTION_TYPES)[number];
 export type FundingStatus = (typeof FUNDING_STATUSES)[number];
 export type DistributionStrategy = (typeof DISTRIBUTION_STRATEGIES)[number];
+export type PaymentAccountType = (typeof PAYMENT_ACCOUNT_TYPES)[number];
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN INTERFACES
@@ -92,6 +95,15 @@ export interface ExpensePlan {
     icon?: string | null;
   } | null;
   autoTrackCategory: boolean;
+
+  // Payment Source (Optional - for coverage tracking)
+  paymentAccountType: PaymentAccountType | null;
+  paymentAccountId: number | null;
+  paymentAccount?: {
+    id: number;
+    name: string;
+    balance: number;
+  } | null;
 
   // Financial
   targetAmount: number;
@@ -222,6 +234,9 @@ export interface CreateExpensePlanDto {
   rolloverSurplus?: boolean;
   initialBalanceSource?: InitialBalanceSource;
   initialBalanceCustom?: number;
+  // Payment source (optional - for coverage tracking)
+  paymentAccountType?: PaymentAccountType;
+  paymentAccountId?: number;
 }
 
 export interface UpdateExpensePlanDto {
@@ -244,6 +259,9 @@ export interface UpdateExpensePlanDto {
   status?: ExpensePlanStatus;
   autoCalculate?: boolean;
   rolloverSurplus?: boolean;
+  // Payment source (optional - for coverage tracking)
+  paymentAccountType?: PaymentAccountType;
+  paymentAccountId?: number;
 }
 
 export interface ContributeDto {
@@ -313,6 +331,61 @@ export interface ManualDistributionResult {
   }[];
   totalDistributed: number;
   remainder: number;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// COVERAGE SUMMARY INTERFACES
+// ═══════════════════════════════════════════════════════════════════════════
+
+export const COVERAGE_STATUSES = ['all_covered', 'has_shortfall', 'no_data'] as const;
+export type CoverageStatus = (typeof COVERAGE_STATUSES)[number];
+
+/**
+ * Expense plan at risk of not being covered
+ */
+export interface PlanAtRisk {
+  id: number;
+  name: string;
+  amount: number;
+  nextDueDate: string | null;
+  daysUntilDue: number;
+  icon: string | null;
+}
+
+/**
+ * Coverage information for a single bank account
+ */
+export interface AccountCoverage {
+  accountId: number;
+  accountName: string;
+  institution: string | null;
+  currentBalance: number;
+  upcomingPlansTotal: number;
+  planCount: number;
+  projectedBalance: number;
+  hasShortfall: boolean;
+  shortfallAmount: number;
+  plansAtRisk: PlanAtRisk[];
+}
+
+/**
+ * Summary for expense plans not linked to any account
+ */
+export interface UnassignedPlanSummary {
+  count: number;
+  totalAmount: number;
+  plans: PlanAtRisk[];
+}
+
+/**
+ * Complete coverage summary response
+ */
+export interface CoverageSummaryResponse {
+  accounts: AccountCoverage[];
+  unassignedPlans: UnassignedPlanSummary;
+  overallStatus: CoverageStatus;
+  totalShortfall: number;
+  accountsWithShortfall: number;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -415,6 +488,7 @@ export interface ExpensePlanFormData {
   rolloverSurplus: boolean;
   initialBalanceSource: InitialBalanceSource;
   initialBalanceCustom: string;
+  paymentAccountId: number | null;
 }
 
 export interface ExpensePlanFormErrors {
@@ -506,6 +580,33 @@ export function getTransactionTypeLabel(type: ExpensePlanTransactionType): strin
   return labels[type] || type;
 }
 
+export function getCoverageStatusLabel(status: CoverageStatus): string {
+  const labels: Record<CoverageStatus, string> = {
+    all_covered: 'All Covered',
+    has_shortfall: 'Shortfall Detected',
+    no_data: 'No Data',
+  };
+  return labels[status] || status;
+}
+
+export function getCoverageStatusColor(status: CoverageStatus): string {
+  const colors: Record<CoverageStatus, string> = {
+    all_covered: 'bg-green-100 text-green-800',
+    has_shortfall: 'bg-red-100 text-red-800',
+    no_data: 'bg-gray-100 text-gray-800',
+  };
+  return colors[status] || 'bg-gray-100 text-gray-800';
+}
+
+export function getCoverageStatusIcon(status: CoverageStatus): string {
+  const icons: Record<CoverageStatus, string> = {
+    all_covered: '✓',
+    has_shortfall: '⚠',
+    no_data: '—',
+  };
+  return icons[status] || '—';
+}
+
 export function calculateProgress(currentBalance: number, targetAmount: number): number {
   if (targetAmount <= 0) return 0;
   const progress = (currentBalance / targetAmount) * 100;
@@ -586,6 +687,7 @@ export function getDefaultFormData(): ExpensePlanFormData {
     rolloverSurplus: true,
     initialBalanceSource: 'zero',
     initialBalanceCustom: '',
+    paymentAccountId: null,
   };
 }
 
@@ -605,4 +707,279 @@ export function getDistributionStrategyDescription(strategy: DistributionStrateg
     fixed: 'Distributes exactly the monthly contribution amount to each plan',
   };
   return descriptions[strategy] || '';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// WIZARD TYPES
+// ═══════════════════════════════════════════════════════════════════════════
+
+export const WIZARD_EXPENSE_CATEGORIES = [
+  'housing',
+  'utilities',
+  'insurance',
+  'loans',
+  'subscriptions',
+  'transportation',
+  'phone_internet',
+  'other',
+] as const;
+
+export type WizardExpenseCategory = (typeof WIZARD_EXPENSE_CATEGORIES)[number];
+
+export const WIZARD_CATEGORY_GROUPS = ['essential', 'lifestyle'] as const;
+export type WizardCategoryGroup = (typeof WIZARD_CATEGORY_GROUPS)[number];
+
+export const WIZARD_FREQUENCIES = [
+  'weekly',
+  'biweekly',
+  'monthly',
+  'quarterly',
+  'semiannual',
+  'annual',
+] as const;
+
+export type WizardFrequency = (typeof WIZARD_FREQUENCIES)[number];
+
+export interface WizardCategoryDefinition {
+  id: WizardExpenseCategory;
+  label: string;
+  icon: string;
+  description: string;
+  group: WizardCategoryGroup;
+  expenseTypes: WizardExpenseType[];
+}
+
+export interface WizardExpenseType {
+  id: string;
+  label: string;
+  icon: string;
+}
+
+export interface WizardExpensePlan {
+  tempId: string;
+  categoryType: WizardExpenseCategory;
+  expenseType: string;
+  name: string;
+  amount: number;
+  frequency: WizardFrequency;
+  nextDueDate: string;
+  priority: 'essential' | 'discretionary';
+  linkedTransactionIds: number[];
+  notes: string;
+  categoryId: number | null;
+  // Payment source (optional - for coverage tracking)
+  paymentAccountId: number | null;
+}
+
+export interface WizardState {
+  currentStep: number;
+  totalSteps: number;
+  selectedCategories: WizardExpenseCategory[];
+  plans: WizardExpensePlan[];
+  isSubmitting: boolean;
+  currentCategoryIndex: number;
+}
+
+// Category definitions with expense types
+export const WIZARD_CATEGORY_DEFINITIONS: WizardCategoryDefinition[] = [
+  {
+    id: 'housing',
+    label: 'Housing',
+    icon: '🏠',
+    description: 'Mortgage or Rent payments',
+    group: 'essential',
+    expenseTypes: [
+      { id: 'mortgage', label: 'Mortgage', icon: '🏠' },
+      { id: 'rent', label: 'Rent', icon: '🏢' },
+    ],
+  },
+  {
+    id: 'utilities',
+    label: 'Utilities',
+    icon: '⚡',
+    description: 'Electric, Gas, Water, Heating',
+    group: 'essential',
+    expenseTypes: [
+      { id: 'electricity', label: 'Electricity', icon: '⚡' },
+      { id: 'gas', label: 'Gas/Heating', icon: '🔥' },
+      { id: 'water', label: 'Water', icon: '💧' },
+      { id: 'waste', label: 'Waste Collection', icon: '🗑️' },
+    ],
+  },
+  {
+    id: 'insurance',
+    label: 'Insurance',
+    icon: '🛡️',
+    description: 'Home, Car, Health, Life insurance',
+    group: 'essential',
+    expenseTypes: [
+      { id: 'home', label: 'Home/Property', icon: '🏠' },
+      { id: 'car', label: 'Car/Vehicle', icon: '🚗' },
+      { id: 'health', label: 'Health', icon: '🏥' },
+      { id: 'life', label: 'Life', icon: '❤️' },
+    ],
+  },
+  {
+    id: 'loans',
+    label: 'Loans & Financing',
+    icon: '💳',
+    description: 'Personal loans, Car financing',
+    group: 'essential',
+    expenseTypes: [
+      { id: 'personal', label: 'Personal Loan', icon: '💳' },
+      { id: 'car', label: 'Car Financing', icon: '🚗' },
+      { id: 'student', label: 'Student Loan', icon: '🎓' },
+    ],
+  },
+  {
+    id: 'subscriptions',
+    label: 'Subscriptions',
+    icon: '📺',
+    description: 'Streaming, Software, Memberships',
+    group: 'lifestyle',
+    expenseTypes: [
+      { id: 'streaming', label: 'Streaming Services', icon: '📺' },
+      { id: 'software', label: 'Software/Apps', icon: '💻' },
+      { id: 'gym', label: 'Gym/Fitness', icon: '🏋️' },
+      { id: 'membership', label: 'Memberships', icon: '🎫' },
+    ],
+  },
+  {
+    id: 'transportation',
+    label: 'Transportation',
+    icon: '🚗',
+    description: 'Car payment, Public transit pass',
+    group: 'lifestyle',
+    expenseTypes: [
+      { id: 'car_payment', label: 'Car Payment', icon: '🚗' },
+      { id: 'transit', label: 'Public Transit Pass', icon: '🚇' },
+      { id: 'parking', label: 'Parking Permit', icon: '🅿️' },
+    ],
+  },
+  {
+    id: 'phone_internet',
+    label: 'Phone & Internet',
+    icon: '📱',
+    description: 'Mobile, Broadband, Cable',
+    group: 'lifestyle',
+    expenseTypes: [
+      { id: 'mobile', label: 'Mobile Phone', icon: '📱' },
+      { id: 'internet', label: 'Internet/Broadband', icon: '🌐' },
+      { id: 'cable', label: 'Cable/TV', icon: '📺' },
+    ],
+  },
+  {
+    id: 'other',
+    label: 'Other',
+    icon: '➕',
+    description: 'Custom recurring expenses',
+    group: 'lifestyle',
+    expenseTypes: [
+      { id: 'custom', label: 'Custom Expense', icon: '➕' },
+    ],
+  },
+];
+
+export function getWizardCategoryDefinition(
+  categoryId: WizardExpenseCategory
+): WizardCategoryDefinition | undefined {
+  return WIZARD_CATEGORY_DEFINITIONS.find((c) => c.id === categoryId);
+}
+
+export function getWizardFrequencyLabel(frequency: WizardFrequency): string {
+  const labels: Record<WizardFrequency, string> = {
+    weekly: 'Weekly',
+    biweekly: 'Bi-weekly',
+    monthly: 'Monthly',
+    quarterly: 'Quarterly',
+    semiannual: 'Semi-annual',
+    annual: 'Annual',
+  };
+  return labels[frequency] || frequency;
+}
+
+export function getWizardFrequencyMonthlyMultiplier(frequency: WizardFrequency): number {
+  const multipliers: Record<WizardFrequency, number> = {
+    weekly: 4.33,
+    biweekly: 2.17,
+    monthly: 1,
+    quarterly: 1 / 3,
+    semiannual: 1 / 6,
+    annual: 1 / 12,
+  };
+  return multipliers[frequency] || 1;
+}
+
+export function calculateMonthlyContribution(
+  amount: number,
+  frequency: WizardFrequency
+): number {
+  return amount * getWizardFrequencyMonthlyMultiplier(frequency);
+}
+
+export function getDefaultWizardState(): WizardState {
+  return {
+    currentStep: 0,
+    totalSteps: 1,
+    selectedCategories: [],
+    plans: [],
+    isSubmitting: false,
+    currentCategoryIndex: 0,
+  };
+}
+
+export function generateTempId(): string {
+  return `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
+export function mapWizardFrequencyToExpensePlanFrequency(
+  frequency: WizardFrequency
+): ExpensePlanFrequency {
+  const mapping: Record<WizardFrequency, ExpensePlanFrequency> = {
+    weekly: 'monthly',
+    biweekly: 'monthly',
+    monthly: 'monthly',
+    quarterly: 'quarterly',
+    semiannual: 'yearly',
+    annual: 'yearly',
+  };
+  return mapping[frequency] || 'yearly';
+}
+
+export function mapWizardPlanToCreateDto(
+  plan: WizardExpensePlan
+): CreateExpensePlanDto {
+  const frequency = mapWizardFrequencyToExpensePlanFrequency(plan.frequency);
+  const monthlyContribution = calculateMonthlyContribution(plan.amount, plan.frequency);
+
+  // Determine plan type based on frequency
+  let planType: ExpensePlanType = 'yearly_fixed';
+  if (plan.frequency === 'monthly' || plan.frequency === 'weekly' || plan.frequency === 'biweekly') {
+    planType = 'fixed_monthly';
+  }
+
+  // Extract due month and day from next due date
+  const dueDate = new Date(plan.nextDueDate);
+  const dueMonth = dueDate.getMonth() + 1;
+  const dueDay = dueDate.getDate();
+
+  return {
+    name: plan.name,
+    description: plan.notes || undefined,
+    planType,
+    priority: plan.priority === 'essential' ? 'essential' : 'discretionary',
+    categoryId: plan.categoryId || undefined,
+    targetAmount: plan.amount,
+    monthlyContribution: Math.round(monthlyContribution * 100) / 100,
+    contributionSource: 'calculated',
+    frequency,
+    dueMonth,
+    dueDay,
+    autoCalculate: true,
+    rolloverSurplus: true,
+    initialBalanceSource: 'zero',
+    // Payment source (optional)
+    paymentAccountType: plan.paymentAccountId ? 'bank_account' : undefined,
+    paymentAccountId: plan.paymentAccountId || undefined,
+  };
 }

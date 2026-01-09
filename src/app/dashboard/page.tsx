@@ -11,6 +11,7 @@ import MonthlySummaryChart from "./components/MonthlySummaryChart";
 import AIAnalysisCard from "./components/AIAnalysisCard";
 import BudgetManagementCard from "./components/BudgetManagementCard";
 import ExpensePlanDashboardCard from "./components/ExpensePlanDashboardCard";
+import CoverageSection from "./components/CoverageSection";
 import FinancialOverview from "./components/FinancialOverview";
 import SmartAlerts from "./components/SmartAlerts";
 import CategoryPerformance12M from "./components/CategoryPerformance12M";
@@ -113,6 +114,9 @@ export default function DashboardPage() {
 
       {/* Expense Plans Card */}
       <ExpensePlanDashboardCard />
+
+      {/* Coverage Monitor */}
+      <CoverageSection className="mb-8" />
 
       {/* Advanced Visualizations Section */}
       <div className="mb-8">

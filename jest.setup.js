@@ -6,6 +6,21 @@ import { TextEncoder, TextDecoder } from 'util';
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
+// Polyfill BroadcastChannel for MSW 2.x (not available in Node.js)
+class BroadcastChannelMock {
+  constructor(name) {
+    this.name = name;
+    this.onmessage = null;
+    this.onmessageerror = null;
+  }
+  postMessage() {}
+  close() {}
+  addEventListener() {}
+  removeEventListener() {}
+  dispatchEvent() { return true; }
+}
+global.BroadcastChannel = BroadcastChannelMock;
+
 // Mock Next.js router
 jest.mock('next/router', () => ({
   useRouter() {

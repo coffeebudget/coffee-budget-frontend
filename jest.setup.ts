@@ -72,6 +72,50 @@ jest.mock('next/link', () => ({
   },
 }));
 
+// Mock next-auth/react with SessionProvider
+jest.mock('next-auth/react', () => {
+  const actualModule = jest.requireActual('next-auth/react');
+  return {
+    ...actualModule,
+    useSession: jest.fn(() => ({
+      data: {
+        user: {
+          id: '1',
+          email: 'test@example.com',
+          name: 'Test User',
+          accessToken: 'mock-access-token',
+        },
+        expires: '2024-12-31T23:59:59.999Z',
+      },
+      status: 'authenticated',
+    })),
+    SessionProvider: ({ children }: { children: React.ReactNode }) => React.createElement(React.Fragment, null, children),
+    signIn: jest.fn(),
+    signOut: jest.fn(),
+  };
+});
+
+// Mock next-auth (for API routes)
+jest.mock('next-auth', () => {
+  const mockNextAuth = jest.fn(() => ({
+    GET: jest.fn(),
+    POST: jest.fn(),
+  }));
+  return {
+    __esModule: true,
+    default: mockNextAuth,
+    getServerSession: jest.fn(() => Promise.resolve({
+      user: {
+        id: '1',
+        email: 'test@example.com',
+        name: 'Test User',
+        accessToken: 'mock-access-token',
+      },
+      expires: '2024-12-31T23:59:59.999Z',
+    })),
+  };
+});
+
 // Mock environment variables
 process.env.NEXT_PUBLIC_API_URL = 'http://localhost:3001';
 process.env.NEXTAUTH_URL = 'http://localhost:3000';

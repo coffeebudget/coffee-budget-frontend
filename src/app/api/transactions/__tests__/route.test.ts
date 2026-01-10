@@ -12,9 +12,19 @@ global.Response = class Response {
 // Mock fetch
 global.fetch = jest.fn();
 
-// Mock next-auth
+// Mock next-auth (must include default export for NextAuth())
 jest.mock('next-auth', () => ({
+  __esModule: true,
+  default: jest.fn(() => ({ GET: jest.fn(), POST: jest.fn() })),
   getServerSession: jest.fn(),
+}));
+
+// Mock the auth route to prevent it from calling NextAuth
+jest.mock('@/app/api/auth/[...nextauth]/route', () => ({
+  authOptions: {
+    providers: [],
+    callbacks: {},
+  },
 }));
 
 import { NextRequest } from 'next/server';

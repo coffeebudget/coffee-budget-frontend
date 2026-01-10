@@ -55,7 +55,7 @@ export const FUNDING_STATUSES = ['funded', 'almost_ready', 'on_track', 'behind']
 
 export const DISTRIBUTION_STRATEGIES = ['priority', 'proportional', 'fixed'] as const;
 
-export const PAYMENT_ACCOUNT_TYPES = ['bank_account'] as const; // Future: 'credit_card'
+export const PAYMENT_ACCOUNT_TYPES = ['bank_account', 'credit_card'] as const;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPE DEFINITIONS
@@ -488,6 +488,7 @@ export interface ExpensePlanFormData {
   rolloverSurplus: boolean;
   initialBalanceSource: InitialBalanceSource;
   initialBalanceCustom: string;
+  paymentAccountType: PaymentAccountType | null;
   paymentAccountId: number | null;
 }
 
@@ -687,6 +688,7 @@ export function getDefaultFormData(): ExpensePlanFormData {
     rolloverSurplus: true,
     initialBalanceSource: 'zero',
     initialBalanceCustom: '',
+    paymentAccountType: null,
     paymentAccountId: null,
   };
 }
@@ -768,6 +770,7 @@ export interface WizardExpensePlan {
   notes: string;
   categoryId: number | null;
   // Payment source (optional - for coverage tracking)
+  paymentAccountType: PaymentAccountType | null;
   paymentAccountId: number | null;
 }
 
@@ -979,7 +982,7 @@ export function mapWizardPlanToCreateDto(
     rolloverSurplus: true,
     initialBalanceSource: 'zero',
     // Payment source (optional)
-    paymentAccountType: plan.paymentAccountId ? 'bank_account' : undefined,
+    paymentAccountType: plan.paymentAccountType || undefined,
     paymentAccountId: plan.paymentAccountId || undefined,
   };
 }

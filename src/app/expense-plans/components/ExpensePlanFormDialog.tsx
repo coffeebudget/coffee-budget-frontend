@@ -19,7 +19,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2 } from "lucide-react";
+import { Loader2, Wallet, CreditCard } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { fetchBankAccounts, fetchCreditCards } from "@/utils/api-client";
+
+interface BankAccount {
+  id: number;
+  name: string;
+  balance: number;
+}
+
+interface CreditCardAccount {
+  id: number;
+  name: string;
+  creditLimit: number;
+  availableCredit: number;
+}
 import {
   useCreateExpensePlan,
   useUpdateExpensePlan,
@@ -40,6 +55,7 @@ import {
   getDefaultFormData,
   ExpensePlanFormData,
   ExpensePlanFormErrors,
+  PaymentAccountType,
 } from "@/types/expense-plan-types";
 
 interface ExpensePlanFormDialogProps {
@@ -61,6 +77,18 @@ export default function ExpensePlanFormDialog({
 
   const [formData, setFormData] = useState<ExpensePlanFormData>(getDefaultFormData());
   const [errors, setErrors] = useState<ExpensePlanFormErrors>({});
+
+  // Fetch bank accounts for payment source selection
+  const { data: bankAccounts = [] } = useQuery<BankAccount[]>({
+    queryKey: ["bankAccounts"],
+    queryFn: fetchBankAccounts,
+  });
+
+  // Fetch credit cards for payment source selection
+  const { data: creditCards = [] } = useQuery<CreditCardAccount[]>({
+    queryKey: ["creditCards"],
+    queryFn: fetchCreditCards,
+  });
 
   useEffect(() => {
     if (plan) {
@@ -85,6 +113,8 @@ export default function ExpensePlanFormDialog({
         rolloverSurplus: plan.rolloverSurplus,
         initialBalanceSource: plan.initialBalanceSource,
         initialBalanceCustom: plan.initialBalanceCustom?.toString() || "",
+        paymentAccountType: plan.paymentAccountType,
+        paymentAccountId: plan.paymentAccountId,
       });
     } else {
       setFormData(getDefaultFormData());
@@ -137,6 +167,8 @@ export default function ExpensePlanFormDialog({
       seasonalMonths: formData.seasonalMonths.length > 0 ? formData.seasonalMonths : undefined,
       autoCalculate: formData.autoCalculate,
       rolloverSurplus: formData.rolloverSurplus,
+      paymentAccountType: formData.paymentAccountType || undefined,
+      paymentAccountId: formData.paymentAccountId || undefined,
     };
 
     try {
@@ -346,6 +378,85 @@ export default function ExpensePlanFormDialog({
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="paymentAccount">Payment Account</Label>
+                <Select
+                  value={
+                    formData.paymentAccountId && formData.paymentAccountType
+                      ? `${formData.paymentAccountType}:${formData.paymentAccountId}`
+                      : "none"
+                  }
+                  onValueChange={(v) => {
+                    if (v === "none") {
+                      setFormData((prev) => ({
+                        ...prev,
+                        paymentAccountType: null,
+                        paymentAccountId: null,
+                      }));
+                    } else {
+                      const [type, id] = v.split(":");
+                      setFormData((prev) => ({
+                        ...prev,
+                        paymentAccountType: type as PaymentAccountType,
+                        paymentAccountId: parseInt(id),
+                      }));
+                    }
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select payment account..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">
+                      <span className="text-gray-500">No account selected</span>
+                    </SelectItem>
+                    {/* Bank Accounts */}
+                    {bankAccounts.length > 0 && (
+                      <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 bg-gray-50">
+                        Bank Accounts
+                      </div>
+                    )}
+                    {bankAccounts.map((account) => (
+                      <SelectItem key={`bank_account:${account.id}`} value={`bank_account:${account.id}`}>
+                        <span className="flex items-center gap-2">
+                          <Wallet className="h-4 w-4 text-blue-600" />
+                          <span>{account.name}</span>
+                          <span className="text-gray-500 ml-2">
+                            ({new Intl.NumberFormat("en-US", {
+                              style: "currency",
+                              currency: "EUR",
+                            }).format(Math.abs(account.balance))})
+                          </span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                    {/* Credit Cards */}
+                    {creditCards.length > 0 && (
+                      <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 bg-gray-50">
+                        Credit Cards
+                      </div>
+                    )}
+                    {creditCards.map((card) => (
+                      <SelectItem key={`credit_card:${card.id}`} value={`credit_card:${card.id}`}>
+                        <span className="flex items-center gap-2">
+                          <CreditCard className="h-4 w-4 text-purple-600" />
+                          <span>{card.name}</span>
+                          <span className="text-gray-500 ml-2">
+                            ({new Intl.NumberFormat("en-US", {
+                              style: "currency",
+                              currency: "EUR",
+                            }).format(card.availableCredit)} available)
+                          </span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Link to a payment account for coverage monitoring
+                </p>
               </div>
             </div>
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
   useExpensePlans,
@@ -22,6 +23,7 @@ import {
   TrendingUp,
   AlertTriangle,
   CheckCircle2,
+  Wand2,
 } from "lucide-react";
 import {
   ExpensePlan,
@@ -41,6 +43,7 @@ import ContributeWithdrawDialog from "./components/ContributeWithdrawDialog";
 import IncomeDistributionSetup from "./components/IncomeDistributionSetup";
 
 export default function ExpensePlansPage() {
+  const router = useRouter();
   const { data: session } = useSession();
   const { data: plans, isLoading, error, refetch } = useExpensePlans();
   const { data: summary, isLoading: summaryLoading } = useMonthlyDepositSummary();
@@ -201,6 +204,14 @@ export default function ExpensePlansPage() {
         <Button onClick={handleCreatePlan} className="gap-2">
           <Plus className="h-4 w-4" />
           Create Plan
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => router.push("/expense-plans/wizard")}
+          className="gap-2 border-green-300 text-green-700 hover:bg-green-50"
+        >
+          <Wand2 className="h-4 w-4" />
+          Create with Wizard
         </Button>
         <Button
           variant="outline"

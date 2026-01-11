@@ -32,7 +32,7 @@ export const waitForElementToDisappear = async (testId: string, timeout = 5000) 
 /**
  * Get an element by test ID with error handling
  */
-export const getByTestId = (testId: string) => {
+export const getElementByTestId = (testId: string) => {
   const element = screen.getByTestId(testId);
   if (!element) {
     throw new Error(`Element with data-testid="${testId}" not found`);
@@ -43,7 +43,7 @@ export const getByTestId = (testId: string) => {
 /**
  * Get multiple elements by test ID
  */
-export const getAllByTestId = (testId: string) => {
+export const getAllElementsByTestId = (testId: string) => {
   return screen.getAllByTestId(testId);
 };
 
@@ -58,7 +58,7 @@ export const getByTestIdWithin = (container: HTMLElement, testId: string) => {
  * Click an element by test ID
  */
 export const clickByTestId = async (testId: string) => {
-  const element = getByTestId(testId);
+  const element = getElementByTestId(testId);
   await userEvent.click(element);
   return element;
 };
@@ -67,7 +67,7 @@ export const clickByTestId = async (testId: string) => {
  * Type text into an input by test ID
  */
 export const typeByTestId = async (testId: string, text: string) => {
-  const element = getByTestId(testId) as HTMLInputElement;
+  const element = getElementByTestId(testId) as HTMLInputElement;
   await userEvent.clear(element);
   await userEvent.type(element, text);
   return element;
@@ -77,7 +77,7 @@ export const typeByTestId = async (testId: string, text: string) => {
  * Select an option from a select element by test ID
  */
 export const selectByTestId = async (testId: string, optionText: string) => {
-  const selectElement = getByTestId(testId) as HTMLSelectElement;
+  const selectElement = getElementByTestId(testId) as HTMLSelectElement;
   await userEvent.selectOptions(selectElement, optionText);
   return selectElement;
 };
@@ -101,7 +101,7 @@ export const isVisible = (testId: string) => {
  * Get text content of an element by test ID
  */
 export const getTextByTestId = (testId: string) => {
-  const element = getByTestId(testId);
+  const element = getElementByTestId(testId);
   return element.textContent;
 };
 
@@ -109,7 +109,7 @@ export const getTextByTestId = (testId: string) => {
  * Check if an element has a specific class
  */
 export const hasClass = (testId: string, className: string) => {
-  const element = getByTestId(testId);
+  const element = getElementByTestId(testId);
   return element.classList.contains(className);
 };
 
@@ -117,12 +117,12 @@ export const hasClass = (testId: string, className: string) => {
  * Check if an element has a specific attribute
  */
 export const hasAttribute = (testId: string, attribute: string, value?: string) => {
-  const element = getByTestId(testId);
+  const element = getElementByTestId(testId);
   const hasAttr = element.hasAttribute(attribute);
-  
+
   if (!hasAttr) return false;
   if (value === undefined) return true;
-  
+
   return element.getAttribute(attribute) === value;
 };
 
@@ -195,7 +195,7 @@ export const createUserEvent = () => {
  * Simulate a form submission
  */
 export const submitForm = async (formTestId: string) => {
-  const form = getByTestId(formTestId);
+  const form = getElementByTestId(formTestId);
   const submitButton = within(form).getByRole('button', { name: /submit|save|create|update/i });
   await userEvent.click(submitButton);
   return form;
@@ -220,7 +220,7 @@ export const fillForm = async (formData: Record<string, string>) => {
  * Check if an element is focused
  */
 export const isFocused = (testId: string) => {
-  const element = getByTestId(testId);
+  const element = getElementByTestId(testId);
   return document.activeElement === element;
 };
 
@@ -228,7 +228,7 @@ export const isFocused = (testId: string) => {
  * Focus an element by test ID
  */
 export const focusByTestId = async (testId: string) => {
-  const element = getByTestId(testId);
+  const element = getElementByTestId(testId);
   element.focus();
   return element;
 };

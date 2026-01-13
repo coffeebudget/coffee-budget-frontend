@@ -169,6 +169,10 @@ export default function PaymentAccountsPage() {
                 onEdit={handleEditAccount}
                 onDelete={handleDeleteAccount}
                 onAccountUpdated={fetchPaymentAccounts}
+                onReconnect={() => {
+                  // Open GoCardless dialog for reconnection
+                  setShowGocardlessDialog(true);
+                }}
               />
             )}
           </TabsContent>

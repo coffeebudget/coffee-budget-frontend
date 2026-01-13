@@ -14,6 +14,7 @@ import ExpensePlanDashboardCard from "./components/ExpensePlanDashboardCard";
 import CoverageSection from "./components/CoverageSection";
 import FinancialOverview from "./components/FinancialOverview";
 import SmartAlerts from "./components/SmartAlerts";
+import BankConnectionAlerts from "./components/BankConnectionAlerts";
 import CategoryPerformance12M from "./components/CategoryPerformance12M";
 import BudgetProgressRings from "./components/BudgetProgressRings";
 import CashFlowForecast from "./components/CashFlowForecast";
@@ -108,7 +109,10 @@ export default function DashboardPage() {
       
       {/* Smart Alerts */}
       <SmartAlerts className="mb-6" />
-      
+
+      {/* Bank Connection Alerts */}
+      <BankConnectionAlerts className="mb-6" />
+
       {/* Budget Management Card */}
       <BudgetManagementCard />
 

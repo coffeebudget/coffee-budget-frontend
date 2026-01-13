@@ -355,8 +355,8 @@ export default function BankAccountsPage() {
                 <span className="ml-2 text-gray-600">Loading bank accounts...</span>
               </div>
             ) : (
-              <BankAccounts 
-                bankAccounts={bankAccounts} 
+              <BankAccounts
+                bankAccounts={bankAccounts}
                 onEdit={handleEditAccount}
                 onDelete={async (id) => {
                   try {
@@ -366,6 +366,10 @@ export default function BankAccountsPage() {
                   }
                 }}
                 onAccountUpdated={fetchBankAccounts}
+                onReconnect={() => {
+                  // Open GoCardless dialog for reconnection
+                  setShowGocardlessDialog(true);
+                }}
               />
             )}
           </TabsContent>

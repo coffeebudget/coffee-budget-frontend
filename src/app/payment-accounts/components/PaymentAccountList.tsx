@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useSession } from "next-auth/react";
 import { PaymentAccount } from "@/types/payment-types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, AlertCircle, CheckCircle, X, Download, Loader2, Link } from "lucide-react";
+import { Edit, Trash2, AlertCircle, CheckCircle, X, Download, Loader2, Link as LinkIcon, Clock } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -16,22 +17,68 @@ import {
 } from "@/components/ui/table";
 import { toast } from "react-hot-toast";
 import { importPaymentActivities } from "@/utils/payment-api-client";
+import {
+  ConnectionStatusSummary,
+  ConnectionAlert,
+  formatExpirationMessage,
+} from "@/types/gocardless-types";
 
 interface PaymentAccountListProps {
   paymentAccounts: PaymentAccount[];
   onEdit: (account: PaymentAccount) => void;
   onDelete: (id: number) => void;
   onAccountUpdated?: () => void;
+  onReconnect?: (account: PaymentAccount) => void;
 }
 
 export default function PaymentAccountList({
   paymentAccounts,
   onEdit,
   onDelete,
-  onAccountUpdated
+  onAccountUpdated,
+  onReconnect
 }: PaymentAccountListProps) {
+  const { data: session } = useSession();
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
   const [importingAccounts, setImportingAccounts] = useState<Set<number>>(new Set());
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatusSummary | null>(null);
+
+  // Fetch connection status
+  useEffect(() => {
+    if (!session?.user?.accessToken) return;
+
+    const fetchConnectionStatus = async () => {
+      try {
+        const response = await fetch('/api/gocardless/connection-status');
+        if (response.ok) {
+          const data = await response.json();
+          setConnectionStatus(data);
+        }
+      } catch (error) {
+        console.error('Error fetching connection status:', error);
+      }
+    };
+
+    fetchConnectionStatus();
+  }, [session]);
+
+  // Create a map of gocardlessAccountId -> alert for quick lookup
+  const alertMap = useMemo(() => {
+    const map = new Map<string, ConnectionAlert>();
+    if (connectionStatus?.alerts) {
+      connectionStatus.alerts.forEach(alert => {
+        alert.linkedAccountIds.forEach(id => map.set(id, alert));
+      });
+    }
+    return map;
+  }, [connectionStatus]);
+
+  // Get connection alert for an account
+  const getAccountAlert = (account: PaymentAccount): ConnectionAlert | undefined => {
+    const gocardlessAccountId = account.providerConfig?.gocardlessAccountId;
+    if (!gocardlessAccountId) return undefined;
+    return alertMap.get(gocardlessAccountId);
+  };
 
   const handleDeleteClick = (id: number) => {
     if (confirmDelete === id) {
@@ -168,10 +215,57 @@ export default function PaymentAccountList({
                 </TableCell>
                 <TableCell className="text-center">
                   {hasGoCardlessConnection(account) ? (
-                    <Badge variant="secondary" className="flex items-center gap-1 w-fit mx-auto">
-                      <CheckCircle className="h-3 w-3" />
-                      Connected
-                    </Badge>
+                    (() => {
+                      const alert = getAccountAlert(account);
+                      if (alert?.status === 'expired') {
+                        return (
+                          <div className="flex flex-col items-center gap-1">
+                            <Badge variant="destructive" className="flex items-center gap-1 w-fit">
+                              <AlertCircle className="h-3 w-3" />
+                              Expired
+                            </Badge>
+                            {onReconnect && (
+                              <Button
+                                variant="link"
+                                size="sm"
+                                className="h-auto p-0 text-xs"
+                                onClick={() => onReconnect(account)}
+                              >
+                                <LinkIcon className="h-3 w-3 mr-1" />
+                                Reconnect
+                              </Button>
+                            )}
+                          </div>
+                        );
+                      } else if (alert?.status === 'expiring_soon') {
+                        return (
+                          <div className="flex flex-col items-center gap-1">
+                            <Badge variant="secondary" className="flex items-center gap-1 w-fit bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
+                              <Clock className="h-3 w-3" />
+                              {formatExpirationMessage(alert.daysUntilExpiration)}
+                            </Badge>
+                            {onReconnect && (
+                              <Button
+                                variant="link"
+                                size="sm"
+                                className="h-auto p-0 text-xs"
+                                onClick={() => onReconnect(account)}
+                              >
+                                <LinkIcon className="h-3 w-3 mr-1" />
+                                Renew
+                              </Button>
+                            )}
+                          </div>
+                        );
+                      } else {
+                        return (
+                          <Badge variant="secondary" className="flex items-center gap-1 w-fit mx-auto">
+                            <CheckCircle className="h-3 w-3" />
+                            Connected
+                          </Badge>
+                        );
+                      }
+                    })()
                   ) : (
                     <Badge variant="outline" className="flex items-center gap-1 w-fit mx-auto">
                       <X className="h-3 w-3" />

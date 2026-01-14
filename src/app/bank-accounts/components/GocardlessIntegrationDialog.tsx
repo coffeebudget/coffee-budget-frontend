@@ -73,6 +73,12 @@ export default function GocardlessIntegrationDialog({
   // Mapping state
   const [accountMappings, setAccountMappings] = useState<AccountMapping[]>([]);
 
+  // Store requisition info for creating connection record
+  const [requisitionInfo, setRequisitionInfo] = useState<{
+    requisitionId: string;
+    institutionId: string;
+  } | null>(null);
+
   // Load institutions when dialog opens
   useEffect(() => {
     if (open) {
@@ -88,6 +94,7 @@ export default function GocardlessIntegrationDialog({
       setSearchTerm('');
       setFilteredInstitutions([]);
       setAccountMappings([]);
+      setRequisitionInfo(null);
       setError(null);
       closePopup();
     }
@@ -105,8 +112,15 @@ export default function GocardlessIntegrationDialog({
         setPopupProcessing(false);
         setIsPopupOpen(false);
         closePopup();
-        
+
         if (event.data.data?.accounts) {
+          // Store requisition info for creating connection record later
+          if (event.data.data.requisitionId) {
+            setRequisitionInfo({
+              requisitionId: event.data.data.requisitionId,
+              institutionId: selectedInstitution, // Use the institution user selected
+            });
+          }
           initializeAccountMappings(event.data.data.accounts);
           setStep('mapping');
         }
@@ -152,11 +166,29 @@ export default function GocardlessIntegrationDialog({
   };
 
   const initializeAccountMappings = (accounts: GocardlessAccount[]) => {
-    const mappings: AccountMapping[] = accounts.map(account => ({
-      gocardlessAccount: account,
-      action: 'create',
-      newAccountName: account.name
-    }));
+    const mappings: AccountMapping[] = accounts.map(account => {
+      // Check if this GoCardless account already has a linked bank account (reconnection scenario)
+      const existingBankAccount = bankAccounts.find(
+        ba => ba.gocardlessAccountId === account.id
+      );
+
+      if (existingBankAccount) {
+        // Reconnection: default to associate with the existing account
+        return {
+          gocardlessAccount: account,
+          action: 'associate' as const,
+          localAccountId: existingBankAccount.id,
+          newAccountName: account.name
+        };
+      } else {
+        // New connection: default to create
+        return {
+          gocardlessAccount: account,
+          action: 'create' as const,
+          newAccountName: account.name
+        };
+      }
+    });
     setAccountMappings(mappings);
   };
 
@@ -241,19 +273,22 @@ export default function GocardlessIntegrationDialog({
   const handleSaveMappings = async () => {
     setLoading(true);
     try {
+      // Collect all account IDs that will be linked
+      const linkedAccountIds: string[] = [];
+
       for (const mapping of accountMappings) {
         // Get current balance from GoCardless
         const balanceResponse = await fetch(`/api/gocardless/accounts/${mapping.gocardlessAccount.id}/balances`);
         let currentBalance = 0;
-        
+
         if (balanceResponse.ok) {
           const balanceData = await balanceResponse.json();
           // Find the current balance (usually "expected" or "interimAvailable")
           const balance = balanceData.balances?.find(
-            (b: { balanceType: string; balanceAmount: { amount: string } }) => 
+            (b: { balanceType: string; balanceAmount: { amount: string } }) =>
               b.balanceType === 'expected' || b.balanceType === 'interimAvailable'
           ) || balanceData.balances?.[0];
-          
+
           if (balance) {
             currentBalance = parseFloat(balance.balanceAmount.amount);
           }
@@ -283,8 +318,36 @@ export default function GocardlessIntegrationDialog({
             })
           });
         }
+
+        // Track linked account IDs
+        linkedAccountIds.push(mapping.gocardlessAccount.id);
       }
-      
+
+      // Create GocardlessConnection record for tracking expiration
+      if (requisitionInfo && linkedAccountIds.length > 0) {
+        try {
+          const connectionResponse = await fetch('/api/gocardless/connections/complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              requisitionId: requisitionInfo.requisitionId,
+              institutionId: requisitionInfo.institutionId,
+              linkedAccountIds,
+            })
+          });
+
+          if (!connectionResponse.ok) {
+            console.error('Failed to create connection record:', await connectionResponse.text());
+            // Don't fail the whole operation - connection tracking is secondary
+          } else {
+            console.log('✅ Created GocardlessConnection record for expiration tracking');
+          }
+        } catch (connectionError) {
+          console.error('Error creating connection record:', connectionError);
+          // Don't fail the whole operation - connection tracking is secondary
+        }
+      }
+
       toast.success('GoCardless accounts successfully connected and balances synchronized!');
       onAccountsUpdated();
       onOpenChange(false);
@@ -498,10 +561,17 @@ export default function GocardlessIntegrationDialog({
                             </SelectTrigger>
                             <SelectContent>
                               {bankAccounts
-                                .filter(acc => !acc.gocardlessAccountId) // Only show accounts not already connected
+                                .filter(acc =>
+                                  // Show accounts not connected OR accounts being reconnected (same gocardlessAccountId)
+                                  !acc.gocardlessAccountId ||
+                                  acc.gocardlessAccountId === mapping.gocardlessAccount.id
+                                )
                                 .map(account => (
                                   <SelectItem key={account.id} value={account.id!.toString()}>
                                     {account.name}
+                                    {account.gocardlessAccountId === mapping.gocardlessAccount.id && (
+                                      <span className="ml-2 text-xs text-blue-600">(reconnect)</span>
+                                    )}
                                   </SelectItem>
                                 ))
                               }

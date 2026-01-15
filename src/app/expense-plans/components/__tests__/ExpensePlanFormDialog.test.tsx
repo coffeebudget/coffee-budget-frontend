@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ExpensePlanFormDialog from '../ExpensePlanFormDialog';
@@ -61,9 +61,10 @@ function createWrapper() {
       queries: { retry: false },
     },
   });
-  return ({ children }: { children: React.ReactNode }) => (
+  const TestWrapper = ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
+  return TestWrapper;
 }
 
 // Helper to create a mock expense plan

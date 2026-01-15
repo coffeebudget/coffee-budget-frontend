@@ -90,7 +90,10 @@ export default function ExpensePlanFormDialog({
     queryFn: fetchCreditCards,
   });
 
+  // Only initialize form when dialog opens - use plan.id to avoid resetting on object reference changes
   useEffect(() => {
+    if (!open) return; // Only run when dialog is open
+
     if (plan) {
       setFormData({
         name: plan.name,
@@ -120,7 +123,8 @@ export default function ExpensePlanFormDialog({
       setFormData(getDefaultFormData());
     }
     setErrors({});
-  }, [plan, open]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plan?.id, open]); // Use plan?.id instead of plan to avoid resetting on reference changes
 
   const validate = (): boolean => {
     const newErrors: ExpensePlanFormErrors = {};

@@ -288,6 +288,42 @@ export async function unlinkTransactionFromExpensePlan(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// ADJUSTMENT OPERATIONS
+// ═══════════════════════════════════════════════════════════════════════════
+
+export async function acceptAdjustment(
+  token: string,
+  planId: number,
+  customAmount?: number
+): Promise<ExpensePlan> {
+  const response = await fetch(
+    `${API_URL}/expense-plans/${planId}/accept-adjustment`,
+    {
+      method: 'POST',
+      headers: getHeaders(token),
+      body: JSON.stringify({ customAmount }),
+    }
+  );
+
+  return handleResponse<ExpensePlan>(response);
+}
+
+export async function dismissAdjustment(
+  token: string,
+  planId: number
+): Promise<ExpensePlan> {
+  const response = await fetch(
+    `${API_URL}/expense-plans/${planId}/dismiss-adjustment`,
+    {
+      method: 'POST',
+      headers: getHeaders(token),
+    }
+  );
+
+  return handleResponse<ExpensePlan>(response);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // SUMMARY & ANALYTICS
 // ═══════════════════════════════════════════════════════════════════════════
 

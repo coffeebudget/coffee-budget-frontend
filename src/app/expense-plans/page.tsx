@@ -40,6 +40,7 @@ import {
 import ExpensePlanCard from "./components/ExpensePlanCard";
 import ExpensePlanFormDialog from "./components/ExpensePlanFormDialog";
 import ContributeWithdrawDialog from "./components/ContributeWithdrawDialog";
+import AdjustmentSuggestionModal from "./components/AdjustmentSuggestionModal";
 import IncomeDistributionSetup from "./components/IncomeDistributionSetup";
 
 export default function ExpensePlansPage() {
@@ -57,6 +58,8 @@ export default function ExpensePlansPage() {
   const [contributeDialogOpen, setContributeDialogOpen] = useState(false);
   const [contributePlan, setContributePlan] = useState<ExpensePlan | null>(null);
   const [contributeMode, setContributeMode] = useState<"contribute" | "withdraw">("contribute");
+  const [adjustmentModalOpen, setAdjustmentModalOpen] = useState(false);
+  const [adjustmentPlan, setAdjustmentPlan] = useState<ExpensePlan | null>(null);
 
   const filteredPlans = plans?.filter((plan) => {
     if (activeTab === "all") return true;
@@ -108,6 +111,17 @@ export default function ExpensePlansPage() {
   const handleContributeComplete = () => {
     setContributeDialogOpen(false);
     setContributePlan(null);
+    refetch();
+  };
+
+  const handleReviewAdjustment = (plan: ExpensePlan) => {
+    setAdjustmentPlan(plan);
+    setAdjustmentModalOpen(true);
+  };
+
+  const handleAdjustmentComplete = () => {
+    setAdjustmentModalOpen(false);
+    setAdjustmentPlan(null);
     refetch();
   };
 
@@ -269,6 +283,7 @@ export default function ExpensePlansPage() {
                       onQuickFund={handleQuickFund}
                       onContribute={handleContribute}
                       onWithdraw={handleWithdraw}
+                      onReviewAdjustment={handleReviewAdjustment}
                       isQuickFunding={quickFundMutation.isPending}
                     />
                   ))}
@@ -299,6 +314,14 @@ export default function ExpensePlansPage() {
         plan={contributePlan}
         mode={contributeMode}
         onComplete={handleContributeComplete}
+      />
+
+      {/* Adjustment Suggestion Modal */}
+      <AdjustmentSuggestionModal
+        open={adjustmentModalOpen}
+        onOpenChange={setAdjustmentModalOpen}
+        plan={adjustmentPlan}
+        onComplete={handleAdjustmentComplete}
       />
     </div>
   );

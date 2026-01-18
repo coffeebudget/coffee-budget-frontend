@@ -25,6 +25,8 @@ import {
   bulkQuickFundExpensePlans,
   linkTransactionToExpensePlan,
   unlinkTransactionFromExpensePlan,
+  acceptAdjustment,
+  dismissAdjustment,
   fetchMonthlyDepositSummary,
   fetchExpenseTimeline,
   fetchCoverageSummary,
@@ -395,6 +397,47 @@ export function useUnlinkTransaction() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to unlink transaction');
+    },
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ADJUSTMENT MUTATION HOOKS
+// ═══════════════════════════════════════════════════════════════════════════
+
+export function useAcceptAdjustment() {
+  const { data: session } = useSession();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ planId, customAmount }: { planId: number; customAmount?: number }) =>
+      acceptAdjustment(session!.user!.accessToken as string, planId, customAmount),
+    onSuccess: (_, { planId }) => {
+      queryClient.invalidateQueries({ queryKey: ['expense-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['expense-plan', planId] });
+      queryClient.invalidateQueries({ queryKey: ['expense-plans-summary'] });
+      toast.success('Expense plan adjusted successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to accept adjustment');
+    },
+  });
+}
+
+export function useDismissAdjustment() {
+  const { data: session } = useSession();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (planId: number) =>
+      dismissAdjustment(session!.user!.accessToken as string, planId),
+    onSuccess: (_, planId) => {
+      queryClient.invalidateQueries({ queryKey: ['expense-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['expense-plan', planId] });
+      toast.success('Adjustment dismissed for 30 days');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to dismiss adjustment');
     },
   });
 }

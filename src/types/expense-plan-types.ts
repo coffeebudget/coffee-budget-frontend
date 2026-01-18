@@ -71,6 +71,7 @@ export type ExpensePlanTransactionType = (typeof EXPENSE_PLAN_TRANSACTION_TYPES)
 export type FundingStatus = (typeof FUNDING_STATUSES)[number];
 export type DistributionStrategy = (typeof DISTRIBUTION_STRATEGIES)[number];
 export type PaymentAccountType = (typeof PAYMENT_ACCOUNT_TYPES)[number];
+export type AdjustmentReason = 'spending_increased' | 'spending_decreased';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN INTERFACES
@@ -133,6 +134,13 @@ export interface ExpensePlan {
   // Metadata
   createdAt: string;
   updatedAt: string;
+
+  // Adjustment Suggestions (populated by weekly cron job)
+  suggestedMonthlyContribution: number | null;
+  suggestedAdjustmentPercent: number | null;
+  adjustmentReason: AdjustmentReason | null;
+  adjustmentSuggestedAt: string | null;
+  adjustmentDismissedAt: string | null;
 
   // Relations (optional, loaded on demand)
   transactions?: ExpensePlanTransaction[];

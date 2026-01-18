@@ -20,8 +20,8 @@ import {
   Plus,
   Minus,
   Calendar,
-  Target,
 } from "lucide-react";
+import AdjustmentBadge from "./AdjustmentBadge";
 import {
   ExpensePlan,
   calculateProgress,
@@ -42,6 +42,7 @@ interface ExpensePlanCardProps {
   onQuickFund: (id: number) => void;
   onContribute: (plan: ExpensePlan) => void;
   onWithdraw: (plan: ExpensePlan) => void;
+  onReviewAdjustment?: (plan: ExpensePlan) => void;
   isQuickFunding?: boolean;
 }
 
@@ -52,6 +53,7 @@ export default function ExpensePlanCard({
   onQuickFund,
   onContribute,
   onWithdraw,
+  onReviewAdjustment,
   isQuickFunding,
 }: ExpensePlanCardProps) {
   const progress = calculateProgress(plan.currentBalance, plan.targetAmount);
@@ -119,6 +121,10 @@ export default function ExpensePlanCard({
 
         {/* Badges */}
         <div className="flex flex-wrap gap-1 mt-2">
+          <AdjustmentBadge
+            plan={plan}
+            onClick={() => onReviewAdjustment?.(plan)}
+          />
           <Badge variant="outline" className={getStatusColor(plan.status)}>
             {getExpensePlanStatusLabel(plan.status)}
           </Badge>

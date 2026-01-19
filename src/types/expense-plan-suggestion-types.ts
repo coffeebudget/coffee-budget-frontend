@@ -33,6 +33,7 @@ export enum FrequencyType {
 }
 
 export type SuggestionStatus = 'pending' | 'approved' | 'rejected' | 'expired';
+export type ExpensePlanPurpose = 'sinking_fund' | 'spending_budget';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // RESPONSE TYPES
@@ -61,6 +62,7 @@ export interface ExpensePlanSuggestion {
   firstOccurrence: string;
   lastOccurrence: string;
   nextExpectedDate: string;
+  suggestedPurpose: ExpensePlanPurpose | null;
   status: SuggestionStatus;
   createdAt: string;
   metadata?: {
@@ -245,4 +247,31 @@ export function formatCurrency(amount: number): string {
     style: 'currency',
     currency: 'EUR',
   }).format(amount);
+}
+
+export function getSuggestedPurposeLabel(purpose: ExpensePlanPurpose | null): string {
+  if (!purpose) return 'Unknown';
+  const labels: Record<ExpensePlanPurpose, string> = {
+    sinking_fund: 'Sinking Fund',
+    spending_budget: 'Spending Budget',
+  };
+  return labels[purpose] || purpose;
+}
+
+export function getSuggestedPurposeIcon(purpose: ExpensePlanPurpose | null): string {
+  if (!purpose) return '📋';
+  const icons: Record<ExpensePlanPurpose, string> = {
+    sinking_fund: '📦',
+    spending_budget: '📊',
+  };
+  return icons[purpose] || '📋';
+}
+
+export function getSuggestedPurposeColor(purpose: ExpensePlanPurpose | null): string {
+  if (!purpose) return 'bg-gray-100 text-gray-800';
+  const colors: Record<ExpensePlanPurpose, string> = {
+    sinking_fund: 'bg-blue-100 text-blue-800',
+    spending_budget: 'bg-purple-100 text-purple-800',
+  };
+  return colors[purpose] || 'bg-gray-100 text-gray-800';
 }

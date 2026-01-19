@@ -7,6 +7,9 @@ import {
   getExpenseTypeIcon,
   getStatusLabel,
   getStatusColor,
+  getSuggestedPurposeLabel,
+  getSuggestedPurposeIcon,
+  getSuggestedPurposeColor,
 } from '@/types/expense-plan-suggestion-types';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -64,6 +67,14 @@ export function SuggestionCard({
                 />
                 <span className="text-xs text-gray-500">Select for bulk action</span>
               </label>
+            )}
+
+            {/* Purpose badge - prominent display */}
+            {suggestion.suggestedPurpose && (
+              <Badge className={cn('mb-2', getSuggestedPurposeColor(suggestion.suggestedPurpose))}>
+                <span className="mr-1">{getSuggestedPurposeIcon(suggestion.suggestedPurpose)}</span>
+                {getSuggestedPurposeLabel(suggestion.suggestedPurpose)}
+              </Badge>
             )}
 
             {/* Name and badges */}
@@ -256,6 +267,11 @@ export function SuggestionCardCompact({
           <span className="font-medium text-gray-900 truncate">{displayName}</span>
           {suggestion.isEssential && (
             <Star className="h-3 w-3 text-amber-500 shrink-0" />
+          )}
+          {suggestion.suggestedPurpose && (
+            <Badge className={cn('text-xs shrink-0', getSuggestedPurposeColor(suggestion.suggestedPurpose))}>
+              {getSuggestedPurposeIcon(suggestion.suggestedPurpose)} {getSuggestedPurposeLabel(suggestion.suggestedPurpose)}
+            </Badge>
           )}
         </div>
         <div className="text-xs text-gray-500">

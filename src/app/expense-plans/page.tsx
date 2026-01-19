@@ -24,15 +24,20 @@ import {
   AlertTriangle,
   CheckCircle2,
   Wand2,
+  LayoutGrid,
+  Layers,
 } from "lucide-react";
 import {
   ExpensePlan,
   ExpensePlanStatus,
+  ExpensePlanPurpose,
   calculateProgress,
   getProgressColor,
   getExpensePlanStatusLabel,
   getExpensePlanPriorityLabel,
   getExpensePlanTypeLabel,
+  getExpensePlanPurposeLabel,
+  getExpensePlanPurposeIcon,
   getPriorityColor,
   getStatusColor,
   formatCurrency,
@@ -42,6 +47,8 @@ import ExpensePlanFormDialog from "./components/ExpensePlanFormDialog";
 import ContributeWithdrawDialog from "./components/ContributeWithdrawDialog";
 import AdjustmentSuggestionModal from "./components/AdjustmentSuggestionModal";
 import IncomeDistributionSetup from "./components/IncomeDistributionSetup";
+import BudgetAllocationHeader from "./components/BudgetAllocationHeader";
+import AllocationView from "./components/AllocationView";
 
 export default function ExpensePlansPage() {
   const router = useRouter();
@@ -52,7 +59,7 @@ export default function ExpensePlansPage() {
   const quickFundMutation = useQuickFundExpensePlan();
   const bulkQuickFundMutation = useBulkQuickFundExpensePlans();
 
-  const [activeTab, setActiveTab] = useState<ExpensePlanStatus | "all" | "distribution">("all");
+  const [activeTab, setActiveTab] = useState<ExpensePlanStatus | "all" | "distribution" | "allocation">("all");
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<ExpensePlan | null>(null);
   const [contributeDialogOpen, setContributeDialogOpen] = useState(false);
@@ -61,10 +68,20 @@ export default function ExpensePlansPage() {
   const [adjustmentModalOpen, setAdjustmentModalOpen] = useState(false);
   const [adjustmentPlan, setAdjustmentPlan] = useState<ExpensePlan | null>(null);
 
+  const [groupByPurpose, setGroupByPurpose] = useState(true);
+
   const filteredPlans = plans?.filter((plan) => {
     if (activeTab === "all") return true;
     return plan.status === activeTab;
   }) || [];
+
+  // Group plans by purpose
+  const sinkingFunds = filteredPlans.filter((p) => p.purpose === "sinking_fund");
+  const spendingBudgets = filteredPlans.filter((p) => p.purpose === "spending_budget");
+
+  // Calculate totals for each group
+  const sinkingFundsTotal = sinkingFunds.reduce((sum, p) => sum + Number(p.monthlyContribution), 0);
+  const spendingBudgetsTotal = spendingBudgets.reduce((sum, p) => sum + Number(p.monthlyContribution), 0);
 
   const handleCreatePlan = () => {
     setEditingPlan(null);
@@ -134,7 +151,13 @@ export default function ExpensePlansPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
+    <div className="min-h-screen bg-gray-100">
+      {/* Budget Allocation Header - YNAB-style "Da Assegnare" banner */}
+      <BudgetAllocationHeader
+        onAllocateClick={() => setActiveTab("allocation")}
+      />
+
+      <div className="p-4">
       {/* Page Header */}
       <div className="max-w-7xl mx-auto mb-6">
         <div className="flex items-center gap-2 mb-2">
@@ -240,21 +263,48 @@ export default function ExpensePlansPage() {
           )}
           Fund All Plans
         </Button>
+        <div className="flex-1" />
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setGroupByPurpose(!groupByPurpose)}
+          className="gap-2 text-gray-500"
+        >
+          {groupByPurpose ? (
+            <>
+              <LayoutGrid className="h-4 w-4" />
+              Flat View
+            </>
+          ) : (
+            <>
+              <Layers className="h-4 w-4" />
+              Group by Type
+            </>
+          )}
+        </Button>
       </div>
 
       {/* Tabs & Content */}
       <div className="max-w-7xl mx-auto">
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ExpensePlanStatus | "all" | "distribution")}>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ExpensePlanStatus | "all" | "distribution" | "allocation")}>
           <TabsList className="mb-4">
             <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="active">Active</TabsTrigger>
             <TabsTrigger value="paused">Paused</TabsTrigger>
             <TabsTrigger value="completed">Completed</TabsTrigger>
+            <TabsTrigger value="allocation" className="bg-blue-50 data-[state=active]:bg-blue-100">
+              Allocazione Mensile
+            </TabsTrigger>
             <TabsTrigger value="distribution">Income Distribution</TabsTrigger>
           </TabsList>
 
+          {/* Allocation Tab */}
+          <TabsContent value="allocation">
+            <AllocationView />
+          </TabsContent>
+
           {/* Plans Tabs */}
-          {activeTab !== "distribution" && (
+          {activeTab !== "distribution" && activeTab !== "allocation" && (
             <TabsContent value={activeTab} forceMount>
               {isLoading ? (
                 <div className="flex justify-center py-12">
@@ -272,6 +322,80 @@ export default function ExpensePlansPage() {
                     Create your first plan
                   </Button>
                 </Card>
+              ) : groupByPurpose ? (
+                <div className="space-y-8">
+                  {/* Sinking Funds Section */}
+                  {sinkingFunds.length > 0 && (
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">{getExpensePlanPurposeIcon("sinking_fund")}</span>
+                          <h2 className="text-xl font-semibold text-gray-900">Sinking Funds</h2>
+                          <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                            {sinkingFunds.length} plan{sinkingFunds.length !== 1 ? "s" : ""}
+                          </Badge>
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          Total: <span className="font-medium text-blue-600">{formatCurrency(sinkingFundsTotal)}/mo</span>
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-500 mb-4">
+                        Accumulating money for predictable future expenses
+                      </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {sinkingFunds.map((plan) => (
+                          <ExpensePlanCard
+                            key={plan.id}
+                            plan={plan}
+                            onEdit={handleEditPlan}
+                            onDelete={handleDeletePlan}
+                            onQuickFund={handleQuickFund}
+                            onContribute={handleContribute}
+                            onWithdraw={handleWithdraw}
+                            onReviewAdjustment={handleReviewAdjustment}
+                            isQuickFunding={quickFundMutation.isPending}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Spending Budgets Section */}
+                  {spendingBudgets.length > 0 && (
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">{getExpensePlanPurposeIcon("spending_budget")}</span>
+                          <h2 className="text-xl font-semibold text-gray-900">Spending Budgets</h2>
+                          <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+                            {spendingBudgets.length} plan{spendingBudgets.length !== 1 ? "s" : ""}
+                          </Badge>
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          Total: <span className="font-medium text-purple-600">{formatCurrency(spendingBudgetsTotal)}/mo</span>
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-500 mb-4">
+                        Tracking and limiting spending per category
+                      </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {spendingBudgets.map((plan) => (
+                          <ExpensePlanCard
+                            key={plan.id}
+                            plan={plan}
+                            onEdit={handleEditPlan}
+                            onDelete={handleDeletePlan}
+                            onQuickFund={handleQuickFund}
+                            onContribute={handleContribute}
+                            onWithdraw={handleWithdraw}
+                            onReviewAdjustment={handleReviewAdjustment}
+                            isQuickFunding={quickFundMutation.isPending}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredPlans.map((plan) => (
@@ -297,6 +421,7 @@ export default function ExpensePlansPage() {
             <IncomeDistributionSetup />
           </TabsContent>
         </Tabs>
+      </div>
       </div>
 
       {/* Form Dialog */}

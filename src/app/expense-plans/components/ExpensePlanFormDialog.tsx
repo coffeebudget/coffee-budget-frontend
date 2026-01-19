@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Wallet, CreditCard } from "lucide-react";
+import { Loader2, Wallet, CreditCard, AlertCircle, CheckCircle2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchBankAccounts, fetchCreditCards } from "@/utils/api-client";
 
@@ -101,6 +101,7 @@ export default function ExpensePlanFormDialog({
         icon: plan.icon || "",
         planType: plan.planType,
         priority: plan.priority,
+        purpose: plan.purpose || "sinking_fund",
         categoryId: plan.categoryId,
         autoTrackCategory: plan.autoTrackCategory,
         targetAmount: plan.targetAmount.toString(),
@@ -384,83 +385,106 @@ export default function ExpensePlanFormDialog({
                 </Select>
               </div>
 
-              <div>
-                <Label htmlFor="paymentAccount">Payment Account</Label>
-                <Select
-                  value={
-                    formData.paymentAccountId && formData.paymentAccountType
-                      ? `${formData.paymentAccountType}:${formData.paymentAccountId}`
-                      : "none"
-                  }
-                  onValueChange={(v) => {
-                    if (v === "none") {
-                      setFormData((prev) => ({
-                        ...prev,
-                        paymentAccountType: null,
-                        paymentAccountId: null,
-                      }));
-                    } else {
-                      const [type, id] = v.split(":");
-                      setFormData((prev) => ({
-                        ...prev,
-                        paymentAccountType: type as PaymentAccountType,
-                        paymentAccountId: parseInt(id),
-                      }));
+              {/* Payment Account Selection with Prompt */}
+              <div className="md:col-span-2">
+                <div className={`p-4 rounded-lg border ${
+                  formData.paymentAccountId
+                    ? "border-green-200 bg-green-50"
+                    : "border-yellow-200 bg-yellow-50"
+                }`}>
+                  <div className="flex items-start gap-3 mb-3">
+                    {formData.paymentAccountId ? (
+                      <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5" />
+                    ) : (
+                      <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                    )}
+                    <div className="flex-1">
+                      <Label htmlFor="paymentAccount" className="text-base font-medium">
+                        {formData.paymentAccountId ? "Payment Account" : "Assign a Payment Account"}
+                      </Label>
+                      <p className={`text-sm mt-0.5 ${
+                        formData.paymentAccountId ? "text-green-700" : "text-yellow-700"
+                      }`}>
+                        {formData.paymentAccountId
+                          ? "This expense will be tracked for coverage monitoring"
+                          : "Link to a bank account or credit card to enable coverage tracking and allocation by account"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <Select
+                    value={
+                      formData.paymentAccountId && formData.paymentAccountType
+                        ? `${formData.paymentAccountType}:${formData.paymentAccountId}`
+                        : "none"
                     }
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select payment account..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">
-                      <span className="text-gray-500">No account selected</span>
-                    </SelectItem>
-                    {/* Bank Accounts */}
-                    {bankAccounts.length > 0 && (
-                      <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 bg-gray-50">
-                        Bank Accounts
-                      </div>
-                    )}
-                    {bankAccounts.map((account) => (
-                      <SelectItem key={`bank_account:${account.id}`} value={`bank_account:${account.id}`}>
-                        <span className="flex items-center gap-2">
-                          <Wallet className="h-4 w-4 text-blue-600" />
-                          <span>{account.name}</span>
-                          <span className="text-gray-500 ml-2">
-                            ({new Intl.NumberFormat("en-US", {
-                              style: "currency",
-                              currency: "EUR",
-                            }).format(Math.abs(account.balance))})
-                          </span>
-                        </span>
+                    onValueChange={(v) => {
+                      if (v === "none") {
+                        setFormData((prev) => ({
+                          ...prev,
+                          paymentAccountType: null,
+                          paymentAccountId: null,
+                        }));
+                      } else {
+                        const [type, id] = v.split(":");
+                        setFormData((prev) => ({
+                          ...prev,
+                          paymentAccountType: type as PaymentAccountType,
+                          paymentAccountId: parseInt(id),
+                        }));
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="bg-white">
+                      <SelectValue placeholder="Select payment account..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">
+                        <span className="text-gray-500">No account selected</span>
                       </SelectItem>
-                    ))}
-                    {/* Credit Cards */}
-                    {creditCards.length > 0 && (
-                      <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 bg-gray-50">
-                        Credit Cards
-                      </div>
-                    )}
-                    {creditCards.map((card) => (
-                      <SelectItem key={`credit_card:${card.id}`} value={`credit_card:${card.id}`}>
-                        <span className="flex items-center gap-2">
-                          <CreditCard className="h-4 w-4 text-purple-600" />
-                          <span>{card.name}</span>
-                          <span className="text-gray-500 ml-2">
-                            ({new Intl.NumberFormat("en-US", {
-                              style: "currency",
-                              currency: "EUR",
-                            }).format(card.availableCredit)} available)
+                      {/* Bank Accounts */}
+                      {bankAccounts.length > 0 && (
+                        <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 bg-gray-50">
+                          Bank Accounts
+                        </div>
+                      )}
+                      {bankAccounts.map((account) => (
+                        <SelectItem key={`bank_account:${account.id}`} value={`bank_account:${account.id}`}>
+                          <span className="flex items-center gap-2">
+                            <Wallet className="h-4 w-4 text-blue-600" />
+                            <span>{account.name}</span>
+                            <span className="text-gray-500 ml-2">
+                              ({new Intl.NumberFormat("en-US", {
+                                style: "currency",
+                                currency: "EUR",
+                              }).format(Math.abs(account.balance))})
+                            </span>
                           </span>
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-gray-500 mt-1">
-                  Link to a payment account for coverage monitoring
-                </p>
+                        </SelectItem>
+                      ))}
+                      {/* Credit Cards */}
+                      {creditCards.length > 0 && (
+                        <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 bg-gray-50">
+                          Credit Cards
+                        </div>
+                      )}
+                      {creditCards.map((card) => (
+                        <SelectItem key={`credit_card:${card.id}`} value={`credit_card:${card.id}`}>
+                          <span className="flex items-center gap-2">
+                            <CreditCard className="h-4 w-4 text-purple-600" />
+                            <span>{card.name}</span>
+                            <span className="text-gray-500 ml-2">
+                              ({new Intl.NumberFormat("en-US", {
+                                style: "currency",
+                                currency: "EUR",
+                              }).format(card.availableCredit)} available)
+                            </span>
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
           </div>

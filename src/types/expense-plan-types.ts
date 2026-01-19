@@ -57,6 +57,8 @@ export const DISTRIBUTION_STRATEGIES = ['priority', 'proportional', 'fixed'] as 
 
 export const PAYMENT_ACCOUNT_TYPES = ['bank_account', 'credit_card'] as const;
 
+export const EXPENSE_PLAN_PURPOSES = ['sinking_fund', 'spending_budget'] as const;
+
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPE DEFINITIONS
 // ═══════════════════════════════════════════════════════════════════════════
@@ -71,7 +73,14 @@ export type ExpensePlanTransactionType = (typeof EXPENSE_PLAN_TRANSACTION_TYPES)
 export type FundingStatus = (typeof FUNDING_STATUSES)[number];
 export type DistributionStrategy = (typeof DISTRIBUTION_STRATEGIES)[number];
 export type PaymentAccountType = (typeof PAYMENT_ACCOUNT_TYPES)[number];
+export type ExpensePlanPurpose = (typeof EXPENSE_PLAN_PURPOSES)[number];
 export type AdjustmentReason = 'spending_increased' | 'spending_decreased';
+
+export interface AllocationHistoryEntry {
+  month: string; // "2026-01"
+  allocated: number;
+  spent: number;
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN INTERFACES
@@ -96,6 +105,7 @@ export interface ExpensePlan {
     icon?: string | null;
   } | null;
   autoTrackCategory: boolean;
+  purpose: ExpensePlanPurpose;
 
   // Payment Source (Optional - for coverage tracking)
   paymentAccountType: PaymentAccountType | null;
@@ -111,6 +121,11 @@ export interface ExpensePlan {
   currentBalance: number;
   monthlyContribution: number;
   contributionSource: ContributionSource;
+
+  // Spending Budget Tracking (for purpose = 'spending_budget')
+  spentThisMonth: number;
+  allocatedThisMonth: number | null;
+  allocationHistory: AllocationHistoryEntry[] | null;
 
   // Timing
   frequency: ExpensePlanFrequency;
@@ -229,6 +244,7 @@ export interface CreateExpensePlanDto {
   priority?: ExpensePlanPriority;
   categoryId?: number;
   autoTrackCategory?: boolean;
+  purpose?: ExpensePlanPurpose;
   targetAmount: number;
   monthlyContribution: number;
   contributionSource?: ContributionSource;
@@ -255,6 +271,7 @@ export interface UpdateExpensePlanDto {
   priority?: ExpensePlanPriority;
   categoryId?: number;
   autoTrackCategory?: boolean;
+  purpose?: ExpensePlanPurpose;
   targetAmount?: number;
   monthlyContribution?: number;
   contributionSource?: ContributionSource;
@@ -483,6 +500,7 @@ export interface ExpensePlanFormData {
   priority: ExpensePlanPriority;
   categoryId: number | null;
   autoTrackCategory: boolean;
+  purpose: ExpensePlanPurpose;
   targetAmount: string;
   monthlyContribution: string;
   contributionSource: ContributionSource;
@@ -657,6 +675,39 @@ export function getStatusColor(status: ExpensePlanStatus): string {
   return colors[status] || 'bg-gray-100 text-gray-800';
 }
 
+export function getExpensePlanPurposeLabel(purpose: ExpensePlanPurpose): string {
+  const labels: Record<ExpensePlanPurpose, string> = {
+    sinking_fund: 'Sinking Fund',
+    spending_budget: 'Spending Budget',
+  };
+  return labels[purpose] || purpose;
+}
+
+export function getExpensePlanPurposeIcon(purpose: ExpensePlanPurpose): string {
+  const icons: Record<ExpensePlanPurpose, string> = {
+    sinking_fund: '📦',
+    spending_budget: '📊',
+  };
+  return icons[purpose] || '📋';
+}
+
+export function getExpensePlanPurposeColor(purpose: ExpensePlanPurpose): string {
+  const colors: Record<ExpensePlanPurpose, string> = {
+    sinking_fund: 'bg-blue-100 text-blue-800',
+    spending_budget: 'bg-purple-100 text-purple-800',
+  };
+  return colors[purpose] || 'bg-gray-100 text-gray-800';
+}
+
+export function getDefaultPurposeForPlanType(planType: ExpensePlanType): ExpensePlanPurpose {
+  // goal and emergency_fund default to spending_budget
+  // all others default to sinking_fund
+  if (planType === 'goal' || planType === 'emergency_fund') {
+    return 'spending_budget';
+  }
+  return 'sinking_fund';
+}
+
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -683,6 +734,7 @@ export function getDefaultFormData(): ExpensePlanFormData {
     priority: 'important',
     categoryId: null,
     autoTrackCategory: false,
+    purpose: 'sinking_fund',
     targetAmount: '',
     monthlyContribution: '',
     contributionSource: 'calculated',

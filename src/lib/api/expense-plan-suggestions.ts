@@ -214,3 +214,18 @@ export async function bulkRejectSuggestions(
 
   return handleResponse<BulkActionResult>(response);
 }
+
+/**
+ * Delete a suggestion permanently
+ */
+export async function deleteSuggestion(
+  token: string,
+  id: number
+): Promise<void> {
+  const response = await fetch(`${API_URL}/expense-plan-suggestions/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(token),
+  });
+
+  return handleResponse<void>(response);
+}

@@ -17,6 +17,7 @@ import {
   useRejectSuggestion,
   useBulkApproveSuggestions,
   useBulkRejectSuggestions,
+  useDeleteSuggestion,
 } from '@/hooks/useExpensePlanSuggestions';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -55,6 +56,7 @@ export default function ExpensePlanSuggestionsPage() {
   const rejectMutation = useRejectSuggestion();
   const bulkApproveMutation = useBulkApproveSuggestions();
   const bulkRejectMutation = useBulkRejectSuggestions();
+  const deleteMutation = useDeleteSuggestion();
 
   // Get the right data based on active tab
   const { data, isLoading, error, refetch } = activeTab === 'pending' ? pendingQuery : allQuery;
@@ -167,6 +169,12 @@ export default function ExpensePlanSuggestionsPage() {
     generateMutation.mutate({});
   };
 
+  const handleDelete = (id: number) => {
+    if (confirm('Are you sure you want to delete this suggestion? This action cannot be undone.')) {
+      deleteMutation.mutate(id);
+    }
+  };
+
   // Loading state
   if (!session) {
     return (
@@ -187,7 +195,8 @@ export default function ExpensePlanSuggestionsPage() {
     approveMutation.isPending ||
     rejectMutation.isPending ||
     bulkApproveMutation.isPending ||
-    bulkRejectMutation.isPending;
+    bulkRejectMutation.isPending ||
+    deleteMutation.isPending;
 
   return (
     <div className="container mx-auto p-4 max-w-6xl">
@@ -371,6 +380,7 @@ export default function ExpensePlanSuggestionsPage() {
               suggestion={suggestion}
               onApprove={handleQuickApprove}
               onReject={handleQuickReject}
+              onDelete={handleDelete}
               onSelect={handleSelectSuggestion}
               isSelected={selectedIds.has(suggestion.id)}
               isLoading={isAnyMutating}

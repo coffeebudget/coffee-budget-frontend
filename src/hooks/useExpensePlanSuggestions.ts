@@ -18,6 +18,7 @@ import {
   rejectSuggestion,
   bulkApproveSuggestions,
   bulkRejectSuggestions,
+  deleteSuggestion,
 } from '@/lib/api/expense-plan-suggestions';
 import {
   SuggestionStatus,
@@ -219,6 +220,26 @@ export function useBulkRejectSuggestions() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to bulk reject');
+    },
+  });
+}
+
+/**
+ * Delete a suggestion permanently
+ */
+export function useDeleteSuggestion() {
+  const { data: session } = useSession();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) =>
+      deleteSuggestion(session!.user!.accessToken as string, id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expense-plan-suggestions'] });
+      toast.success('Suggestion deleted');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete suggestion');
     },
   });
 }

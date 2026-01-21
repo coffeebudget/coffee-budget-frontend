@@ -14,7 +14,7 @@ import {
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, X, ChevronDown, ChevronUp, Star } from 'lucide-react';
+import { Check, X, ChevronDown, ChevronUp, Star, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { ConfidenceBadge } from './ConfidenceIndicator';
 import { MonthlyBreakdownCompact } from './MonthlyBreakdown';
@@ -24,6 +24,7 @@ interface SuggestionCardProps {
   suggestion: ExpensePlanSuggestion;
   onApprove?: (id: number) => void;
   onReject?: (id: number) => void;
+  onDelete?: (id: number) => void;
   onSelect?: (id: number, selected: boolean) => void;
   isSelected?: boolean;
   isLoading?: boolean;
@@ -34,6 +35,7 @@ export function SuggestionCard({
   suggestion,
   onApprove,
   onReject,
+  onDelete,
   onSelect,
   isSelected = false,
   isLoading = false,
@@ -190,7 +192,7 @@ export function SuggestionCard({
         )}
       </CardContent>
 
-      {/* Action buttons (only for pending) */}
+      {/* Action buttons for pending suggestions */}
       {isPending && (onApprove || onReject) && (
         <CardFooter className="pt-2 border-t border-gray-100">
           <div className="flex gap-2 w-full">
@@ -220,6 +222,22 @@ export function SuggestionCard({
           </div>
         </CardFooter>
       )}
+
+      {/* Delete button for non-pending suggestions */}
+      {!isPending && onDelete && (
+        <CardFooter className="pt-2 border-t border-gray-100">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onDelete(suggestion.id)}
+            disabled={isLoading}
+            className="w-full text-gray-600 hover:text-red-600 hover:bg-red-50"
+          >
+            <Trash2 className="h-4 w-4 mr-1" />
+            Delete Suggestion
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 }
@@ -229,6 +247,7 @@ export function SuggestionCardCompact({
   suggestion,
   onApprove,
   onReject,
+  onDelete,
   onSelect,
   isSelected = false,
   isLoading = false,
@@ -293,7 +312,7 @@ export function SuggestionCardCompact({
       {/* Confidence */}
       <ConfidenceBadge confidence={suggestion.overallConfidence} className="shrink-0" />
 
-      {/* Actions */}
+      {/* Actions for pending */}
       {isPending && (onApprove || onReject) && (
         <div className="flex gap-1 shrink-0">
           {onReject && (
@@ -321,6 +340,20 @@ export function SuggestionCardCompact({
             </Button>
           )}
         </div>
+      )}
+
+      {/* Delete action for non-pending */}
+      {!isPending && onDelete && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onDelete(suggestion.id)}
+          disabled={isLoading}
+          className="h-8 w-8 text-gray-500 hover:text-red-600 hover:bg-red-50 shrink-0"
+          title="Delete"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
       )}
     </div>
   );

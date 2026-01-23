@@ -13,12 +13,9 @@ import {
   ContributeDto,
   WithdrawDto,
   AdjustBalanceDto,
-  BulkFundDto,
   LinkTransactionDto,
   MonthlyDepositSummary,
   TimelineEntry,
-  BulkFundResult,
-  BulkQuickFundResult,
   ExpensePlanStatus,
   CoverageSummaryResponse,
   LongTermStatusSummary,
@@ -193,64 +190,6 @@ export async function adjustExpensePlanBalance(
   });
 
   return handleResponse<ExpensePlanTransaction>(response);
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// FUNDING OPERATIONS
-// ═══════════════════════════════════════════════════════════════════════════
-
-export async function quickFundExpensePlan(
-  token: string,
-  planId: number
-): Promise<ExpensePlanTransaction> {
-  const response = await fetch(`${API_URL}/expense-plans/${planId}/quick-fund`, {
-    method: 'POST',
-    headers: getHeaders(token),
-  });
-
-  return handleResponse<ExpensePlanTransaction>(response);
-}
-
-export async function fundExpensePlanToTarget(
-  token: string,
-  planId: number
-): Promise<ExpensePlanTransaction | null> {
-  const response = await fetch(`${API_URL}/expense-plans/${planId}/fund-to-target`, {
-    method: 'POST',
-    headers: getHeaders(token),
-  });
-
-  // 200 OK with null means already fully funded
-  if (response.ok) {
-    const data = await response.json();
-    return data;
-  }
-
-  return handleResponse<ExpensePlanTransaction | null>(response);
-}
-
-export async function bulkFundExpensePlans(
-  token: string,
-  data: BulkFundDto
-): Promise<BulkFundResult> {
-  const response = await fetch(`${API_URL}/expense-plans/bulk-fund`, {
-    method: 'POST',
-    headers: getHeaders(token),
-    body: JSON.stringify(data),
-  });
-
-  return handleResponse<BulkFundResult>(response);
-}
-
-export async function bulkQuickFundExpensePlans(
-  token: string
-): Promise<BulkQuickFundResult> {
-  const response = await fetch(`${API_URL}/expense-plans/bulk-quick-fund`, {
-    method: 'POST',
-    headers: getHeaders(token),
-  });
-
-  return handleResponse<BulkQuickFundResult>(response);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

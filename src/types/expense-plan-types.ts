@@ -76,12 +76,6 @@ export type PaymentAccountType = (typeof PAYMENT_ACCOUNT_TYPES)[number];
 export type ExpensePlanPurpose = (typeof EXPENSE_PLAN_PURPOSES)[number];
 export type AdjustmentReason = 'spending_increased' | 'spending_decreased';
 
-export interface AllocationHistoryEntry {
-  month: string; // "2026-01"
-  allocated: number;
-  spent: number;
-}
-
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN INTERFACES
 // ═══════════════════════════════════════════════════════════════════════════
@@ -121,11 +115,6 @@ export interface ExpensePlan {
   currentBalance: number;
   monthlyContribution: number;
   contributionSource: ContributionSource;
-
-  // Spending Budget Tracking (for purpose = 'spending_budget')
-  spentThisMonth: number;
-  allocatedThisMonth: number | null;
-  allocationHistory: AllocationHistoryEntry[] | null;
 
   // Timing
   frequency: ExpensePlanFrequency;
@@ -302,16 +291,6 @@ export interface WithdrawDto {
 export interface AdjustBalanceDto {
   newBalance: number;
   note?: string;
-}
-
-export interface BulkFundItemDto {
-  planId: number;
-  amount: number;
-  note?: string;
-}
-
-export interface BulkFundDto {
-  items: BulkFundItemDto[];
 }
 
 export interface LinkTransactionDto {
@@ -513,31 +492,6 @@ export interface LongTermStatusSummary {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// BULK OPERATION RESULTS
-// ═══════════════════════════════════════════════════════════════════════════
-
-export interface BulkFundSuccessItem {
-  planId: number;
-  amount: number;
-  transactionId: number;
-}
-
-export interface BulkFundFailedItem {
-  planId: number;
-  reason: string;
-}
-
-export interface BulkFundResult {
-  successful: BulkFundSuccessItem[];
-  failed: BulkFundFailedItem[];
-  totalFunded: number;
-}
-
-export interface BulkQuickFundResult extends BulkFundResult {
-  skipped: BulkFundFailedItem[];
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
 // UI HELPER TYPES
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -545,8 +499,6 @@ export interface ExpensePlanCardProps {
   plan: ExpensePlan;
   onEdit?: (plan: ExpensePlan) => void;
   onDelete?: (id: number) => void;
-  onQuickFund?: (id: number) => void;
-  onFundToTarget?: (id: number) => void;
   onContribute?: (plan: ExpensePlan) => void;
   onWithdraw?: (plan: ExpensePlan) => void;
   showActions?: boolean;

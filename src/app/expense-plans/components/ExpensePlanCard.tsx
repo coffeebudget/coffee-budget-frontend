@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -12,11 +12,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Loader2,
   MoreVertical,
   Edit,
   Trash2,
-  Zap,
   Plus,
   Minus,
   Calendar,
@@ -41,22 +39,18 @@ interface ExpensePlanCardProps {
   plan: ExpensePlan;
   onEdit: (plan: ExpensePlan) => void;
   onDelete: (id: number) => void;
-  onQuickFund: (id: number) => void;
   onContribute: (plan: ExpensePlan) => void;
   onWithdraw: (plan: ExpensePlan) => void;
   onReviewAdjustment?: (plan: ExpensePlan) => void;
-  isQuickFunding?: boolean;
 }
 
 export default function ExpensePlanCard({
   plan,
   onEdit,
   onDelete,
-  onQuickFund,
   onContribute,
   onWithdraw,
   onReviewAdjustment,
-  isQuickFunding,
 }: ExpensePlanCardProps) {
   const progress = calculateProgress(plan.currentBalance, plan.targetAmount);
   const progressColor = getProgressColor(progress);
@@ -193,23 +187,6 @@ export default function ExpensePlanCard({
           )}
         </div>
       </CardContent>
-
-      <CardFooter className="pt-0">
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full gap-2"
-          onClick={() => onQuickFund(plan.id)}
-          disabled={isQuickFunding || plan.status !== "active"}
-        >
-          {isQuickFunding ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Zap className="h-4 w-4" />
-          )}
-          Quick Fund ({formatCurrency(plan.monthlyContribution)})
-        </Button>
-      </CardFooter>
     </Card>
   );
 }

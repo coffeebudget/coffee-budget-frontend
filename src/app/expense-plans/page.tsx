@@ -7,8 +7,6 @@ import {
   useExpensePlans,
   useMonthlyDepositSummary,
   useDeleteExpensePlan,
-  useQuickFundExpensePlan,
-  useBulkQuickFundExpensePlans,
 } from "@/hooks/useExpensePlans";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -18,9 +16,6 @@ import {
   Loader2,
   PiggyBank,
   Plus,
-  Zap,
-  Calendar,
-  TrendingUp,
   AlertTriangle,
   CheckCircle2,
   Wand2,
@@ -30,13 +25,7 @@ import {
 import {
   ExpensePlan,
   ExpensePlanStatus,
-  ExpensePlanPurpose,
-  calculateProgress,
-  getProgressColor,
   getExpensePlanStatusLabel,
-  getExpensePlanPriorityLabel,
-  getExpensePlanTypeLabel,
-  getExpensePlanPurposeLabel,
   getExpensePlanPurposeIcon,
   getPriorityColor,
   getStatusColor,
@@ -47,8 +36,6 @@ import ExpensePlanFormDialog from "./components/ExpensePlanFormDialog";
 import ContributeWithdrawDialog from "./components/ContributeWithdrawDialog";
 import AdjustmentSuggestionModal from "./components/AdjustmentSuggestionModal";
 import IncomeDistributionSetup from "./components/IncomeDistributionSetup";
-import BudgetAllocationHeader from "./components/BudgetAllocationHeader";
-import AllocationView from "./components/AllocationView";
 
 export default function ExpensePlansPage() {
   const router = useRouter();
@@ -56,10 +43,8 @@ export default function ExpensePlansPage() {
   const { data: plans, isLoading, error, refetch } = useExpensePlans();
   const { data: summary, isLoading: summaryLoading } = useMonthlyDepositSummary();
   const deleteMutation = useDeleteExpensePlan();
-  const quickFundMutation = useQuickFundExpensePlan();
-  const bulkQuickFundMutation = useBulkQuickFundExpensePlans();
 
-  const [activeTab, setActiveTab] = useState<ExpensePlanStatus | "all" | "distribution" | "allocation">("all");
+  const [activeTab, setActiveTab] = useState<ExpensePlanStatus | "all" | "distribution">("all");
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<ExpensePlan | null>(null);
   const [contributeDialogOpen, setContributeDialogOpen] = useState(false);
@@ -97,14 +82,6 @@ export default function ExpensePlansPage() {
     if (confirm("Are you sure you want to delete this expense plan?")) {
       await deleteMutation.mutateAsync(id);
     }
-  };
-
-  const handleQuickFund = async (id: number) => {
-    await quickFundMutation.mutateAsync(id);
-  };
-
-  const handleBulkQuickFund = async () => {
-    await bulkQuickFundMutation.mutateAsync();
   };
 
   const handleContribute = (plan: ExpensePlan) => {
@@ -152,11 +129,6 @@ export default function ExpensePlansPage() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Budget Allocation Header - YNAB-style "Da Assegnare" banner */}
-      <BudgetAllocationHeader
-        onAllocateClick={() => setActiveTab("allocation")}
-      />
-
       <div className="p-4">
       {/* Page Header */}
       <div className="max-w-7xl mx-auto mb-6">
@@ -250,19 +222,6 @@ export default function ExpensePlansPage() {
           <Wand2 className="h-4 w-4" />
           Create with Wizard
         </Button>
-        <Button
-          variant="outline"
-          onClick={handleBulkQuickFund}
-          disabled={bulkQuickFundMutation.isPending || !plans?.length}
-          className="gap-2"
-        >
-          {bulkQuickFundMutation.isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Zap className="h-4 w-4" />
-          )}
-          Fund All Plans
-        </Button>
         <div className="flex-1" />
         <Button
           variant="ghost"
@@ -286,25 +245,17 @@ export default function ExpensePlansPage() {
 
       {/* Tabs & Content */}
       <div className="max-w-7xl mx-auto">
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ExpensePlanStatus | "all" | "distribution" | "allocation")}>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ExpensePlanStatus | "all" | "distribution")}>
           <TabsList className="mb-4">
             <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="active">Active</TabsTrigger>
             <TabsTrigger value="paused">Paused</TabsTrigger>
             <TabsTrigger value="completed">Completed</TabsTrigger>
-            <TabsTrigger value="allocation" className="bg-blue-50 data-[state=active]:bg-blue-100">
-              Allocazione Mensile
-            </TabsTrigger>
             <TabsTrigger value="distribution">Income Distribution</TabsTrigger>
           </TabsList>
 
-          {/* Allocation Tab */}
-          <TabsContent value="allocation">
-            <AllocationView />
-          </TabsContent>
-
           {/* Plans Tabs */}
-          {activeTab !== "distribution" && activeTab !== "allocation" && (
+          {activeTab !== "distribution" && (
             <TabsContent value={activeTab} forceMount>
               {isLoading ? (
                 <div className="flex justify-center py-12">
@@ -349,12 +300,10 @@ export default function ExpensePlansPage() {
                             plan={plan}
                             onEdit={handleEditPlan}
                             onDelete={handleDeletePlan}
-                            onQuickFund={handleQuickFund}
-                            onContribute={handleContribute}
+                                                        onContribute={handleContribute}
                             onWithdraw={handleWithdraw}
                             onReviewAdjustment={handleReviewAdjustment}
-                            isQuickFunding={quickFundMutation.isPending}
-                          />
+                                                      />
                         ))}
                       </div>
                     </div>
@@ -385,12 +334,10 @@ export default function ExpensePlansPage() {
                             plan={plan}
                             onEdit={handleEditPlan}
                             onDelete={handleDeletePlan}
-                            onQuickFund={handleQuickFund}
-                            onContribute={handleContribute}
+                                                        onContribute={handleContribute}
                             onWithdraw={handleWithdraw}
                             onReviewAdjustment={handleReviewAdjustment}
-                            isQuickFunding={quickFundMutation.isPending}
-                          />
+                                                      />
                         ))}
                       </div>
                     </div>
@@ -404,12 +351,10 @@ export default function ExpensePlansPage() {
                       plan={plan}
                       onEdit={handleEditPlan}
                       onDelete={handleDeletePlan}
-                      onQuickFund={handleQuickFund}
-                      onContribute={handleContribute}
+                                            onContribute={handleContribute}
                       onWithdraw={handleWithdraw}
                       onReviewAdjustment={handleReviewAdjustment}
-                      isQuickFunding={quickFundMutation.isPending}
-                    />
+                                          />
                   ))}
                 </div>
               )}

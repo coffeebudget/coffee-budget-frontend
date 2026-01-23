@@ -19,10 +19,6 @@ import {
   contributeToExpensePlan,
   withdrawFromExpensePlan,
   adjustExpensePlanBalance,
-  quickFundExpensePlan,
-  fundExpensePlanToTarget,
-  bulkFundExpensePlans,
-  bulkQuickFundExpensePlans,
   linkTransactionToExpensePlan,
   unlinkTransactionFromExpensePlan,
   acceptAdjustment,
@@ -40,7 +36,6 @@ import {
   ContributeDto,
   WithdrawDto,
   AdjustBalanceDto,
-  BulkFundDto,
   LinkTransactionDto,
 } from '@/types/expense-plan-types';
 
@@ -283,103 +278,6 @@ export function useAdjustExpensePlanBalance() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to adjust balance');
-    },
-  });
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// FUNDING MUTATION HOOKS
-// ═══════════════════════════════════════════════════════════════════════════
-
-export function useQuickFundExpensePlan() {
-  const { data: session } = useSession();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (planId: number) =>
-      quickFundExpensePlan(session!.user!.accessToken as string, planId),
-    onSuccess: (_, planId) => {
-      queryClient.invalidateQueries({ queryKey: ['expense-plans'] });
-      queryClient.invalidateQueries({ queryKey: ['expense-plan', planId] });
-      queryClient.invalidateQueries({ queryKey: ['expense-plan-transactions', planId] });
-      queryClient.invalidateQueries({ queryKey: ['expense-plans-summary'] });
-      toast.success('Quick fund completed');
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to quick fund');
-    },
-  });
-}
-
-export function useFundExpensePlanToTarget() {
-  const { data: session } = useSession();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (planId: number) =>
-      fundExpensePlanToTarget(session!.user!.accessToken as string, planId),
-    onSuccess: (result, planId) => {
-      queryClient.invalidateQueries({ queryKey: ['expense-plans'] });
-      queryClient.invalidateQueries({ queryKey: ['expense-plan', planId] });
-      queryClient.invalidateQueries({ queryKey: ['expense-plan-transactions', planId] });
-      queryClient.invalidateQueries({ queryKey: ['expense-plans-summary'] });
-      if (result) {
-        toast.success('Funded to target successfully');
-      } else {
-        toast.success('Plan is already fully funded');
-      }
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to fund to target');
-    },
-  });
-}
-
-export function useBulkFundExpensePlans() {
-  const { data: session } = useSession();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: BulkFundDto) =>
-      bulkFundExpensePlans(session!.user!.accessToken as string, data),
-    onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ['expense-plans'] });
-      queryClient.invalidateQueries({ queryKey: ['expense-plans-summary'] });
-      const successCount = result.successful.length;
-      const failedCount = result.failed.length;
-      if (failedCount === 0) {
-        toast.success(`Successfully funded ${successCount} plans`);
-      } else {
-        toast.success(
-          `Funded ${successCount} plans, ${failedCount} failed`
-        );
-      }
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to bulk fund');
-    },
-  });
-}
-
-export function useBulkQuickFundExpensePlans() {
-  const { data: session } = useSession();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: () =>
-      bulkQuickFundExpensePlans(session!.user!.accessToken as string),
-    onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: ['expense-plans'] });
-      queryClient.invalidateQueries({ queryKey: ['expense-plans-summary'] });
-      const successCount = result.successful.length;
-      const skippedCount = result.skipped.length;
-      const failedCount = result.failed.length;
-      toast.success(
-        `Funded ${successCount} plans, ${skippedCount} skipped (fully funded), ${failedCount} failed`
-      );
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to bulk quick fund');
     },
   });
 }

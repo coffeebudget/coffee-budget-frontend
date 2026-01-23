@@ -30,6 +30,8 @@ import {
   fetchMonthlyDepositSummary,
   fetchExpenseTimeline,
   fetchCoverageSummary,
+  fetchLongTermStatus,
+  fetchExpensePlansWithStatus,
 } from '@/lib/api/expense-plans';
 import {
   ExpensePlanStatus,
@@ -127,6 +129,38 @@ export function useCoverageSummary() {
       fetchCoverageSummary(session!.user!.accessToken as string),
     enabled: !!session,
     staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+/**
+ * Fetch long-term sinking fund status summary.
+ * Used by CoverageSection to show sinking fund health.
+ */
+export function useLongTermStatus() {
+  const { data: session } = useSession();
+
+  return useQuery({
+    queryKey: ['expense-plans-long-term-status'],
+    queryFn: () =>
+      fetchLongTermStatus(session!.user!.accessToken as string),
+    enabled: !!session,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+/**
+ * Fetch expense plans with calculated funding status fields.
+ * Used for UI display where progress indicators are needed.
+ */
+export function useExpensePlansWithStatus() {
+  const { data: session } = useSession();
+
+  return useQuery({
+    queryKey: ['expense-plans-with-status'],
+    queryFn: () =>
+      fetchExpensePlansWithStatus(session!.user!.accessToken as string),
+    enabled: !!session,
+    staleTime: 60 * 1000, // 1 minute
   });
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCoverageSummary } from "@/hooks/useExpensePlans";
+import { useCoverageSummary, useLongTermStatus } from "@/hooks/useExpensePlans";
 import {
   Shield,
   AlertTriangle,
@@ -12,6 +12,8 @@ import {
   CalendarClock,
   Clock,
   ExternalLink,
+  TrendingUp,
+  Target,
 } from "lucide-react";
 import {
   formatCurrency,
@@ -19,7 +21,10 @@ import {
   CoverageSummaryResponse,
   AccountCoverage,
   PlanAtRisk,
+  LongTermStatusSummary,
+  PlanNeedingAttention,
 } from "@/types/expense-plan-types";
+import FundingStatusBadge from "@/app/expense-plans/components/FundingStatusBadge";
 import { useState } from "react";
 import Link from "next/link";
 
@@ -29,6 +34,7 @@ interface CoverageSectionProps {
 
 export default function CoverageSection({ className = "" }: CoverageSectionProps) {
   const { data, isLoading, error, refetch } = useCoverageSummary();
+  const { data: longTermStatus, isLoading: longTermLoading } = useLongTermStatus();
   const [expandedAccounts, setExpandedAccounts] = useState<Set<number>>(new Set());
 
   const toggleAccount = (accountId: number) => {
@@ -262,6 +268,11 @@ export default function CoverageSection({ className = "" }: CoverageSectionProps
           </div>
         </div>
       )}
+
+      {/* Long-Term Sinking Funds Status */}
+      {!longTermLoading && longTermStatus && longTermStatus.totalSinkingFunds > 0 && (
+        <LongTermStatusSection longTermStatus={longTermStatus} />
+      )}
     </div>
   );
 }
@@ -451,6 +462,146 @@ function PlanRow({ plan }: { plan: PlanAtRisk }) {
           {formatCurrency(plan.amount)}
         </div>
         <ExternalLink className="w-4 h-4 text-gray-400" />
+      </div>
+    </Link>
+  );
+}
+
+// Helper component for long-term sinking funds status
+interface LongTermStatusSectionProps {
+  longTermStatus: LongTermStatusSummary;
+}
+
+function LongTermStatusSection({ longTermStatus }: LongTermStatusSectionProps) {
+  const hasProblems = longTermStatus.behindScheduleCount > 0 || longTermStatus.almostReadyCount > 0;
+  const allOnTrack = longTermStatus.behindScheduleCount === 0;
+
+  return (
+    <div className={`mt-4 rounded-lg border overflow-hidden ${
+      allOnTrack
+        ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200"
+        : "bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200"
+    }`}>
+      {/* Header */}
+      <div className={`p-3 border-b ${allOnTrack ? "bg-blue-100/50 border-blue-200" : "bg-amber-100/50 border-amber-200"}`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <TrendingUp className={`w-5 h-5 mr-2 ${allOnTrack ? "text-blue-600" : "text-amber-600"}`} />
+            <h4 className="font-semibold text-gray-800">Sinking Funds Progress</h4>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            {longTermStatus.fundedCount > 0 && (
+              <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                <CheckCircle2 className="w-3 h-3" />
+                {longTermStatus.fundedCount} Funded
+              </span>
+            )}
+            {longTermStatus.onTrackCount > 0 && (
+              <span className="flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                <Target className="w-3 h-3" />
+                {longTermStatus.onTrackCount} On Track
+              </span>
+            )}
+            {longTermStatus.behindScheduleCount > 0 && (
+              <span className="flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-xs font-medium">
+                <AlertTriangle className="w-3 h-3" />
+                {longTermStatus.behindScheduleCount} Behind
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Summary Stats */}
+      <div className="p-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+          <div className="bg-white rounded-lg p-3 text-center border border-gray-100">
+            <div className="text-xs text-gray-500 mb-1">Total Plans</div>
+            <div className="text-xl font-bold text-gray-800">{longTermStatus.totalSinkingFunds}</div>
+          </div>
+          <div className="bg-white rounded-lg p-3 text-center border border-gray-100">
+            <div className="text-xs text-gray-500 mb-1">Amount Needed</div>
+            <div className="text-xl font-bold text-gray-800">{formatCurrency(longTermStatus.totalAmountNeeded)}</div>
+          </div>
+          <div className="bg-white rounded-lg p-3 text-center border border-green-100">
+            <div className="text-xs text-green-600 mb-1">On Track</div>
+            <div className="text-xl font-bold text-green-700">
+              {longTermStatus.fundedCount + longTermStatus.onTrackCount + longTermStatus.almostReadyCount}
+            </div>
+          </div>
+          <div className={`bg-white rounded-lg p-3 text-center border ${longTermStatus.behindScheduleCount > 0 ? "border-red-100" : "border-gray-100"}`}>
+            <div className={`text-xs mb-1 ${longTermStatus.behindScheduleCount > 0 ? "text-red-600" : "text-gray-500"}`}>Behind</div>
+            <div className={`text-xl font-bold ${longTermStatus.behindScheduleCount > 0 ? "text-red-700" : "text-gray-400"}`}>
+              {longTermStatus.behindScheduleCount}
+            </div>
+          </div>
+        </div>
+
+        {/* Plans Needing Attention */}
+        {hasProblems && longTermStatus.plansNeedingAttention.length > 0 && (
+          <div>
+            <div className="text-sm font-medium text-gray-600 mb-2">Plans Needing Attention</div>
+            <div className="space-y-2">
+              {longTermStatus.plansNeedingAttention.slice(0, 5).map((plan) => (
+                <PlanNeedingAttentionRow key={plan.id} plan={plan} />
+              ))}
+              {longTermStatus.plansNeedingAttention.length > 5 && (
+                <Link
+                  href="/expense-plans"
+                  className="block text-center text-sm text-blue-600 hover:text-blue-800 hover:underline py-2"
+                >
+                  View all {longTermStatus.plansNeedingAttention.length} plans needing attention →
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* All Good Message */}
+        {!hasProblems && (
+          <div className="flex items-center justify-center gap-2 py-3 text-green-700 bg-green-50 rounded-lg">
+            <CheckCircle2 className="w-5 h-5" />
+            <span className="font-medium">All sinking funds are on track!</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Helper component for plan needing attention row
+function PlanNeedingAttentionRow({ plan }: { plan: PlanNeedingAttention }) {
+  return (
+    <Link
+      href={`/expense-plans?highlight=${plan.id}`}
+      className={`flex items-center justify-between rounded-lg p-3 border transition-all hover:shadow-md hover:scale-[1.01] cursor-pointer ${
+        plan.status === "behind"
+          ? "bg-red-50 border-red-200 hover:bg-red-100"
+          : "bg-blue-50 border-blue-200 hover:bg-blue-100"
+      }`}
+    >
+      <div className="flex items-center min-w-0 flex-1">
+        <span className="text-lg mr-2 flex-shrink-0">{plan.icon || "📋"}</span>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-gray-800 text-sm truncate">{plan.name}</span>
+            <FundingStatusBadge status={plan.status} size="sm" showLabel={false} />
+          </div>
+          <div className="text-xs text-gray-500 flex items-center gap-2 flex-wrap">
+            <span>Due: {plan.nextDueDate ? formatDate(plan.nextDueDate) : "No date"}</span>
+            {plan.monthsUntilDue > 0 && (
+              <span className="text-gray-400">({plan.monthsUntilDue} mo)</span>
+            )}
+          </div>
+        </div>
+      </div>
+      <div className="flex flex-col items-end ml-2 flex-shrink-0">
+        <div className="font-semibold text-gray-800 text-sm">
+          {formatCurrency(plan.amountNeeded)} needed
+        </div>
+        <div className={`text-xs ${plan.status === "behind" ? "text-red-600" : "text-blue-600"}`}>
+          +{formatCurrency(plan.shortfallPerMonth)}/mo required
+        </div>
       </div>
     </Link>
   );

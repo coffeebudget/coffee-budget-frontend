@@ -21,6 +21,8 @@ import {
   BulkQuickFundResult,
   ExpensePlanStatus,
   CoverageSummaryResponse,
+  LongTermStatusSummary,
+  ExpensePlanWithStatus,
 } from '@/types/expense-plan-types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -363,4 +365,30 @@ export async function fetchCoverageSummary(
   });
 
   return handleResponse<CoverageSummaryResponse>(response);
+}
+
+/**
+ * Fetch long-term sinking fund status summary
+ */
+export async function fetchLongTermStatus(
+  token: string
+): Promise<LongTermStatusSummary> {
+  const response = await fetch(`${API_URL}/expense-plans/long-term-status`, {
+    headers: getHeaders(token),
+  });
+
+  return handleResponse<LongTermStatusSummary>(response);
+}
+
+/**
+ * Fetch expense plans with funding status fields
+ */
+export async function fetchExpensePlansWithStatus(
+  token: string
+): Promise<ExpensePlanWithStatus[]> {
+  const response = await fetch(`${API_URL}/expense-plans/with-status`, {
+    headers: getHeaders(token),
+  });
+
+  return handleResponse<ExpensePlanWithStatus[]>(response);
 }

@@ -22,6 +22,7 @@ import {
   Calendar,
 } from "lucide-react";
 import AdjustmentBadge from "./AdjustmentBadge";
+import FundingStatusBadge from "./FundingStatusBadge";
 import {
   ExpensePlan,
   calculateProgress,
@@ -33,6 +34,7 @@ import {
   getPriorityColor,
   getStatusColor,
   formatCurrency,
+  calculateFundingStatus,
 } from "@/types/expense-plan-types";
 
 interface ExpensePlanCardProps {
@@ -60,6 +62,7 @@ export default function ExpensePlanCard({
   const progressColor = getProgressColor(progress);
   const remaining = Math.max(0, plan.targetAmount - plan.currentBalance);
   const isFullyFunded = plan.currentBalance >= plan.targetAmount;
+  const fundingStatus = plan.purpose === 'sinking_fund' ? calculateFundingStatus(plan) : null;
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return null;
@@ -125,6 +128,9 @@ export default function ExpensePlanCard({
             plan={plan}
             onClick={() => onReviewAdjustment?.(plan)}
           />
+          {fundingStatus && (
+            <FundingStatusBadge status={fundingStatus} size="sm" />
+          )}
           <Badge variant="outline" className={getStatusColor(plan.status)}>
             {getExpensePlanStatusLabel(plan.status)}
           </Badge>

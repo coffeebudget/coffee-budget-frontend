@@ -421,6 +421,7 @@ export interface MonthlyDepositSummary {
   totalMonthlyDeposit: number;
   planCount: number;
   fullyFundedCount: number;
+  onTrackCount: number;
   behindScheduleCount: number;
   byType: {
     fixed_monthly: { total: number; plans: ExpensePlanSummaryItem[] };
@@ -450,6 +451,65 @@ export interface TimelineEntry {
   currentBalance: number;
   status: FundingStatus;
   monthsAway: number;
+}
+
+/**
+ * Expense plan with calculated funding status fields.
+ * Returned by GET /expense-plans/with-status
+ */
+export interface ExpensePlanWithStatus {
+  id: number;
+  name: string;
+  description: string | null;
+  icon: string | null;
+  planType: ExpensePlanType;
+  priority: ExpensePlanPriority;
+  purpose: ExpensePlanPurpose;
+  targetAmount: number;
+  currentBalance: number;
+  monthlyContribution: number;
+  frequency: ExpensePlanFrequency;
+  nextDueDate: string | null;
+  status: ExpensePlanStatus;
+  categoryId: number | null;
+  paymentAccountId: number | null;
+  paymentAccountType: PaymentAccountType | null;
+  // Calculated funding status fields
+  fundingStatus: FundingStatus | null;
+  monthsUntilDue: number | null;
+  amountNeeded: number | null;
+  requiredMonthlyContribution: number | null;
+  progressPercent: number;
+}
+
+/**
+ * Plan needing attention in long-term status summary
+ */
+export interface PlanNeedingAttention {
+  id: number;
+  name: string;
+  icon: string | null;
+  status: 'behind' | 'almost_ready';
+  amountNeeded: number;
+  monthsUntilDue: number;
+  nextDueDate: string | null;
+  requiredMonthly: number;
+  currentMonthly: number;
+  shortfallPerMonth: number;
+}
+
+/**
+ * Long-term sinking fund status summary.
+ * Returned by GET /expense-plans/long-term-status
+ */
+export interface LongTermStatusSummary {
+  totalSinkingFunds: number;
+  onTrackCount: number;
+  behindScheduleCount: number;
+  fundedCount: number;
+  almostReadyCount: number;
+  totalAmountNeeded: number;
+  plansNeedingAttention: PlanNeedingAttention[];
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -706,6 +766,61 @@ export function getDefaultPurposeForPlanType(planType: ExpensePlanType): Expense
     return 'spending_budget';
   }
   return 'sinking_fund';
+}
+
+/**
+ * Calculate funding status for a sinking fund plan.
+ * Mirrors backend calculateStatus logic.
+ * Returns null if no due date set.
+ */
+export function calculateFundingStatus(plan: {
+  currentBalance: number;
+  targetAmount: number;
+  monthlyContribution: number;
+  nextDueDate: string | null;
+  purpose?: ExpensePlanPurpose;
+}): FundingStatus | null {
+  // Only calculate for sinking funds with a due date
+  if (!plan.nextDueDate) {
+    return null;
+  }
+
+  // If already funded
+  if (plan.currentBalance >= plan.targetAmount) {
+    return 'funded';
+  }
+
+  // Calculate months until due
+  const now = new Date();
+  const dueDate = new Date(plan.nextDueDate);
+  const monthsUntilDue = Math.max(
+    0,
+    (dueDate.getFullYear() - now.getFullYear()) * 12 +
+      (dueDate.getMonth() - now.getMonth())
+  );
+
+  // If due date is in the past or this month
+  if (monthsUntilDue <= 0) {
+    return plan.currentBalance >= plan.targetAmount ? 'funded' : 'behind';
+  }
+
+  // Calculate required monthly contribution
+  const amountNeeded = plan.targetAmount - plan.currentBalance;
+  const requiredMonthly = amountNeeded / monthsUntilDue;
+
+  // On track if current contribution is within 10% of required
+  const isOnTrack = requiredMonthly <= plan.monthlyContribution * 1.1;
+
+  if (isOnTrack) {
+    // Almost ready if 90%+ funded
+    const progress = (plan.currentBalance / plan.targetAmount) * 100;
+    if (progress >= 90) {
+      return 'almost_ready';
+    }
+    return 'on_track';
+  }
+
+  return 'behind';
 }
 
 export function formatCurrency(amount: number): string {

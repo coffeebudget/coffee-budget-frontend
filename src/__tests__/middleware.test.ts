@@ -162,7 +162,6 @@ describe('middleware', () => {
         '/budget-management',
         '/bank-accounts',
         '/credit-cards',
-        '/recurring-transactions',
         '/pending-duplicates',
       ];
 
@@ -232,7 +231,6 @@ describe('middleware', () => {
         '/categories/manage',
         '/budget-management',
         '/bank-accounts/connect',
-        '/recurring-transactions/edit/123',
       ];
 
       for (const route of protectedRoutes) {

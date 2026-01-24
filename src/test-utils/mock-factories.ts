@@ -263,25 +263,6 @@ export function createMockCreditCard(overrides: Partial<any> = {}) {
 }
 
 /**
- * Recurring transaction factory
- */
-export function createMockRecurringTransaction(overrides: Partial<any> = {}) {
-  return {
-    id: Math.floor(Math.random() * 10000),
-    description: 'Monthly Subscription',
-    amount: 9.99,
-    frequency: 'monthly' as const,
-    nextDate: new Date().toISOString(),
-    categoryId: 1,
-    isActive: true,
-    userId: 1,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    ...overrides,
-  };
-}
-
-/**
  * Pending duplicate factory
  */
 export function createMockPendingDuplicate(overrides: Partial<any> = {}) {

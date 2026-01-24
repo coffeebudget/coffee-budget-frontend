@@ -397,31 +397,6 @@ export const handlers = [
     });
   }),
 
-  // Recurring transactions endpoints
-  http.get(`${API_BASE_URL}/recurring-transactions/unconfirmed-patterns`, () => {
-    return HttpResponse.json({
-      success: true,
-      data: [
-        {
-          id: 1,
-          description: 'Monthly Netflix Subscription',
-          amount: 15.99,
-          frequency: 'monthly',
-          confidence: 0.95,
-          lastSeen: '2024-01-15T10:30:00Z',
-        },
-        {
-          id: 2,
-          description: 'Weekly Grocery Shopping',
-          amount: 85.50,
-          frequency: 'weekly',
-          confidence: 0.87,
-          lastSeen: '2024-01-14T09:15:00Z',
-        },
-      ],
-    });
-  }),
-
   // Pending duplicates endpoints
   http.get(`${API_BASE_URL}/pending-duplicates`, () => {
     return HttpResponse.json({

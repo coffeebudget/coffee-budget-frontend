@@ -33,7 +33,6 @@ const protectedLinks = [
   { href: '/payment-activities', label: 'Payment Activities' },
   { href: '/payment-reconciliation', label: 'Reconciliation' },
   { href: '/transactions', label: 'Transactions' },
-  { href: '/recurring-transactions', label: 'Recurring' },
   { href: '/pending-duplicates', label: 'Duplicates' },
   { href: '/expense-plans', label: 'Expense Plans' },
   { href: '/categories', label: 'Categories' },

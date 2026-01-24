@@ -52,32 +52,6 @@ export type Tag = {
   name: string;
 };
 
-export type RecurringTransaction = {
-  id?: number;
-  name: string;
-  description?: string;
-  amount: number;
-  status: 'SCHEDULED' | 'PAUSED' | 'COMPLETED' | 'CANCELLED';
-  type: 'expense' | 'income' | 'credit';
-  frequencyEveryN: number;
-  frequencyType: 'daily' | 'weekly' | 'monthly' | 'yearly';
-  occurrences?: number;
-  startDate: string;
-  endDate?: string | null;
-  categoryId?: number | null;
-  tagIds?: number[];
-  bankAccountId?: number;
-  creditCardId?: number;
-  applyToPast?: boolean;
-  userConfirmed?: boolean;
-  source?: string;
-  // These are for display purposes only
-  category?: Category;
-  tags?: Tag[];
-  bankAccount?: BankAccount;
-  creditCard?: CreditCard;
-};
-
 export type PendingDuplicate = {
   id: number;
   existingTransaction: Transaction;  // The original transaction that was found

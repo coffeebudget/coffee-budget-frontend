@@ -94,10 +94,6 @@ export class DashboardPage {
     return this.getAlert('savings');
   }
 
-  static getRecurringTransactionAlert() {
-    return cy.get('[data-testid="recurring-transaction-alert"]');
-  }
-
   static getSmartAlerts() {
     return cy.get('[data-testid="smart-alerts"]');
   }

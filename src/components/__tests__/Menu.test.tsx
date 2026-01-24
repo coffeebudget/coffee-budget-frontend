@@ -41,7 +41,6 @@ describe('Menu', () => {
         { testId: 'nav-link-credit-cards', label: 'Credit Cards', href: '/credit-cards' },
         { testId: 'nav-link-payment-accounts', label: 'Payment Accounts', href: '/payment-accounts' },
         { testId: 'nav-link-transactions', label: 'Transactions', href: '/transactions' },
-        { testId: 'nav-link-recurring-transactions', label: 'Recurring', href: '/recurring-transactions' },
         { testId: 'nav-link-pending-duplicates', label: 'Duplicates', href: '/pending-duplicates' },
         { testId: 'nav-link-categories', label: 'Categories', href: '/categories' },
         { testId: 'nav-link-tags', label: 'Tags', href: '/tags' },

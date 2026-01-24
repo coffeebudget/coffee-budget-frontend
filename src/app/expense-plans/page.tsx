@@ -21,6 +21,7 @@ import {
   Wand2,
   LayoutGrid,
   Layers,
+  Building2,
 } from "lucide-react";
 import {
   ExpensePlan,
@@ -36,6 +37,7 @@ import ExpensePlanFormDialog from "./components/ExpensePlanFormDialog";
 import ContributeWithdrawDialog from "./components/ContributeWithdrawDialog";
 import AdjustmentSuggestionModal from "./components/AdjustmentSuggestionModal";
 import IncomeDistributionSetup from "./components/IncomeDistributionSetup";
+import ExpensePlansByAccount from "./components/ExpensePlansByAccount";
 
 export default function ExpensePlansPage() {
   const router = useRouter();
@@ -53,7 +55,8 @@ export default function ExpensePlansPage() {
   const [adjustmentModalOpen, setAdjustmentModalOpen] = useState(false);
   const [adjustmentPlan, setAdjustmentPlan] = useState<ExpensePlan | null>(null);
 
-  const [groupByPurpose, setGroupByPurpose] = useState(true);
+  // View modes: "flat" | "purpose" | "account"
+  const [viewMode, setViewMode] = useState<"flat" | "purpose" | "account">("purpose");
 
   const filteredPlans = plans?.filter((plan) => {
     if (activeTab === "all") return true;
@@ -223,24 +226,35 @@ export default function ExpensePlansPage() {
           Create with Wizard
         </Button>
         <div className="flex-1" />
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setGroupByPurpose(!groupByPurpose)}
-          className="gap-2 text-gray-500"
-        >
-          {groupByPurpose ? (
-            <>
-              <LayoutGrid className="h-4 w-4" />
-              Flat View
-            </>
-          ) : (
-            <>
-              <Layers className="h-4 w-4" />
-              Group by Type
-            </>
-          )}
-        </Button>
+        <div className="flex gap-1 border rounded-lg p-1 bg-gray-50">
+          <Button
+            variant={viewMode === "flat" ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setViewMode("flat")}
+            className="gap-1.5"
+          >
+            <LayoutGrid className="h-4 w-4" />
+            Lista
+          </Button>
+          <Button
+            variant={viewMode === "purpose" ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setViewMode("purpose")}
+            className="gap-1.5"
+          >
+            <Layers className="h-4 w-4" />
+            Per Tipo
+          </Button>
+          <Button
+            variant={viewMode === "account" ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setViewMode("account")}
+            className="gap-1.5"
+          >
+            <Building2 className="h-4 w-4" />
+            Per Conto
+          </Button>
+        </div>
       </div>
 
       {/* Tabs & Content */}
@@ -273,7 +287,16 @@ export default function ExpensePlansPage() {
                     Create your first plan
                   </Button>
                 </Card>
-              ) : groupByPurpose ? (
+              ) : viewMode === "account" ? (
+                <ExpensePlansByAccount
+                  plans={filteredPlans}
+                  onEdit={handleEditPlan}
+                  onDelete={handleDeletePlan}
+                  onContribute={handleContribute}
+                  onWithdraw={handleWithdraw}
+                  onReviewAdjustment={handleReviewAdjustment}
+                />
+              ) : viewMode === "purpose" ? (
                 <div className="space-y-8">
                   {/* Sinking Funds Section */}
                   {sinkingFunds.length > 0 && (

@@ -1,16 +1,20 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
   Target,
   AlertTriangle,
   CheckCircle,
-  RefreshCw 
+  RefreshCw,
+  Wallet,
+  PiggyBank,
+  Receipt
 } from 'lucide-react';
+import { useCoverageSummary, useMonthlyDepositSummary } from '@/hooks/useExpensePlans';
 
 interface FinancialOverviewData {
   currentBalance: number;
@@ -37,10 +41,38 @@ export default function FinancialOverview({ className = '' }: FinancialOverviewP
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Expense plans data for real availability calculation
+  const { data: coverageSummary, isLoading: coverageLoading } = useCoverageSummary();
+  const { data: depositSummary, isLoading: depositLoading } = useMonthlyDepositSummary();
+
   useEffect(() => {
     if (!session?.user?.accessToken) return;
     loadFinancialOverview();
   }, [session]);
+
+  // Calculate real availability: balance - upcoming expenses
+  const realAvailability = useMemo(() => {
+    if (!data || !coverageSummary) return null;
+
+    // Sum of all upcoming expenses across accounts (next 30 days)
+    const upcomingExpenses = coverageSummary.accounts.reduce(
+      (sum, acc) => sum + acc.upcomingPlansTotal,
+      0
+    ) + (coverageSummary.unassignedPlans?.totalAmount || 0);
+
+    // Monthly deposits to goals (sinking funds)
+    const monthlyGoals = depositSummary?.totalMonthlyDeposit || 0;
+
+    // Real availability = current balance - upcoming expenses
+    const available = data.currentBalance - upcomingExpenses;
+
+    return {
+      available,
+      upcomingExpenses,
+      monthlyGoals,
+      isHealthy: available > 0,
+    };
+  }, [data, coverageSummary, depositSummary]);
 
   const loadFinancialOverview = async () => {
     try {
@@ -171,6 +203,60 @@ export default function FinancialOverview({ className = '' }: FinancialOverviewP
           <RefreshCw className="w-5 h-5" />
         </button>
       </div>
+
+      {/* Real Availability - Hero Section */}
+      {realAvailability && (
+        <div className="bg-white/20 backdrop-blur-sm rounded-xl p-6 mb-6 border border-white/30">
+          <div className="flex items-center gap-3 mb-4">
+            <div className={`p-3 rounded-full ${realAvailability.isHealthy ? 'bg-green-500/30' : 'bg-red-500/30'}`}>
+              <Wallet className={`w-8 h-8 ${realAvailability.isHealthy ? 'text-green-300' : 'text-red-300'}`} />
+            </div>
+            <div>
+              <div className="text-sm text-blue-200 uppercase tracking-wide">Disponibile Ora</div>
+              <div className={`text-4xl font-bold ${realAvailability.isHealthy ? 'text-green-300' : 'text-red-300'}`}>
+                {formatCurrency(realAvailability.available)}
+              </div>
+            </div>
+          </div>
+
+          {/* Breakdown */}
+          <div className="grid grid-cols-3 gap-4 pt-4 border-t border-white/20">
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-1 text-blue-200 text-xs mb-1">
+                <DollarSign className="w-3 h-3" />
+                <span>Saldo Totale</span>
+              </div>
+              <div className="text-lg font-semibold">{formatCurrency(data.currentBalance)}</div>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-1 text-blue-200 text-xs mb-1">
+                <Receipt className="w-3 h-3" />
+                <span>Spese Previste</span>
+              </div>
+              <div className="text-lg font-semibold text-red-300">-{formatCurrency(realAvailability.upcomingExpenses)}</div>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-1 text-blue-200 text-xs mb-1">
+                <PiggyBank className="w-3 h-3" />
+                <span>Obiettivi/Mese</span>
+              </div>
+              <div className="text-lg font-semibold text-yellow-300">{formatCurrency(realAvailability.monthlyGoals)}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Loading state for availability */}
+      {(coverageLoading || depositLoading) && !realAvailability && (
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-6 animate-pulse">
+          <div className="h-12 bg-white/20 rounded w-48 mb-4"></div>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="h-16 bg-white/20 rounded"></div>
+            <div className="h-16 bg-white/20 rounded"></div>
+            <div className="h-16 bg-white/20 rounded"></div>
+          </div>
+        </div>
+      )}
 
       {/* KPI Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

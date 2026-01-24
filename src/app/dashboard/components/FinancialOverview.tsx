@@ -15,6 +15,7 @@ import {
   Receipt
 } from 'lucide-react';
 import { useCoverageSummary, useMonthlyDepositSummary } from '@/hooks/useExpensePlans';
+import Link from 'next/link';
 
 interface FinancialOverviewData {
   currentBalance: number;
@@ -242,6 +243,18 @@ export default function FinancialOverview({ className = '' }: FinancialOverviewP
               </div>
               <div className="text-lg font-semibold text-yellow-300">{formatCurrency(realAvailability.monthlyGoals)}</div>
             </div>
+          </div>
+
+          {/* Quick Action Link */}
+          <div className="pt-4 mt-4 border-t border-white/20 text-center">
+            <Link
+              href="/expense-plans"
+              className="inline-flex items-center gap-2 text-sm text-blue-200 hover:text-white transition-colors"
+            >
+              <PiggyBank className="w-4 h-4" />
+              Vai a Smistamento per Conto
+              <span className="text-xs">→</span>
+            </Link>
           </div>
         </div>
       )}

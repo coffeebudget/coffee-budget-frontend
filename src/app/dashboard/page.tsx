@@ -18,6 +18,7 @@ import BankConnectionAlerts from "./components/BankConnectionAlerts";
 import CategoryPerformance12M from "./components/CategoryPerformance12M";
 import BudgetProgressRings from "./components/BudgetProgressRings";
 import CashFlowForecast from "./components/CashFlowForecast";
+import AccountHealthPanel from "./components/AccountHealthPanel";
 
 export default function DashboardPage() {
   const { data: session } = useSession();
@@ -106,7 +107,10 @@ export default function DashboardPage() {
       
       {/* Hero Section - Financial Overview */}
       <FinancialOverview className="mb-8" />
-      
+
+      {/* Account Health Panel */}
+      <AccountHealthPanel className="mb-6" />
+
       {/* Smart Alerts */}
       <SmartAlerts className="mb-6" />
 

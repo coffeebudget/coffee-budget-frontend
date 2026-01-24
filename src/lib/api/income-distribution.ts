@@ -12,7 +12,6 @@ import {
   UpdateIncomeDistributionRuleDto,
   ManualDistributionDto,
   ManualDistributionResult,
-  PendingDistribution,
 } from '@/types/expense-plan-types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -63,17 +62,6 @@ export async function fetchIncomeDistributionRules(
   });
 
   return handleResponse<IncomeDistributionRule[]>(response);
-}
-
-export async function fetchIncomeDistributionRuleById(
-  token: string,
-  id: number
-): Promise<IncomeDistributionRule> {
-  const response = await fetch(`${API_URL}/income-distribution/rules/${id}`, {
-    headers: getHeaders(token),
-  });
-
-  return handleResponse<IncomeDistributionRule>(response);
 }
 
 export async function createIncomeDistributionRule(
@@ -130,14 +118,4 @@ export async function distributeManually(
   });
 
   return handleResponse<ManualDistributionResult>(response);
-}
-
-export async function fetchPendingDistributions(
-  token: string
-): Promise<PendingDistribution[]> {
-  const response = await fetch(`${API_URL}/income-distribution/pending-distributions`, {
-    headers: getHeaders(token),
-  });
-
-  return handleResponse<PendingDistribution[]>(response);
 }

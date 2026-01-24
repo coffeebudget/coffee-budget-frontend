@@ -10,12 +10,10 @@ import { useSession } from 'next-auth/react';
 import { toast } from 'react-hot-toast';
 import {
   fetchIncomeDistributionRules,
-  fetchIncomeDistributionRuleById,
   createIncomeDistributionRule,
   updateIncomeDistributionRule,
   deleteIncomeDistributionRule,
   distributeManually,
-  fetchPendingDistributions,
 } from '@/lib/api/income-distribution';
 import {
   CreateIncomeDistributionRuleDto,
@@ -36,30 +34,6 @@ export function useIncomeDistributionRules() {
       fetchIncomeDistributionRules(session!.user!.accessToken as string),
     enabled: !!session,
     staleTime: 60 * 1000, // 1 minute
-  });
-}
-
-export function useIncomeDistributionRule(id: number) {
-  const { data: session } = useSession();
-
-  return useQuery({
-    queryKey: ['income-distribution-rule', id],
-    queryFn: () =>
-      fetchIncomeDistributionRuleById(session!.user!.accessToken as string, id),
-    enabled: !!session && !!id,
-    staleTime: 60 * 1000,
-  });
-}
-
-export function usePendingDistributions() {
-  const { data: session } = useSession();
-
-  return useQuery({
-    queryKey: ['pending-distributions'],
-    queryFn: () =>
-      fetchPendingDistributions(session!.user!.accessToken as string),
-    enabled: !!session,
-    staleTime: 30 * 1000, // 30 seconds - changes frequently
   });
 }
 

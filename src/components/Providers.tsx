@@ -30,12 +30,16 @@ export default function Providers({ children }: ProvidersProps) {
       </div>
       <Toaster
         position="top-right"
+        containerClassName=""
         containerStyle={{
           top: 16,
           right: 16,
+          left: 'auto',
+          bottom: 'auto',
+          pointerEvents: 'none',
         }}
         toastOptions={{
-          duration: 6000,
+          duration: 4000,
           style: {
             background: '#ffffff',
             color: '#1f2937',
@@ -47,10 +51,11 @@ export default function Providers({ children }: ProvidersProps) {
             minWidth: '200px',
             padding: '16px',
             zIndex: 9999,
-            wordBreak: 'break-word',
+            wordBreak: 'break-word' as const,
+            pointerEvents: 'auto',
           },
           success: {
-            duration: 4000,
+            duration: 3000,
             style: {
               background: '#10b981',
               color: '#ffffff',
@@ -58,7 +63,7 @@ export default function Providers({ children }: ProvidersProps) {
             },
           },
           error: {
-            duration: 6000,
+            duration: 5000,
             style: {
               background: '#ef4444',
               color: '#ffffff',

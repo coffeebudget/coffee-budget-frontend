@@ -3,6 +3,19 @@
   --toastify-z-index: 9999;
 }
 
+/* Ensure react-hot-toast container doesn't block clicks */
+#_rht_toaster {
+  pointer-events: none !important;
+  /* Don't cover the whole viewport */
+  left: auto !important;
+  bottom: auto !important;
+}
+
+/* Individual toasts should be clickable */
+#_rht_toaster > div {
+  pointer-events: auto;
+}
+
 /* Override any toast container styles */
 .Toastify__toast-container,
 [data-radix-toast-viewport],
@@ -10,15 +23,17 @@
   z-index: 9999 !important;
   position: fixed !important;
   opacity: 1 !important;
+  pointer-events: none !important;
 }
 
-/* Ensure toast content is visible */
+/* Ensure toast content is visible and clickable */
 .Toastify__toast,
 [data-radix-toast-root],
 [role="status"] > div {
   opacity: 1 !important;
   z-index: 9999 !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+  pointer-events: auto !important;
 }
 
 /* Add a more prominent border */

@@ -148,6 +148,9 @@ export interface ExpensePlan {
 
   // Relations (optional, loaded on demand)
   transactions?: ExpensePlanTransaction[];
+
+  // Fixed monthly status (only populated for fixed_monthly plans with status endpoint)
+  fixedMonthlyStatus?: FixedMonthlyStatus | null;
 }
 
 export interface ExpensePlanTransaction {
@@ -393,6 +396,25 @@ export interface CoverageSummaryResponse {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// FIXED MONTHLY STATUS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Status information specific to fixed_monthly expense plans.
+ * Shows payment status for the current month rather than funding progress.
+ */
+export interface FixedMonthlyStatus {
+  /** Whether payment for current month has been made */
+  currentMonthPaymentMade: boolean;
+  /** Date of current month payment */
+  paymentDate: string | null;
+  /** Whether balance is sufficient for next payment */
+  readyForNextMonth: boolean;
+  /** Amount short of next payment (targetAmount - currentBalance) */
+  amountShort: number | null;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // SUMMARY & ANALYTICS INTERFACES
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -463,6 +485,8 @@ export interface ExpensePlanWithStatus {
   expectedFundedByNow: number | null;
   fundingGapFromExpected: number | null;
   createdAt: string | null;
+  // Fixed monthly status (only for fixed_monthly plans)
+  fixedMonthlyStatus?: FixedMonthlyStatus | null;
 }
 
 /**

@@ -18,6 +18,8 @@ import {
   Plus,
   Minus,
   Calendar,
+  CheckCircle2,
+  Clock,
 } from "lucide-react";
 import AdjustmentBadge from "./AdjustmentBadge";
 import FundingStatusBadge from "./FundingStatusBadge";
@@ -166,21 +168,71 @@ export default function ExpensePlanCard({
           </div>
         </div>
 
-        {/* Expected Funding Gap Alert */}
-        {hasFundingGap && expectedFundedByNow !== null && (
-          <div className="mb-4 p-2 bg-amber-50 border border-amber-200 rounded-md">
-            <div className="flex items-center gap-1 text-xs text-amber-800">
-              <span className="font-medium">Expected by now:</span>
-              <span>{formatCurrency(expectedFundedByNow)}</span>
+        {/* Fixed Monthly Status OR Funding Gap */}
+        {plan.planType === "fixed_monthly" && plan.fixedMonthlyStatus ? (
+          <div className="mb-4 space-y-2">
+            {/* Payment Status */}
+            <div
+              className={`p-2 rounded-md flex items-center gap-2 ${
+                plan.fixedMonthlyStatus.currentMonthPaymentMade
+                  ? "bg-green-50 border border-green-200"
+                  : "bg-gray-50 border border-gray-200"
+              }`}
+            >
+              {plan.fixedMonthlyStatus.currentMonthPaymentMade ? (
+                <>
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <span className="text-sm text-green-800">
+                    Paid this month
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Clock className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm text-gray-600">
+                    Not yet paid this month
+                  </span>
+                </>
+              )}
             </div>
-            <div className="flex items-center gap-1 text-xs text-amber-600 mt-1">
-              <span>Gap:</span>
-              <span className="font-medium text-amber-700">
-                {formatCurrency(fundingGapFromExpected!)}
-              </span>
-              <span className="text-amber-500">behind schedule</span>
-            </div>
+
+            {/* Ready for Next Month (only show if not paid yet) */}
+            {!plan.fixedMonthlyStatus.currentMonthPaymentMade && (
+              <div
+                className={`p-2 rounded-md flex items-center gap-2 ${
+                  plan.fixedMonthlyStatus.readyForNextMonth
+                    ? "bg-blue-50 border border-blue-200"
+                    : "bg-amber-50 border border-amber-200"
+                }`}
+              >
+                {plan.fixedMonthlyStatus.readyForNextMonth ? (
+                  <span className="text-sm text-blue-800">Ready to pay</span>
+                ) : (
+                  <span className="text-sm text-amber-800">
+                    Need {formatCurrency(plan.fixedMonthlyStatus.amountShort || 0)}{" "}
+                    more
+                  </span>
+                )}
+              </div>
+            )}
           </div>
+        ) : (
+          hasFundingGap &&
+          expectedFundedByNow !== null && (
+            <div className="mb-4 p-2 bg-amber-50 border border-amber-200 rounded-md">
+              <div className="flex items-center gap-1 text-xs text-amber-800">
+                <span className="font-medium">Expected by now:</span>
+                <span>{formatCurrency(expectedFundedByNow)}</span>
+              </div>
+              <div className="flex items-center gap-1 text-xs text-amber-600 mt-1">
+                <span>Gap:</span>
+                <span className="font-medium text-amber-700">
+                  {formatCurrency(fundingGapFromExpected!)}
+                </span>
+                <span className="text-amber-500">behind schedule</span>
+              </div>
+            </div>
+          )
         )}
 
         {/* Details */}

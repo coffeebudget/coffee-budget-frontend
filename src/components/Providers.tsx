@@ -28,8 +28,12 @@ export default function Providers({ children }: ProvidersProps) {
         <Menu />
         <main>{children}</main>
       </div>
-      <Toaster 
+      <Toaster
         position="top-right"
+        containerStyle={{
+          top: 16,
+          right: 16,
+        }}
         toastOptions={{
           duration: 6000,
           style: {
@@ -39,12 +43,14 @@ export default function Providers({ children }: ProvidersProps) {
             borderRadius: '8px',
             boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
             fontSize: '14px',
-            maxWidth: '500px',
+            maxWidth: '400px',
+            minWidth: '200px',
             padding: '16px',
             zIndex: 9999,
+            wordBreak: 'break-word',
           },
           success: {
-            duration: 8000,
+            duration: 4000,
             style: {
               background: '#10b981',
               color: '#ffffff',

@@ -793,12 +793,20 @@ export function formatCurrency(amount: number): string {
 }
 
 /**
- * Calculate the expected funded amount by now based on plan creation date
- * and monthly contribution rate.
+ * Calculate the expected funded amount by now based on when savings
+ * SHOULD have started to reach the target by the due date.
  *
- * For sinking funds, this helps users understand how much they should have
- * saved by now if they had been contributing consistently since the plan
- * was created.
+ * For sinking funds, this calculates backwards from the due date:
+ * 1. How many months are needed to save the target at the contribution rate?
+ * 2. When should saving have started?
+ * 3. How many months have elapsed since then?
+ * 4. Expected = elapsed months × monthly contribution
+ *
+ * Example: Summer vacation €4,000, €400/month, due July 2026
+ * - Months needed: 4000/400 = 10 months
+ * - Should have started: July - 10 = September 2025
+ * - Now is January 2026, so 4-5 months elapsed
+ * - Expected by now: ~€1,600-2,000
  */
 export function calculateExpectedFundedByNow(plan: {
   purpose?: ExpensePlanPurpose;
@@ -806,6 +814,7 @@ export function calculateExpectedFundedByNow(plan: {
   targetAmount: number;
   createdAt: string;
   nextDueDate: string | null;
+  targetDate?: string | null;
 }): number | null {
   // Only calculate for sinking funds
   if (plan.purpose && plan.purpose !== 'sinking_fund') {
@@ -815,45 +824,47 @@ export function calculateExpectedFundedByNow(plan: {
   const monthlyContribution = plan.monthlyContribution;
   const targetAmount = plan.targetAmount;
 
-  if (!plan.createdAt || monthlyContribution <= 0) {
+  if (monthlyContribution <= 0 || targetAmount <= 0) {
     return null;
   }
 
   const now = new Date();
-  const createdAt = new Date(plan.createdAt);
-  const nextDueDate = plan.nextDueDate ? new Date(plan.nextDueDate) : null;
 
-  // Calculate months since creation with decimal precision
-  const yearsDiff = now.getFullYear() - createdAt.getFullYear();
-  const monthsDiff = now.getMonth() - createdAt.getMonth();
-  const daysDiff = now.getDate() - createdAt.getDate();
-  const monthsSinceCreation = Math.max(0, yearsDiff * 12 + monthsDiff + daysDiff / 30);
+  // Get the due date (prefer nextDueDate, fall back to targetDate)
+  const dueDateStr = plan.nextDueDate || plan.targetDate;
+  if (!dueDateStr) {
+    // No due date - can't calculate expected progress
+    return null;
+  }
 
-  // Approach 1: Time-based calculation
-  const timeBasedExpected = Math.min(
-    monthsSinceCreation * monthlyContribution,
+  const dueDate = new Date(dueDateStr);
+
+  // Calculate how many months are needed to save the full target
+  const monthsNeededToSave = targetAmount / monthlyContribution;
+
+  // Calculate when saving should have started
+  const savingStartDate = new Date(dueDate);
+  savingStartDate.setMonth(savingStartDate.getMonth() - Math.ceil(monthsNeededToSave));
+
+  // If saving hasn't needed to start yet, expected is 0
+  if (now < savingStartDate) {
+    return 0;
+  }
+
+  // Calculate how many months have elapsed since saving should have started
+  const yearsDiff = now.getFullYear() - savingStartDate.getFullYear();
+  const monthsDiff = now.getMonth() - savingStartDate.getMonth();
+  const daysDiff = now.getDate() - savingStartDate.getDate();
+  const monthsElapsed = Math.max(0, yearsDiff * 12 + monthsDiff + daysDiff / 30);
+
+  // Expected funded amount = months elapsed × monthly contribution
+  // Capped at target amount
+  const expectedFundedByNow = Math.min(
+    monthsElapsed * monthlyContribution,
     targetAmount
   );
 
-  // Approach 2: Goal-based calculation (if due date exists)
-  let goalBasedExpected = timeBasedExpected;
-
-  if (nextDueDate && nextDueDate > now) {
-    // Calculate total months from creation to due date
-    const totalYearsDiff = nextDueDate.getFullYear() - createdAt.getFullYear();
-    const totalMonthsDiff = nextDueDate.getMonth() - createdAt.getMonth();
-    const totalDaysDiff = nextDueDate.getDate() - createdAt.getDate();
-    const totalMonthsToSave = Math.max(0, totalYearsDiff * 12 + totalMonthsDiff + totalDaysDiff / 30);
-
-    if (totalMonthsToSave > 0) {
-      // Calculate what percentage of the saving period has elapsed
-      const progressRatio = monthsSinceCreation / totalMonthsToSave;
-      goalBasedExpected = Math.min(progressRatio * targetAmount, targetAmount);
-    }
-  }
-
-  // Return the higher of the two calculations (more conservative)
-  return Math.round(Math.max(timeBasedExpected, goalBasedExpected) * 100) / 100;
+  return Math.round(expectedFundedByNow * 100) / 100;
 }
 
 /**
@@ -867,6 +878,7 @@ export function calculateFundingGapFromExpected(plan: {
   currentBalance: number;
   createdAt: string;
   nextDueDate: string | null;
+  targetDate?: string | null;
 }): number | null {
   const expectedFundedByNow = calculateExpectedFundedByNow(plan);
   if (expectedFundedByNow === null) {

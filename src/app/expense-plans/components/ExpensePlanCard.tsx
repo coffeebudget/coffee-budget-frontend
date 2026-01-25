@@ -33,6 +33,8 @@ import {
   getStatusColor,
   formatCurrency,
   calculateFundingStatus,
+  calculateExpectedFundedByNow,
+  calculateFundingGapFromExpected,
 } from "@/types/expense-plan-types";
 
 interface ExpensePlanCardProps {
@@ -57,6 +59,15 @@ export default function ExpensePlanCard({
   const remaining = Math.max(0, plan.targetAmount - plan.currentBalance);
   const isFullyFunded = plan.currentBalance >= plan.targetAmount;
   const fundingStatus = plan.purpose === 'sinking_fund' ? calculateFundingStatus(plan) : null;
+
+  // Calculate expected funding for sinking funds
+  const expectedFundedByNow = plan.purpose === 'sinking_fund'
+    ? calculateExpectedFundedByNow(plan)
+    : null;
+  const fundingGapFromExpected = plan.purpose === 'sinking_fund'
+    ? calculateFundingGapFromExpected(plan)
+    : null;
+  const hasFundingGap = fundingGapFromExpected !== null && fundingGapFromExpected > 0;
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return null;
@@ -154,6 +165,23 @@ export default function ExpensePlanCard({
             {!isFullyFunded && <span>{formatCurrency(remaining)} to go</span>}
           </div>
         </div>
+
+        {/* Expected Funding Gap Alert */}
+        {hasFundingGap && expectedFundedByNow !== null && (
+          <div className="mb-4 p-2 bg-amber-50 border border-amber-200 rounded-md">
+            <div className="flex items-center gap-1 text-xs text-amber-800">
+              <span className="font-medium">Expected by now:</span>
+              <span>{formatCurrency(expectedFundedByNow)}</span>
+            </div>
+            <div className="flex items-center gap-1 text-xs text-amber-600 mt-1">
+              <span>Gap:</span>
+              <span className="font-medium text-amber-700">
+                {formatCurrency(fundingGapFromExpected!)}
+              </span>
+              <span className="text-amber-500">behind schedule</span>
+            </div>
+          </div>
+        )}
 
         {/* Details */}
         <div className="space-y-2 text-sm">

@@ -459,6 +459,10 @@ export interface ExpensePlanWithStatus {
   amountNeeded: number | null;
   requiredMonthlyContribution: number | null;
   progressPercent: number;
+  // Expected funding fields
+  expectedFundedByNow: number | null;
+  fundingGapFromExpected: number | null;
+  createdAt: string | null;
 }
 
 /**
@@ -475,6 +479,10 @@ export interface PlanNeedingAttention {
   requiredMonthly: number;
   currentMonthly: number;
   shortfallPerMonth: number;
+  // Expected funding fields
+  expectedFundedByNow: number | null;
+  currentBalance: number;
+  fundingGapFromExpected: number | null;
 }
 
 /**
@@ -782,6 +790,89 @@ export function formatCurrency(amount: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(amount);
+}
+
+/**
+ * Calculate the expected funded amount by now based on plan creation date
+ * and monthly contribution rate.
+ *
+ * For sinking funds, this helps users understand how much they should have
+ * saved by now if they had been contributing consistently since the plan
+ * was created.
+ */
+export function calculateExpectedFundedByNow(plan: {
+  purpose?: ExpensePlanPurpose;
+  monthlyContribution: number;
+  targetAmount: number;
+  createdAt: string;
+  nextDueDate: string | null;
+}): number | null {
+  // Only calculate for sinking funds
+  if (plan.purpose && plan.purpose !== 'sinking_fund') {
+    return null;
+  }
+
+  const monthlyContribution = plan.monthlyContribution;
+  const targetAmount = plan.targetAmount;
+
+  if (!plan.createdAt || monthlyContribution <= 0) {
+    return null;
+  }
+
+  const now = new Date();
+  const createdAt = new Date(plan.createdAt);
+  const nextDueDate = plan.nextDueDate ? new Date(plan.nextDueDate) : null;
+
+  // Calculate months since creation with decimal precision
+  const yearsDiff = now.getFullYear() - createdAt.getFullYear();
+  const monthsDiff = now.getMonth() - createdAt.getMonth();
+  const daysDiff = now.getDate() - createdAt.getDate();
+  const monthsSinceCreation = Math.max(0, yearsDiff * 12 + monthsDiff + daysDiff / 30);
+
+  // Approach 1: Time-based calculation
+  const timeBasedExpected = Math.min(
+    monthsSinceCreation * monthlyContribution,
+    targetAmount
+  );
+
+  // Approach 2: Goal-based calculation (if due date exists)
+  let goalBasedExpected = timeBasedExpected;
+
+  if (nextDueDate && nextDueDate > now) {
+    // Calculate total months from creation to due date
+    const totalYearsDiff = nextDueDate.getFullYear() - createdAt.getFullYear();
+    const totalMonthsDiff = nextDueDate.getMonth() - createdAt.getMonth();
+    const totalDaysDiff = nextDueDate.getDate() - createdAt.getDate();
+    const totalMonthsToSave = Math.max(0, totalYearsDiff * 12 + totalMonthsDiff + totalDaysDiff / 30);
+
+    if (totalMonthsToSave > 0) {
+      // Calculate what percentage of the saving period has elapsed
+      const progressRatio = monthsSinceCreation / totalMonthsToSave;
+      goalBasedExpected = Math.min(progressRatio * targetAmount, targetAmount);
+    }
+  }
+
+  // Return the higher of the two calculations (more conservative)
+  return Math.round(Math.max(timeBasedExpected, goalBasedExpected) * 100) / 100;
+}
+
+/**
+ * Calculate the funding gap from expected.
+ * Positive value means behind schedule.
+ */
+export function calculateFundingGapFromExpected(plan: {
+  purpose?: ExpensePlanPurpose;
+  monthlyContribution: number;
+  targetAmount: number;
+  currentBalance: number;
+  createdAt: string;
+  nextDueDate: string | null;
+}): number | null {
+  const expectedFundedByNow = calculateExpectedFundedByNow(plan);
+  if (expectedFundedByNow === null) {
+    return null;
+  }
+  return Math.max(0, expectedFundedByNow - plan.currentBalance);
 }
 
 export function getMonthName(month: number): string {

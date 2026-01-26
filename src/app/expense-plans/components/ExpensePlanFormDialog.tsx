@@ -19,7 +19,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Wallet, CreditCard, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Loader2, Wallet, CreditCard, AlertCircle, CheckCircle2, Info, Calculator } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useQuery } from "@tanstack/react-query";
 import { fetchBankAccounts, fetchCreditCards } from "@/utils/api-client";
 
@@ -536,6 +542,101 @@ export default function ExpensePlanFormDialog({
                 />
               </div>
             </div>
+
+            {/* Multi-Year Plan Guidance */}
+            {formData.frequency === "multi_year" && (
+              <div className="p-4 rounded-lg border border-blue-200 bg-blue-50 space-y-4">
+                <div className="flex items-start gap-3">
+                  <Calculator className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium text-blue-900">Multi-Year Expense Configuration</span>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Info className="h-4 w-4 text-blue-500" />
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p className="text-sm">
+                              For irregular expenses (e.g., car tires every 2-3 years), set the frequency in years.
+                              Use the average interval for balanced savings, or the shortest interval for a conservative approach.
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <p className="text-sm text-blue-700">
+                      Set how many years between each expense occurrence to calculate your monthly savings rate.
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="frequencyYears" className="text-blue-900">Frequency (years)</Label>
+                  <Input
+                    id="frequencyYears"
+                    type="number"
+                    step="0.5"
+                    min="1"
+                    max="10"
+                    value={formData.frequencyYears}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, frequencyYears: e.target.value }))
+                    }
+                    placeholder="e.g., 2.5 for every 2.5 years"
+                    className="mt-1 bg-white"
+                  />
+                  <p className="text-xs text-blue-600 mt-1">
+                    Tip: For variable intervals (e.g., 2-3 years), use the average (2.5) or the shorter interval (2) for conservative planning.
+                  </p>
+                </div>
+
+                {/* Calculation Preview */}
+                {formData.frequencyYears && parseFloat(formData.frequencyYears) > 0 && formData.targetAmount && parseFloat(formData.targetAmount) > 0 && (
+                  <div className="p-3 rounded-md bg-white border border-blue-200">
+                    <div className="text-sm text-blue-900">
+                      <span className="font-medium">Calculation Preview:</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
+                      <div>
+                        <span className="text-gray-600">Total target:</span>
+                        <span className="ml-2 font-medium">
+                          {new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(parseFloat(formData.targetAmount))}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Every:</span>
+                        <span className="ml-2 font-medium">{formData.frequencyYears} years</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Months to save:</span>
+                        <span className="ml-2 font-medium">{Math.round(parseFloat(formData.frequencyYears) * 12)}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Monthly contribution:</span>
+                        <span className="ml-2 font-medium text-blue-700">
+                          {new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(
+                            parseFloat(formData.targetAmount) / (parseFloat(formData.frequencyYears) * 12)
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                    {formData.autoCalculate && (
+                      <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3" />
+                        Auto-calculate is enabled - monthly contribution will be calculated automatically
+                      </p>
+                    )}
+                    {!formData.autoCalculate && parseFloat(formData.monthlyContribution) !== parseFloat(formData.targetAmount) / (parseFloat(formData.frequencyYears) * 12) && (
+                      <p className="text-xs text-yellow-600 mt-2 flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        Your current monthly contribution differs from the calculated amount. Enable auto-calculate or update manually.
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Options */}

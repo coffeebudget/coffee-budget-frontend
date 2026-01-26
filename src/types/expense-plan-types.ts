@@ -458,35 +458,20 @@ export interface TimelineEntry {
  * Expense plan with calculated funding status fields.
  * Returned by GET /expense-plans/with-status
  */
-export interface ExpensePlanWithStatus {
-  id: number;
-  name: string;
-  description: string | null;
-  icon: string | null;
-  planType: ExpensePlanType;
-  priority: ExpensePlanPriority;
-  purpose: ExpensePlanPurpose;
-  targetAmount: number;
-  currentBalance: number;
-  monthlyContribution: number;
-  frequency: ExpensePlanFrequency;
-  nextDueDate: string | null;
-  status: ExpensePlanStatus;
-  categoryId: number | null;
-  paymentAccountId: number | null;
-  paymentAccountType: PaymentAccountType | null;
+/**
+ * Extended ExpensePlan with calculated funding status fields.
+ * Returned by GET /expense-plans/with-status endpoint.
+ */
+export interface ExpensePlanWithStatus extends ExpensePlan {
   // Calculated funding status fields
   fundingStatus: FundingStatus | null;
   monthsUntilDue: number | null;
   amountNeeded: number | null;
   requiredMonthlyContribution: number | null;
   progressPercent: number;
-  // Expected funding fields
+  // Expected funding fields (override to ensure they're included)
   expectedFundedByNow: number | null;
   fundingGapFromExpected: number | null;
-  createdAt: string | null;
-  // Fixed monthly status (only for fixed_monthly plans)
-  fixedMonthlyStatus?: FixedMonthlyStatus | null;
 }
 
 /**
@@ -521,6 +506,121 @@ export interface LongTermStatusSummary {
   almostReadyCount: number;
   totalAmountNeeded: number;
   plansNeedingAttention: PlanNeedingAttention[];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ACCOUNT ALLOCATION SUMMARY INTERFACES
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Health status for account allocation
+ */
+export type AccountHealthStatus = 'healthy' | 'tight' | 'shortfall';
+
+/**
+ * Status for fixed monthly plan allocation
+ */
+export type FixedMonthlyAllocationStatus = 'paid' | 'pending' | 'short';
+
+/**
+ * Status for sinking fund plan allocation
+ */
+export type SinkingFundAllocationStatus = 'ahead' | 'on_track' | 'behind';
+
+/**
+ * Individual fixed monthly plan allocation within the account summary.
+ * Shows whether the plan is ready for payment and current status.
+ */
+export interface FixedMonthlyPlanAllocation {
+  id: number;
+  name: string;
+  icon: string | null;
+  /** Required amount (full payment) */
+  requiredToday: number;
+  /** Current balance in the plan */
+  currentBalance: number;
+  /** Whether current month payment has been made */
+  paymentMade: boolean;
+  /** Whether ready for next payment */
+  readyForNextMonth: boolean;
+  /** Payment status: paid, pending, or short */
+  status: FixedMonthlyAllocationStatus;
+  /** Amount short if not ready */
+  amountShort: number | null;
+}
+
+/**
+ * Individual sinking fund plan allocation within the account summary.
+ * Shows expected vs actual savings progress.
+ */
+export interface SinkingFundPlanAllocation {
+  id: number;
+  name: string;
+  icon: string | null;
+  /** Expected funded amount by today (required allocation) */
+  requiredToday: number;
+  /** Current balance in the plan */
+  currentBalance: number;
+  /** Target total amount */
+  targetAmount: number;
+  /** Monthly contribution */
+  monthlyContribution: number;
+  /** Progress percentage */
+  progressPercent: number;
+  /** Funding status relative to schedule */
+  status: SinkingFundAllocationStatus;
+  /** Gap from expected (positive = behind schedule) */
+  gapFromExpected: number | null;
+  /** Next due date */
+  nextDueDate: string | null;
+  /** Months until due */
+  monthsUntilDue: number | null;
+}
+
+/**
+ * Complete account allocation summary showing total required today
+ * vs current balance and detailed breakdown by plan type.
+ */
+export interface AccountAllocationSummary {
+  accountId: number;
+  accountName: string;
+  /** Current bank account balance */
+  currentBalance: number;
+  /** Total amount that should be allocated today */
+  totalRequiredToday: number;
+  /** Amount short (positive) or surplus (negative) */
+  shortfall: number;
+  /** Amount surplus (if any) */
+  surplus: number;
+  /** Account health status */
+  healthStatus: AccountHealthStatus;
+  /** Fixed monthly plans (bills that need full amount ready) */
+  fixedMonthlyPlans: FixedMonthlyPlanAllocation[];
+  /** Total required for fixed monthly plans */
+  fixedMonthlyTotal: number;
+  /** Sinking fund plans (savings progress) */
+  sinkingFundPlans: SinkingFundPlanAllocation[];
+  /** Total expected for sinking funds by today */
+  sinkingFundTotal: number;
+  /** Total monthly contribution across all plans */
+  monthlyContributionTotal: number;
+  /** Suggested catch-up amount to add */
+  suggestedCatchUp: number | null;
+}
+
+/**
+ * Response containing allocation summaries for all accounts with linked plans.
+ */
+export interface AccountAllocationSummaryResponse {
+  accounts: AccountAllocationSummary[];
+  /** Overall health status across all accounts */
+  overallStatus: AccountHealthStatus;
+  /** Total shortfall across all accounts */
+  totalShortfall: number;
+  /** Number of accounts with shortfall */
+  accountsWithShortfall: number;
+  /** Total monthly contribution needed across all accounts */
+  totalMonthlyContribution: number;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -676,6 +776,71 @@ export function getCoverageStatusIcon(status: CoverageStatus): string {
     no_data: '—',
   };
   return icons[status] || '—';
+}
+
+// Account Allocation Summary helpers
+
+export function getAccountHealthStatusLabel(status: AccountHealthStatus): string {
+  const labels: Record<AccountHealthStatus, string> = {
+    healthy: 'Healthy',
+    tight: 'Tight',
+    shortfall: 'Shortfall',
+  };
+  return labels[status] || status;
+}
+
+export function getAccountHealthStatusColor(status: AccountHealthStatus): string {
+  const colors: Record<AccountHealthStatus, string> = {
+    healthy: 'bg-green-100 text-green-800',
+    tight: 'bg-yellow-100 text-yellow-800',
+    shortfall: 'bg-red-100 text-red-800',
+  };
+  return colors[status] || 'bg-gray-100 text-gray-800';
+}
+
+export function getAccountHealthStatusIcon(status: AccountHealthStatus): string {
+  const icons: Record<AccountHealthStatus, string> = {
+    healthy: '✓',
+    tight: '⚠',
+    shortfall: '✕',
+  };
+  return icons[status] || '—';
+}
+
+export function getFixedMonthlyAllocationStatusLabel(status: FixedMonthlyAllocationStatus): string {
+  const labels: Record<FixedMonthlyAllocationStatus, string> = {
+    paid: 'Paid',
+    pending: 'Ready',
+    short: 'Short',
+  };
+  return labels[status] || status;
+}
+
+export function getFixedMonthlyAllocationStatusColor(status: FixedMonthlyAllocationStatus): string {
+  const colors: Record<FixedMonthlyAllocationStatus, string> = {
+    paid: 'bg-green-100 text-green-800',
+    pending: 'bg-blue-100 text-blue-800',
+    short: 'bg-red-100 text-red-800',
+  };
+  return colors[status] || 'bg-gray-100 text-gray-800';
+}
+
+export function getSinkingFundAllocationStatusLabel(status: SinkingFundAllocationStatus): string {
+  const labels: Record<SinkingFundAllocationStatus, string> = {
+    ahead: 'Ahead',
+    on_track: 'On Track',
+    behind: 'Behind',
+  };
+  return labels[status] || status;
+}
+
+export function getSinkingFundAllocationStatusColor(status: SinkingFundAllocationStatus): string {
+  const colors: Record<SinkingFundAllocationStatus, string> = {
+    ahead: 'bg-green-100 text-green-800',
+    on_track: 'bg-blue-100 text-blue-800',
+    behind: 'bg-red-100 text-red-800',
+  };
+  return colors[status] || 'bg-gray-100 text-gray-800';
 }
 
 export function calculateProgress(currentBalance: number, targetAmount: number): number {

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -11,10 +12,17 @@ import {
   AlertTriangle,
   CheckCircle,
   Loader2,
+  Target,
+  ArrowRight,
 } from 'lucide-react';
-import { useCoverageSummary } from '@/hooks/useExpensePlans';
+import { useCoverageSummary, useAccountAllocationSummary } from '@/hooks/useExpensePlans';
 import { useCreditCards } from '@/hooks/useCreditCards';
-import { AccountCoverage } from '@/types/expense-plan-types';
+import {
+  AccountCoverage,
+  AccountAllocationSummary,
+  getAccountHealthStatusLabel,
+  getAccountHealthStatusColor,
+} from '@/types/expense-plan-types';
 import { CreditCard as CreditCardType } from '@/utils/types';
 
 interface AccountHealthPanelProps {
@@ -23,9 +31,10 @@ interface AccountHealthPanelProps {
 
 export default function AccountHealthPanel({ className = '' }: AccountHealthPanelProps) {
   const { data: coverageSummary, isLoading: coverageLoading } = useCoverageSummary();
+  const { data: allocationSummary, isLoading: allocationLoading } = useAccountAllocationSummary();
   const { data: creditCards, isLoading: cardsLoading } = useCreditCards();
 
-  const isLoading = coverageLoading || cardsLoading;
+  const isLoading = coverageLoading || cardsLoading || allocationLoading;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('it-IT', {
@@ -55,6 +64,11 @@ export default function AccountHealthPanel({ className = '' }: AccountHealthPane
     return { status: 'healthy', label: 'OK', color: 'bg-green-100 text-green-800' };
   };
 
+  // Get allocation data for an account
+  const getAllocationForAccount = (accountId: number): AccountAllocationSummary | undefined => {
+    return allocationSummary?.accounts.find(a => a.accountId === accountId);
+  };
+
   if (isLoading) {
     return (
       <Card className={className}>
@@ -75,8 +89,10 @@ export default function AccountHealthPanel({ className = '' }: AccountHealthPane
 
   const bankAccounts = coverageSummary?.accounts || [];
   const cards = creditCards || [];
+  const hasAllocationShortfall = allocationSummary?.overallStatus === 'shortfall';
   const hasAnyIssue = bankAccounts.some(a => a.hasShortfall) ||
-    cards.some(c => ((c.creditLimit - c.availableCredit) / c.creditLimit) > 0.8);
+    cards.some(c => ((c.creditLimit - c.availableCredit) / c.creditLimit) > 0.8) ||
+    hasAllocationShortfall;
 
   return (
     <Card className={className}>
@@ -105,6 +121,7 @@ export default function AccountHealthPanel({ className = '' }: AccountHealthPane
           <div className="space-y-3">
             {bankAccounts.map((account) => {
               const health = getHealthStatus(account);
+              const allocation = getAllocationForAccount(account.accountId);
               const margin = account.projectedBalance;
 
               return (
@@ -117,22 +134,73 @@ export default function AccountHealthPanel({ className = '' }: AccountHealthPane
                       <Building2 className="h-4 w-4 text-blue-600" />
                       <span className="font-medium text-gray-900">{account.accountName}</span>
                     </div>
-                    <Badge className={health.color}>{health.label}</Badge>
+                    <div className="flex items-center gap-2">
+                      {allocation && (
+                        <Badge className={getAccountHealthStatusColor(allocation.healthStatus)}>
+                          {getAccountHealthStatusLabel(allocation.healthStatus)}
+                        </Badge>
+                      )}
+                      {!allocation && <Badge className={health.color}>{health.label}</Badge>}
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 text-sm">
+                  {/* Primary metrics: Balance and Required Today */}
+                  <div className="grid grid-cols-2 gap-3 text-sm mb-2">
                     <div>
-                      <div className="text-gray-500 text-xs">Saldo</div>
-                      <div className="font-medium">{formatCurrency(account.currentBalance)}</div>
+                      <div className="text-gray-500 text-xs">Saldo attuale</div>
+                      <div className="font-medium text-lg">{formatCurrency(account.currentBalance)}</div>
                     </div>
+                    {allocation && (
+                      <div>
+                        <div className="text-gray-500 text-xs flex items-center gap-1">
+                          <Target className="h-3 w-3" />
+                          Necessario oggi
+                        </div>
+                        <div className="font-medium text-lg">{formatCurrency(allocation.totalRequiredToday)}</div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Shortfall/Surplus indicator */}
+                  {allocation && (allocation.shortfall > 0 || allocation.surplus > 0) && (
+                    <div className={`p-2 rounded-md mb-2 ${
+                      allocation.shortfall > 0
+                        ? 'bg-red-50 border border-red-200'
+                        : 'bg-green-50 border border-green-200'
+                    }`}>
+                      <div className={`text-sm font-medium flex items-center gap-1 ${
+                        allocation.shortfall > 0 ? 'text-red-700' : 'text-green-700'
+                      }`}>
+                        {allocation.shortfall > 0 ? (
+                          <>
+                            <TrendingDown className="h-4 w-4" />
+                            Scoperto: {formatCurrency(allocation.shortfall)}
+                          </>
+                        ) : (
+                          <>
+                            <TrendingUp className="h-4 w-4" />
+                            Surplus: {formatCurrency(allocation.surplus)}
+                          </>
+                        )}
+                      </div>
+                      {allocation.suggestedCatchUp && allocation.suggestedCatchUp > 0 && (
+                        <div className="text-xs text-gray-600 mt-1">
+                          Contributo mensile: {formatCurrency(allocation.monthlyContributionTotal)} + {formatCurrency(allocation.suggestedCatchUp)} recupero
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Secondary metrics: 30-day coverage */}
+                  <div className="grid grid-cols-2 gap-2 text-sm border-t border-gray-200 pt-2">
                     <div>
-                      <div className="text-gray-500 text-xs">Previste</div>
+                      <div className="text-gray-500 text-xs">Spese pross. 30gg</div>
                       <div className="font-medium text-red-600">
                         -{formatCurrency(account.upcomingPlansTotal)}
                       </div>
                     </div>
                     <div>
-                      <div className="text-gray-500 text-xs">Margine</div>
+                      <div className="text-gray-500 text-xs">Margine 30gg</div>
                       <div className={`font-medium flex items-center gap-1 ${margin >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                         {margin >= 0 ? (
                           <TrendingUp className="h-3 w-3" />
@@ -150,6 +218,19 @@ export default function AccountHealthPanel({ className = '' }: AccountHealthPane
                         <AlertTriangle className="h-3 w-3" />
                         {account.plansAtRisk.length} piano{account.plansAtRisk.length !== 1 ? 'i' : ''} a rischio
                       </div>
+                    </div>
+                  )}
+
+                  {/* Link to detailed view */}
+                  {allocation && (
+                    <div className="mt-2 pt-2 border-t border-gray-200">
+                      <Link
+                        href="/expense-plans?view=accounts"
+                        className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                      >
+                        Vedi dettaglio allocazione
+                        <ArrowRight className="h-3 w-3" />
+                      </Link>
                     </div>
                   )}
                 </div>

@@ -28,6 +28,7 @@ import {
   fetchCoverageSummary,
   fetchLongTermStatus,
   fetchExpensePlansWithStatus,
+  fetchAccountAllocationSummary,
 } from '@/lib/api/expense-plans';
 import {
   ExpensePlanStatus,
@@ -159,6 +160,24 @@ export function useExpensePlansWithStatus() {
   });
 }
 
+/**
+ * Fetch account allocation summary showing what each account should hold TODAY.
+ * Answers the question: "How much should my account have right now?"
+ * - For fixed_monthly: requiredToday = targetAmount (full payment ready)
+ * - For sinking funds: requiredToday = expectedFundedByNow (savings progress)
+ */
+export function useAccountAllocationSummary() {
+  const { data: session } = useSession();
+
+  return useQuery({
+    queryKey: ['expense-plans-account-allocation'],
+    queryFn: () =>
+      fetchAccountAllocationSummary(session!.user!.accessToken as string),
+    enabled: !!session,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // MUTATION HOOKS (Write Operations)
 // ═══════════════════════════════════════════════════════════════════════════
@@ -172,6 +191,7 @@ export function useCreateExpensePlan() {
       createExpensePlan(session!.user!.accessToken as string, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['expense-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['expense-plans-with-status'] });
       queryClient.invalidateQueries({ queryKey: ['expense-plans-summary'] });
       toast.success('Expense plan created successfully');
     },
@@ -190,6 +210,7 @@ export function useUpdateExpensePlan() {
       updateExpensePlan(session!.user!.accessToken as string, id, data),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['expense-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['expense-plans-with-status'] });
       queryClient.invalidateQueries({ queryKey: ['expense-plan', id] });
       queryClient.invalidateQueries({ queryKey: ['expense-plans-summary'] });
       toast.success('Expense plan updated successfully');
@@ -209,6 +230,7 @@ export function useDeleteExpensePlan() {
       deleteExpensePlan(session!.user!.accessToken as string, id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['expense-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['expense-plans-with-status'] });
       queryClient.invalidateQueries({ queryKey: ['expense-plans-summary'] });
       toast.success('Expense plan deleted successfully');
     },
@@ -231,6 +253,7 @@ export function useContributeToExpensePlan() {
       contributeToExpensePlan(session!.user!.accessToken as string, planId, data),
     onSuccess: (_, { planId }) => {
       queryClient.invalidateQueries({ queryKey: ['expense-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['expense-plans-with-status'] });
       queryClient.invalidateQueries({ queryKey: ['expense-plan', planId] });
       queryClient.invalidateQueries({ queryKey: ['expense-plan-transactions', planId] });
       queryClient.invalidateQueries({ queryKey: ['expense-plans-summary'] });
@@ -251,6 +274,7 @@ export function useWithdrawFromExpensePlan() {
       withdrawFromExpensePlan(session!.user!.accessToken as string, planId, data),
     onSuccess: (_, { planId }) => {
       queryClient.invalidateQueries({ queryKey: ['expense-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['expense-plans-with-status'] });
       queryClient.invalidateQueries({ queryKey: ['expense-plan', planId] });
       queryClient.invalidateQueries({ queryKey: ['expense-plan-transactions', planId] });
       queryClient.invalidateQueries({ queryKey: ['expense-plans-summary'] });
@@ -271,6 +295,7 @@ export function useAdjustExpensePlanBalance() {
       adjustExpensePlanBalance(session!.user!.accessToken as string, planId, data),
     onSuccess: (_, { planId }) => {
       queryClient.invalidateQueries({ queryKey: ['expense-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['expense-plans-with-status'] });
       queryClient.invalidateQueries({ queryKey: ['expense-plan', planId] });
       queryClient.invalidateQueries({ queryKey: ['expense-plan-transactions', planId] });
       queryClient.invalidateQueries({ queryKey: ['expense-plans-summary'] });
@@ -346,6 +371,7 @@ export function useAcceptAdjustment() {
       acceptAdjustment(session!.user!.accessToken as string, planId, customAmount),
     onSuccess: (_, { planId }) => {
       queryClient.invalidateQueries({ queryKey: ['expense-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['expense-plans-with-status'] });
       queryClient.invalidateQueries({ queryKey: ['expense-plan', planId] });
       queryClient.invalidateQueries({ queryKey: ['expense-plans-summary'] });
       toast.success('Expense plan adjusted successfully');
@@ -365,6 +391,7 @@ export function useDismissAdjustment() {
       dismissAdjustment(session!.user!.accessToken as string, planId),
     onSuccess: (_, planId) => {
       queryClient.invalidateQueries({ queryKey: ['expense-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['expense-plans-with-status'] });
       queryClient.invalidateQueries({ queryKey: ['expense-plan', planId] });
       toast.success('Adjustment dismissed for 30 days');
     },

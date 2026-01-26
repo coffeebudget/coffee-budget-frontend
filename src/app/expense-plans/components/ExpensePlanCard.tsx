@@ -20,11 +20,13 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
+  AlertTriangle,
 } from "lucide-react";
 import AdjustmentBadge from "./AdjustmentBadge";
 import FundingStatusBadge from "./FundingStatusBadge";
 import {
   ExpensePlan,
+  AccountCoverage,
   calculateProgress,
   getProgressColor,
   getExpensePlanStatusLabel,
@@ -46,6 +48,8 @@ interface ExpensePlanCardProps {
   onContribute: (plan: ExpensePlan) => void;
   onWithdraw: (plan: ExpensePlan) => void;
   onReviewAdjustment?: (plan: ExpensePlan) => void;
+  /** Account coverage info - shows warning if account has shortfall */
+  accountCoverage?: AccountCoverage | null;
 }
 
 export default function ExpensePlanCard({
@@ -55,6 +59,7 @@ export default function ExpensePlanCard({
   onContribute,
   onWithdraw,
   onReviewAdjustment,
+  accountCoverage,
 }: ExpensePlanCardProps) {
   const progress = calculateProgress(plan.currentBalance, plan.targetAmount);
   const progressColor = getProgressColor(progress);
@@ -233,6 +238,20 @@ export default function ExpensePlanCard({
               </div>
             </div>
           )
+        )}
+
+        {/* Account Coverage Warning */}
+        {accountCoverage?.hasShortfall && (
+          <div className="mb-4 p-2 bg-red-50 border border-red-200 rounded-md">
+            <div className="flex items-center gap-1.5 text-xs text-red-800">
+              <AlertTriangle className="h-3.5 w-3.5 text-red-600 flex-shrink-0" />
+              <span className="font-medium">{accountCoverage.accountName} shortfall</span>
+            </div>
+            <div className="text-xs text-red-600 mt-1 ml-5">
+              {accountCoverage.planCount} bills need {formatCurrency(accountCoverage.upcomingPlansTotal)},
+              but only {formatCurrency(accountCoverage.currentBalance)} available
+            </div>
+          </div>
         )}
 
         {/* Details */}

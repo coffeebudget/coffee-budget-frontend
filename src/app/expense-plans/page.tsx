@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
-  useExpensePlans,
+  useExpensePlansWithStatus,
   useMonthlyDepositSummary,
   useDeleteExpensePlan,
+  useCoverageSummary,
 } from "@/hooks/useExpensePlans";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ import {
 import {
   ExpensePlan,
   ExpensePlanStatus,
+  AccountCoverage,
   getExpensePlanStatusLabel,
   getExpensePlanPurposeIcon,
   getPriorityColor,
@@ -42,9 +44,23 @@ import ExpensePlansByAccount from "./components/ExpensePlansByAccount";
 export default function ExpensePlansPage() {
   const router = useRouter();
   const { data: session } = useSession();
-  const { data: plans, isLoading, error, refetch } = useExpensePlans();
+  const { data: plans, isLoading, error, refetch } = useExpensePlansWithStatus();
   const { data: summary, isLoading: summaryLoading } = useMonthlyDepositSummary();
+  const { data: coverageSummary } = useCoverageSummary();
   const deleteMutation = useDeleteExpensePlan();
+
+  // Create lookup map: accountId -> AccountCoverage (only for accounts with shortfall)
+  const accountCoverageMap = useMemo(() => {
+    const map = new Map<number, AccountCoverage>();
+    if (coverageSummary?.accounts) {
+      for (const account of coverageSummary.accounts) {
+        if (account.hasShortfall) {
+          map.set(account.accountId, account);
+        }
+      }
+    }
+    return map;
+  }, [coverageSummary]);
 
   const [activeTab, setActiveTab] = useState<ExpensePlanStatus | "all" | "distribution">("all");
   const [formDialogOpen, setFormDialogOpen] = useState(false);
@@ -295,6 +311,7 @@ export default function ExpensePlansPage() {
                   onContribute={handleContribute}
                   onWithdraw={handleWithdraw}
                   onReviewAdjustment={handleReviewAdjustment}
+                  accountCoverageMap={accountCoverageMap}
                 />
               ) : viewMode === "purpose" ? (
                 <div className="space-y-8">
@@ -323,10 +340,11 @@ export default function ExpensePlansPage() {
                             plan={plan}
                             onEdit={handleEditPlan}
                             onDelete={handleDeletePlan}
-                                                        onContribute={handleContribute}
+                            onContribute={handleContribute}
                             onWithdraw={handleWithdraw}
                             onReviewAdjustment={handleReviewAdjustment}
-                                                      />
+                            accountCoverage={plan.paymentAccountId ? accountCoverageMap.get(plan.paymentAccountId) : null}
+                          />
                         ))}
                       </div>
                     </div>
@@ -357,10 +375,11 @@ export default function ExpensePlansPage() {
                             plan={plan}
                             onEdit={handleEditPlan}
                             onDelete={handleDeletePlan}
-                                                        onContribute={handleContribute}
+                            onContribute={handleContribute}
                             onWithdraw={handleWithdraw}
                             onReviewAdjustment={handleReviewAdjustment}
-                                                      />
+                            accountCoverage={plan.paymentAccountId ? accountCoverageMap.get(plan.paymentAccountId) : null}
+                          />
                         ))}
                       </div>
                     </div>
@@ -374,10 +393,11 @@ export default function ExpensePlansPage() {
                       plan={plan}
                       onEdit={handleEditPlan}
                       onDelete={handleDeletePlan}
-                                            onContribute={handleContribute}
+                      onContribute={handleContribute}
                       onWithdraw={handleWithdraw}
                       onReviewAdjustment={handleReviewAdjustment}
-                                          />
+                      accountCoverage={plan.paymentAccountId ? accountCoverageMap.get(plan.paymentAccountId) : null}
+                    />
                   ))}
                 </div>
               )}

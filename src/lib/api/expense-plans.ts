@@ -20,6 +20,7 @@ import {
   CoverageSummaryResponse,
   LongTermStatusSummary,
   ExpensePlanWithStatus,
+  AccountAllocationSummaryResponse,
 } from '@/types/expense-plan-types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -330,4 +331,22 @@ export async function fetchExpensePlansWithStatus(
   });
 
   return handleResponse<ExpensePlanWithStatus[]>(response);
+}
+
+/**
+ * Fetch account allocation summary showing what each account should hold TODAY.
+ * For fixed_monthly plans: requiredToday = targetAmount
+ * For sinking funds: requiredToday = expectedFundedByNow
+ */
+export async function fetchAccountAllocationSummary(
+  token: string
+): Promise<AccountAllocationSummaryResponse> {
+  const response = await fetch(
+    `${API_URL}/expense-plans/summary/account-allocation`,
+    {
+      headers: getHeaders(token),
+    }
+  );
+
+  return handleResponse<AccountAllocationSummaryResponse>(response);
 }

@@ -36,7 +36,6 @@ import {
 } from "@/types/expense-plan-types";
 import ExpensePlanCard from "./components/ExpensePlanCard";
 import ExpensePlanFormDialog from "./components/ExpensePlanFormDialog";
-import ContributeWithdrawDialog from "./components/ContributeWithdrawDialog";
 import AdjustmentSuggestionModal from "./components/AdjustmentSuggestionModal";
 import IncomeDistributionSetup from "./components/IncomeDistributionSetup";
 import ExpensePlansByAccount from "./components/ExpensePlansByAccount";
@@ -65,9 +64,6 @@ export default function ExpensePlansPage() {
   const [activeTab, setActiveTab] = useState<ExpensePlanStatus | "all" | "distribution">("all");
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<ExpensePlan | null>(null);
-  const [contributeDialogOpen, setContributeDialogOpen] = useState(false);
-  const [contributePlan, setContributePlan] = useState<ExpensePlan | null>(null);
-  const [contributeMode, setContributeMode] = useState<"contribute" | "withdraw">("contribute");
   const [adjustmentModalOpen, setAdjustmentModalOpen] = useState(false);
   const [adjustmentPlan, setAdjustmentPlan] = useState<ExpensePlan | null>(null);
 
@@ -103,27 +99,9 @@ export default function ExpensePlansPage() {
     }
   };
 
-  const handleContribute = (plan: ExpensePlan) => {
-    setContributePlan(plan);
-    setContributeMode("contribute");
-    setContributeDialogOpen(true);
-  };
-
-  const handleWithdraw = (plan: ExpensePlan) => {
-    setContributePlan(plan);
-    setContributeMode("withdraw");
-    setContributeDialogOpen(true);
-  };
-
   const handleFormComplete = () => {
     setFormDialogOpen(false);
     setEditingPlan(null);
-    refetch();
-  };
-
-  const handleContributeComplete = () => {
-    setContributeDialogOpen(false);
-    setContributePlan(null);
     refetch();
   };
 
@@ -308,8 +286,6 @@ export default function ExpensePlansPage() {
                   plans={filteredPlans}
                   onEdit={handleEditPlan}
                   onDelete={handleDeletePlan}
-                  onContribute={handleContribute}
-                  onWithdraw={handleWithdraw}
                   onReviewAdjustment={handleReviewAdjustment}
                   accountCoverageMap={accountCoverageMap}
                 />
@@ -340,8 +316,6 @@ export default function ExpensePlansPage() {
                             plan={plan}
                             onEdit={handleEditPlan}
                             onDelete={handleDeletePlan}
-                            onContribute={handleContribute}
-                            onWithdraw={handleWithdraw}
                             onReviewAdjustment={handleReviewAdjustment}
                             accountCoverage={plan.paymentAccountId ? accountCoverageMap.get(plan.paymentAccountId) : null}
                           />
@@ -375,8 +349,6 @@ export default function ExpensePlansPage() {
                             plan={plan}
                             onEdit={handleEditPlan}
                             onDelete={handleDeletePlan}
-                            onContribute={handleContribute}
-                            onWithdraw={handleWithdraw}
                             onReviewAdjustment={handleReviewAdjustment}
                             accountCoverage={plan.paymentAccountId ? accountCoverageMap.get(plan.paymentAccountId) : null}
                           />
@@ -393,8 +365,6 @@ export default function ExpensePlansPage() {
                       plan={plan}
                       onEdit={handleEditPlan}
                       onDelete={handleDeletePlan}
-                      onContribute={handleContribute}
-                      onWithdraw={handleWithdraw}
                       onReviewAdjustment={handleReviewAdjustment}
                       accountCoverage={plan.paymentAccountId ? accountCoverageMap.get(plan.paymentAccountId) : null}
                     />
@@ -418,15 +388,6 @@ export default function ExpensePlansPage() {
         onOpenChange={setFormDialogOpen}
         plan={editingPlan}
         onComplete={handleFormComplete}
-      />
-
-      {/* Contribute/Withdraw Dialog */}
-      <ContributeWithdrawDialog
-        open={contributeDialogOpen}
-        onOpenChange={setContributeDialogOpen}
-        plan={contributePlan}
-        mode={contributeMode}
-        onComplete={handleContributeComplete}
       />
 
       {/* Adjustment Suggestion Modal */}

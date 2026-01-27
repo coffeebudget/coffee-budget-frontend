@@ -3,7 +3,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,8 +14,6 @@ import {
   MoreVertical,
   Edit,
   Trash2,
-  Plus,
-  Minus,
   Calendar,
   CheckCircle2,
   Clock,
@@ -27,8 +24,6 @@ import FundingStatusBadge from "./FundingStatusBadge";
 import {
   ExpensePlan,
   AccountCoverage,
-  calculateProgress,
-  getProgressColor,
   getExpensePlanStatusLabel,
   getExpensePlanPriorityLabel,
   getExpensePlanTypeLabel,
@@ -36,45 +31,83 @@ import {
   getPriorityColor,
   getStatusColor,
   formatCurrency,
-  calculateFundingStatus,
   calculateExpectedFundedByNow,
-  calculateFundingGapFromExpected,
 } from "@/types/expense-plan-types";
 
 interface ExpensePlanCardProps {
   plan: ExpensePlan;
   onEdit: (plan: ExpensePlan) => void;
   onDelete: (id: number) => void;
-  onContribute: (plan: ExpensePlan) => void;
-  onWithdraw: (plan: ExpensePlan) => void;
   onReviewAdjustment?: (plan: ExpensePlan) => void;
   /** Account coverage info - shows warning if account has shortfall */
   accountCoverage?: AccountCoverage | null;
+}
+
+/**
+ * Calculate time-based funding status for sinking funds.
+ * Based on contribution rate vs required rate.
+ */
+function calculateTimeFundingStatus(plan: ExpensePlan): 'on_track' | 'behind' | null {
+  if (plan.purpose !== 'sinking_fund' || !plan.nextDueDate) {
+    return null;
+  }
+
+  const now = new Date();
+  const dueDate = new Date(plan.nextDueDate);
+  const monthsUntilDue = Math.max(
+    0,
+    (dueDate.getFullYear() - now.getFullYear()) * 12 +
+      (dueDate.getMonth() - now.getMonth())
+  );
+
+  if (monthsUntilDue <= 0) {
+    return 'behind'; // Past due
+  }
+
+  const requiredMonthly = plan.targetAmount / monthsUntilDue;
+  // On track if current contribution is within 10% of required
+  return requiredMonthly <= plan.monthlyContribution * 1.1 ? 'on_track' : 'behind';
+}
+
+/**
+ * Calculate months until due date.
+ */
+function getMonthsUntilDue(plan: ExpensePlan): number | null {
+  if (!plan.nextDueDate) return null;
+
+  const now = new Date();
+  const dueDate = new Date(plan.nextDueDate);
+  const monthsUntilDue = Math.max(
+    0,
+    (dueDate.getFullYear() - now.getFullYear()) * 12 +
+      (dueDate.getMonth() - now.getMonth())
+  );
+  return monthsUntilDue;
 }
 
 export default function ExpensePlanCard({
   plan,
   onEdit,
   onDelete,
-  onContribute,
-  onWithdraw,
   onReviewAdjustment,
   accountCoverage,
 }: ExpensePlanCardProps) {
-  const progress = calculateProgress(plan.currentBalance, plan.targetAmount);
-  const progressColor = getProgressColor(progress);
-  const remaining = Math.max(0, plan.targetAmount - plan.currentBalance);
-  const isFullyFunded = plan.currentBalance >= plan.targetAmount;
-  const fundingStatus = plan.purpose === 'sinking_fund' ? calculateFundingStatus(plan) : null;
+  const fundingStatus = calculateTimeFundingStatus(plan);
+  const monthsUntilDue = getMonthsUntilDue(plan);
 
   // Calculate expected funding for sinking funds
   const expectedFundedByNow = plan.purpose === 'sinking_fund'
     ? calculateExpectedFundedByNow(plan)
     : null;
-  const fundingGapFromExpected = plan.purpose === 'sinking_fund'
-    ? calculateFundingGapFromExpected(plan)
+
+  // Calculate required monthly contribution
+  const requiredMonthly = monthsUntilDue !== null && monthsUntilDue > 0
+    ? plan.targetAmount / monthsUntilDue
     : null;
-  const hasFundingGap = fundingGapFromExpected !== null && fundingGapFromExpected > 0;
+
+  // Check if contribution rate needs adjustment
+  const needsIncrease = requiredMonthly !== null &&
+    plan.monthlyContribution < requiredMonthly * 0.9;
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return null;
@@ -111,17 +144,6 @@ export default function ExpensePlanCard({
                 <Edit className="h-4 w-4 mr-2" />
                 Edit
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onContribute(plan)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Contribute
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => onWithdraw(plan)}
-                disabled={plan.currentBalance <= 0}
-              >
-                <Minus className="h-4 w-4 mr-2" />
-                Withdraw
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => onDelete(plan.id)}
@@ -156,27 +178,33 @@ export default function ExpensePlanCard({
       </CardHeader>
 
       <CardContent className="flex-grow">
-        {/* Progress */}
-        <div className="mb-4">
-          <div className="flex justify-between text-sm mb-1">
-            <span className="font-medium">
-              {formatCurrency(plan.currentBalance)}
-            </span>
-            <span className="text-gray-500">
-              of {formatCurrency(plan.targetAmount)}
-            </span>
+        {/* Target & Schedule Info for Sinking Funds */}
+        {plan.purpose === 'sinking_fund' && (
+          <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
+            <div className="flex justify-between text-sm mb-2">
+              <span className="text-gray-600">Target</span>
+              <span className="font-medium">{formatCurrency(plan.targetAmount)}</span>
+            </div>
+            {monthsUntilDue !== null && (
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-gray-600">Time to due</span>
+                <span className="font-medium">
+                  {monthsUntilDue === 0 ? 'This month' : `${monthsUntilDue} month${monthsUntilDue !== 1 ? 's' : ''}`}
+                </span>
+              </div>
+            )}
+            {expectedFundedByNow !== null && expectedFundedByNow > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Expected by now</span>
+                <span className="font-medium">{formatCurrency(expectedFundedByNow)}</span>
+              </div>
+            )}
           </div>
-          <Progress value={progress} className="h-2" />
-          <div className="flex justify-between text-xs text-gray-500 mt-1">
-            <span>{progress.toFixed(1)}% funded</span>
-            {!isFullyFunded && <span>{formatCurrency(remaining)} to go</span>}
-          </div>
-        </div>
+        )}
 
-        {/* Fixed Monthly Status OR Funding Gap */}
-        {plan.planType === "fixed_monthly" && plan.fixedMonthlyStatus ? (
-          <div className="mb-4 space-y-2">
-            {/* Payment Status */}
+        {/* Fixed Monthly Status */}
+        {plan.planType === "fixed_monthly" && plan.fixedMonthlyStatus && (
+          <div className="mb-4">
             <div
               className={`p-2 rounded-md flex items-center gap-2 ${
                 plan.fixedMonthlyStatus.currentMonthPaymentMade
@@ -200,44 +228,21 @@ export default function ExpensePlanCard({
                 </>
               )}
             </div>
-
-            {/* Ready for Next Month (only show if not paid yet) */}
-            {!plan.fixedMonthlyStatus.currentMonthPaymentMade && (
-              <div
-                className={`p-2 rounded-md flex items-center gap-2 ${
-                  plan.fixedMonthlyStatus.readyForNextMonth
-                    ? "bg-blue-50 border border-blue-200"
-                    : "bg-amber-50 border border-amber-200"
-                }`}
-              >
-                {plan.fixedMonthlyStatus.readyForNextMonth ? (
-                  <span className="text-sm text-blue-800">Ready to pay</span>
-                ) : (
-                  <span className="text-sm text-amber-800">
-                    Need {formatCurrency(plan.fixedMonthlyStatus.amountShort || 0)}{" "}
-                    more
-                  </span>
-                )}
-              </div>
-            )}
           </div>
-        ) : (
-          hasFundingGap &&
-          expectedFundedByNow !== null && (
-            <div className="mb-4 p-2 bg-amber-50 border border-amber-200 rounded-md">
-              <div className="flex items-center gap-1 text-xs text-amber-800">
-                <span className="font-medium">Expected by now:</span>
-                <span>{formatCurrency(expectedFundedByNow)}</span>
-              </div>
-              <div className="flex items-center gap-1 text-xs text-amber-600 mt-1">
-                <span>Gap:</span>
-                <span className="font-medium text-amber-700">
-                  {formatCurrency(fundingGapFromExpected!)}
-                </span>
-                <span className="text-amber-500">behind schedule</span>
-              </div>
+        )}
+
+        {/* Contribution Rate Warning */}
+        {needsIncrease && requiredMonthly !== null && (
+          <div className="mb-4 p-2 bg-amber-50 border border-amber-200 rounded-md">
+            <div className="flex items-center gap-1.5 text-xs text-amber-800">
+              <AlertTriangle className="h-3.5 w-3.5 text-amber-600 flex-shrink-0" />
+              <span className="font-medium">Contribution rate too low</span>
             </div>
-          )
+            <div className="text-xs text-amber-600 mt-1 ml-5">
+              Need {formatCurrency(requiredMonthly)}/mo to reach target,
+              currently {formatCurrency(plan.monthlyContribution)}/mo
+            </div>
+          </div>
         )}
 
         {/* Account Coverage Warning */}

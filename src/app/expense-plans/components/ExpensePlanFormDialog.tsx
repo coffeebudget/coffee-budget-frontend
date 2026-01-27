@@ -121,8 +121,6 @@ export default function ExpensePlanFormDialog({
         seasonalMonths: plan.seasonalMonths || [],
         autoCalculate: plan.autoCalculate,
         rolloverSurplus: plan.rolloverSurplus,
-        initialBalanceSource: plan.initialBalanceSource,
-        initialBalanceCustom: plan.initialBalanceCustom?.toString() || "",
         paymentAccountType: plan.paymentAccountType,
         paymentAccountId: plan.paymentAccountId,
       });
@@ -186,14 +184,7 @@ export default function ExpensePlanFormDialog({
       if (isEditMode && plan) {
         await updateMutation.mutateAsync({ id: plan.id, data: data as UpdateExpensePlanDto });
       } else {
-        const createData = {
-          ...data,
-          initialBalanceSource: formData.initialBalanceSource,
-          initialBalanceCustom: formData.initialBalanceCustom
-            ? parseFloat(formData.initialBalanceCustom)
-            : undefined,
-        } as CreateExpensePlanDto;
-        await createMutation.mutateAsync(createData);
+        await createMutation.mutateAsync(data as CreateExpensePlanDto);
       }
       onComplete();
     } catch (error) {

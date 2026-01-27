@@ -42,8 +42,6 @@ interface ExpensePlansByAccountProps {
   plans: ExpensePlan[];
   onEdit: (plan: ExpensePlan) => void;
   onDelete: (id: number) => void;
-  onContribute: (plan: ExpensePlan) => void;
-  onWithdraw: (plan: ExpensePlan) => void;
   onReviewAdjustment: (plan: ExpensePlan) => void;
   accountCoverageMap?: Map<number, AccountCoverage>;
 }
@@ -62,8 +60,6 @@ export default function ExpensePlansByAccount({
   plans,
   onEdit,
   onDelete,
-  onContribute,
-  onWithdraw,
   onReviewAdjustment,
   accountCoverageMap,
 }: ExpensePlansByAccountProps) {
@@ -449,9 +445,7 @@ export default function ExpensePlansByAccount({
                                           <span className="ml-1">
                                             {plan.status === "paid"
                                               ? "Pagato"
-                                              : plan.status === "pending"
-                                              ? "Pronto"
-                                              : `Mancano ${formatCurrency(plan.amountShort || 0)}`}
+                                              : "Pronto"}
                                           </span>
                                         </Badge>
                                       </div>
@@ -486,7 +480,6 @@ export default function ExpensePlansByAccount({
                                         </div>
                                         <div className="flex items-center gap-3">
                                           <span className="text-gray-500 text-xs">
-                                            {formatCurrency(plan.currentBalance)} /{" "}
                                             {formatCurrency(plan.requiredToday)} previsto
                                           </span>
                                           <Badge
@@ -496,11 +489,9 @@ export default function ExpensePlansByAccount({
                                           >
                                             {getStatusIcon(plan.status)}
                                             <span className="ml-1">
-                                              {plan.status === "ahead"
-                                                ? "In anticipo"
-                                                : plan.status === "on_track"
+                                              {plan.status === "on_track"
                                                 ? "In linea"
-                                                : `${formatCurrency(plan.gapFromExpected || 0)} indietro`}
+                                                : "Indietro"}
                                             </span>
                                           </Badge>
                                         </div>
@@ -555,8 +546,6 @@ export default function ExpensePlansByAccount({
                             plan={plan}
                             onEdit={onEdit}
                             onDelete={onDelete}
-                            onContribute={onContribute}
-                            onWithdraw={onWithdraw}
                             onReviewAdjustment={onReviewAdjustment}
                             accountCoverage={
                               plan.paymentAccountId && accountCoverageMap

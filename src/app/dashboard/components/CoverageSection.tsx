@@ -23,6 +23,9 @@ import {
   PlanAtRisk,
   LongTermStatusSummary,
   PlanNeedingAttention,
+  CoveragePeriodType,
+  VALID_COVERAGE_PERIODS,
+  BalanceSource,
 } from "@/types/expense-plan-types";
 import FundingStatusBadge from "@/app/expense-plans/components/FundingStatusBadge";
 import { useState } from "react";
@@ -32,8 +35,19 @@ interface CoverageSectionProps {
   className?: string;
 }
 
+// Period display labels
+const PERIOD_LABELS: Record<CoveragePeriodType, string> = {
+  this_month: "This Month",
+  next_month: "Next Month",
+  next_3_months: "Next 3 Months",
+  next_30_days: "Next 30 Days",
+  next_60_days: "Next 60 Days",
+  next_90_days: "Next 90 Days",
+};
+
 export default function CoverageSection({ className = "" }: CoverageSectionProps) {
-  const { data, isLoading, error, refetch } = useCoverageSummary();
+  const [period, setPeriod] = useState<CoveragePeriodType>("next_30_days");
+  const { data, isLoading, error, refetch } = useCoverageSummary(period);
   const { data: longTermStatus, isLoading: longTermLoading } = useLongTermStatus();
   const [expandedAccounts, setExpandedAccounts] = useState<Set<number>>(new Set());
 
@@ -165,11 +179,23 @@ export default function CoverageSection({ className = "" }: CoverageSectionProps
               Coverage Monitor
             </h3>
             <p className={`${statusConfig.subtitleColor} text-sm`}>
-              30-day expense coverage status
+              {data.period?.label || PERIOD_LABELS[period]}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {/* Period Selector */}
+          <select
+            value={period}
+            onChange={(e) => setPeriod(e.target.value as CoveragePeriodType)}
+            className="text-sm bg-white border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            {VALID_COVERAGE_PERIODS.map((p) => (
+              <option key={p} value={p}>
+                {PERIOD_LABELS[p]}
+              </option>
+            ))}
+          </select>
           <Link
             href="/expense-plans"
             className="hidden sm:flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors"
@@ -312,7 +338,10 @@ function AccountRow({ account, isExpanded, onToggle }: AccountRowProps) {
           {/* Desktop: Inline stats */}
           <div className="hidden md:flex items-center gap-4 lg:gap-6">
             <div className="text-right">
-              <div className="text-xs lg:text-sm text-gray-600">Balance</div>
+              <div className="text-xs lg:text-sm text-gray-600 flex items-center justify-end gap-1">
+                Balance
+                <BalanceSourceBadge source={account.balanceSource} />
+              </div>
               <div className="font-semibold text-gray-800 text-sm lg:text-base">
                 {formatCurrency(account.currentBalance)}
               </div>
@@ -352,7 +381,10 @@ function AccountRow({ account, isExpanded, onToggle }: AccountRowProps) {
         {/* Mobile: Stats grid below header */}
         <div className="md:hidden mt-3 grid grid-cols-2 gap-2">
           <div className="bg-gray-50 rounded p-2">
-            <div className="text-xs text-gray-600">Balance</div>
+            <div className="text-xs text-gray-600 flex items-center gap-1">
+              Balance
+              <BalanceSourceBadge source={account.balanceSource} />
+            </div>
             <div className="font-semibold text-gray-800 text-sm">
               {formatCurrency(account.currentBalance)}
             </div>
@@ -671,4 +703,31 @@ function formatDate(dateString: string): string {
     day: "numeric",
     year: "numeric",
   });
+}
+
+// Balance source indicator badge
+function BalanceSourceBadge({ source }: { source: BalanceSource }) {
+  if (source === "gocardless") {
+    return (
+      <span
+        className="inline-flex items-center text-[10px] text-green-600"
+        title="Live balance from bank"
+      >
+        <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-0.5 animate-pulse" />
+        Live
+      </span>
+    );
+  }
+  if (source === "manual") {
+    return (
+      <span
+        className="inline-flex items-center text-[10px] text-gray-500"
+        title="Manually entered balance"
+      >
+        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full mr-0.5" />
+        Manual
+      </span>
+    );
+  }
+  return null;
 }

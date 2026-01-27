@@ -15,12 +15,6 @@ import {
   createExpensePlan,
   updateExpensePlan,
   deleteExpensePlan,
-  fetchExpensePlanTransactions,
-  contributeToExpensePlan,
-  withdrawFromExpensePlan,
-  adjustExpensePlanBalance,
-  linkTransactionToExpensePlan,
-  unlinkTransactionFromExpensePlan,
   acceptAdjustment,
   dismissAdjustment,
   fetchMonthlyDepositSummary,
@@ -34,10 +28,7 @@ import {
   ExpensePlanStatus,
   CreateExpensePlanDto,
   UpdateExpensePlanDto,
-  ContributeDto,
-  WithdrawDto,
-  AdjustBalanceDto,
-  LinkTransactionDto,
+  CoveragePeriodType,
 } from '@/types/expense-plan-types';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -80,18 +71,6 @@ export function useExpensePlan(id: number) {
   });
 }
 
-export function useExpensePlanTransactions(planId: number) {
-  const { data: session } = useSession();
-
-  return useQuery({
-    queryKey: ['expense-plan-transactions', planId],
-    queryFn: () =>
-      fetchExpensePlanTransactions(session!.user!.accessToken as string, planId),
-    enabled: !!session && !!planId,
-    staleTime: 30 * 1000, // 30 seconds - transactions change frequently
-  });
-}
-
 export function useMonthlyDepositSummary() {
   const { data: session } = useSession();
 
@@ -116,13 +95,13 @@ export function useExpenseTimeline(months: number = 12) {
   });
 }
 
-export function useCoverageSummary() {
+export function useCoverageSummary(period?: CoveragePeriodType) {
   const { data: session } = useSession();
 
   return useQuery({
-    queryKey: ['expense-plans-coverage'],
+    queryKey: ['expense-plans-coverage', period],
     queryFn: () =>
-      fetchCoverageSummary(session!.user!.accessToken as string),
+      fetchCoverageSummary(session!.user!.accessToken as string, period),
     enabled: !!session,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -161,18 +140,20 @@ export function useExpensePlansWithStatus() {
 }
 
 /**
- * Fetch account allocation summary showing what each account should hold TODAY.
+ * Fetch account allocation summary showing what each account should hold.
  * Answers the question: "How much should my account have right now?"
  * - For fixed_monthly: requiredToday = targetAmount (full payment ready)
  * - For sinking funds: requiredToday = expectedFundedByNow (savings progress)
+ *
+ * @param period - Time period for allocation calculation (defaults to this_month)
  */
-export function useAccountAllocationSummary() {
+export function useAccountAllocationSummary(period?: CoveragePeriodType) {
   const { data: session } = useSession();
 
   return useQuery({
-    queryKey: ['expense-plans-account-allocation'],
+    queryKey: ['expense-plans-account-allocation', period],
     queryFn: () =>
-      fetchAccountAllocationSummary(session!.user!.accessToken as string),
+      fetchAccountAllocationSummary(session!.user!.accessToken as string, period),
     enabled: !!session,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -236,124 +217,6 @@ export function useDeleteExpensePlan() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to delete expense plan');
-    },
-  });
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// TRANSACTION MUTATION HOOKS
-// ═══════════════════════════════════════════════════════════════════════════
-
-export function useContributeToExpensePlan() {
-  const { data: session } = useSession();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ planId, data }: { planId: number; data: ContributeDto }) =>
-      contributeToExpensePlan(session!.user!.accessToken as string, planId, data),
-    onSuccess: (_, { planId }) => {
-      queryClient.invalidateQueries({ queryKey: ['expense-plans'] });
-      queryClient.invalidateQueries({ queryKey: ['expense-plans-with-status'] });
-      queryClient.invalidateQueries({ queryKey: ['expense-plan', planId] });
-      queryClient.invalidateQueries({ queryKey: ['expense-plan-transactions', planId] });
-      queryClient.invalidateQueries({ queryKey: ['expense-plans-summary'] });
-      toast.success('Contribution added successfully');
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to add contribution');
-    },
-  });
-}
-
-export function useWithdrawFromExpensePlan() {
-  const { data: session } = useSession();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ planId, data }: { planId: number; data: WithdrawDto }) =>
-      withdrawFromExpensePlan(session!.user!.accessToken as string, planId, data),
-    onSuccess: (_, { planId }) => {
-      queryClient.invalidateQueries({ queryKey: ['expense-plans'] });
-      queryClient.invalidateQueries({ queryKey: ['expense-plans-with-status'] });
-      queryClient.invalidateQueries({ queryKey: ['expense-plan', planId] });
-      queryClient.invalidateQueries({ queryKey: ['expense-plan-transactions', planId] });
-      queryClient.invalidateQueries({ queryKey: ['expense-plans-summary'] });
-      toast.success('Withdrawal completed successfully');
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to withdraw');
-    },
-  });
-}
-
-export function useAdjustExpensePlanBalance() {
-  const { data: session } = useSession();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ planId, data }: { planId: number; data: AdjustBalanceDto }) =>
-      adjustExpensePlanBalance(session!.user!.accessToken as string, planId, data),
-    onSuccess: (_, { planId }) => {
-      queryClient.invalidateQueries({ queryKey: ['expense-plans'] });
-      queryClient.invalidateQueries({ queryKey: ['expense-plans-with-status'] });
-      queryClient.invalidateQueries({ queryKey: ['expense-plan', planId] });
-      queryClient.invalidateQueries({ queryKey: ['expense-plan-transactions', planId] });
-      queryClient.invalidateQueries({ queryKey: ['expense-plans-summary'] });
-      toast.success('Balance adjusted successfully');
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to adjust balance');
-    },
-  });
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// TRANSACTION LINKING HOOKS
-// ═══════════════════════════════════════════════════════════════════════════
-
-export function useLinkTransaction() {
-  const { data: session } = useSession();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({
-      planTransactionId,
-      data,
-    }: {
-      planTransactionId: number;
-      data: LinkTransactionDto;
-    }) =>
-      linkTransactionToExpensePlan(
-        session!.user!.accessToken as string,
-        planTransactionId,
-        data
-      ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['expense-plan-transactions'] });
-      toast.success('Transaction linked successfully');
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to link transaction');
-    },
-  });
-}
-
-export function useUnlinkTransaction() {
-  const { data: session } = useSession();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (planTransactionId: number) =>
-      unlinkTransactionFromExpensePlan(
-        session!.user!.accessToken as string,
-        planTransactionId
-      ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['expense-plan-transactions'] });
-      toast.success('Transaction unlinked successfully');
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to unlink transaction');
     },
   });
 }

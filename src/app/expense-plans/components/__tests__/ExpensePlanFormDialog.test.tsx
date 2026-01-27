@@ -80,10 +80,10 @@ const createMockExpensePlan = (
   priority: 'essential',
   categoryId: null,
   autoTrackCategory: false,
+  purpose: 'sinking_fund',
   paymentAccountType: null,
   paymentAccountId: null,
   targetAmount: 1000,
-  currentBalance: 500,
   monthlyContribution: 100,
   contributionSource: 'manual',
   frequency: 'monthly',
@@ -92,14 +92,17 @@ const createMockExpensePlan = (
   dueDay: null,
   targetDate: null,
   seasonalMonths: null,
+  nextDueDate: null,
   autoCalculate: false,
   rolloverSurplus: true,
-  initialBalanceSource: 'zero',
-  initialBalanceCustom: null,
-  lastFundedDate: null,
   status: 'active',
   createdAt: '2025-01-01T00:00:00Z',
   updatedAt: '2025-01-01T00:00:00Z',
+  suggestedMonthlyContribution: null,
+  suggestedAdjustmentPercent: null,
+  adjustmentReason: null,
+  adjustmentSuggestedAt: null,
+  adjustmentDismissedAt: null,
   ...overrides,
 });
 
@@ -152,7 +155,8 @@ describe('ExpensePlanFormDialog', () => {
         { wrapper: createWrapper() }
       );
 
-      expect(screen.getByText('Payment Account')).toBeInTheDocument();
+      // When no account selected, shows "Assign a Payment Account"
+      expect(screen.getByText('Assign a Payment Account')).toBeInTheDocument();
     });
 
     it('should show bank accounts in the dropdown', async () => {
@@ -168,18 +172,20 @@ describe('ExpensePlanFormDialog', () => {
         { wrapper: createWrapper() }
       );
 
-      // Wait for component to load
+      // Wait for component to load - when no account selected shows "Assign a Payment Account"
       await waitFor(() => {
-        expect(screen.getByText('Payment Account')).toBeInTheDocument();
+        expect(screen.getByText('Assign a Payment Account')).toBeInTheDocument();
       });
 
-      // Default value is "none" showing as "No account selected"
-      // Find the combobox button closest to the Payment Account label
-      const paymentAccountLabel = screen.getByText('Payment Account');
-      const paymentAccountSection = paymentAccountLabel.closest('div');
-      const selectTrigger = paymentAccountSection?.querySelector('button[role="combobox"]');
-      expect(selectTrigger).toBeInTheDocument();
-      await user.click(selectTrigger!);
+      // Find the payment account combobox - look for the one with "Select payment account..." placeholder
+      // Get all comboboxes and find the one related to payment account
+      const comboboxes = screen.getAllByRole('combobox');
+      // The payment account select shows "Select payment account..." or "No account selected"
+      const paymentAccountSelect = comboboxes.find(
+        (cb) => cb.textContent?.includes('Select payment account') || cb.textContent?.includes('No account selected')
+      );
+      expect(paymentAccountSelect).toBeInTheDocument();
+      await user.click(paymentAccountSelect!);
 
       // Check that bank accounts are displayed in the dropdown
       await waitFor(() => {
@@ -233,12 +239,13 @@ describe('ExpensePlanFormDialog', () => {
         expect(screen.getByLabelText('Name *')).toHaveValue('Test Plan');
       });
 
-      // Find the payment account select button
-      const paymentAccountLabel = screen.getByText('Payment Account');
-      const paymentAccountSection = paymentAccountLabel.closest('div');
-      const selectTrigger = paymentAccountSection?.querySelector('button[role="combobox"]');
-      expect(selectTrigger).toBeInTheDocument();
-      await user.click(selectTrigger!);
+      // Find the payment account combobox
+      const comboboxes = screen.getAllByRole('combobox');
+      const paymentAccountSelect = comboboxes.find(
+        (cb) => cb.textContent?.includes('Select payment account') || cb.textContent?.includes('No account selected')
+      );
+      expect(paymentAccountSelect).toBeInTheDocument();
+      await user.click(paymentAccountSelect!);
 
       await waitFor(() => {
         expect(screen.getByText('Main Checking')).toBeInTheDocument();

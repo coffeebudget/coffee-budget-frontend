@@ -7,13 +7,8 @@
 
 import {
   ExpensePlan,
-  ExpensePlanTransaction,
   CreateExpensePlanDto,
   UpdateExpensePlanDto,
-  ContributeDto,
-  WithdrawDto,
-  AdjustBalanceDto,
-  LinkTransactionDto,
   MonthlyDepositSummary,
   TimelineEntry,
   ExpensePlanStatus,
@@ -21,6 +16,7 @@ import {
   LongTermStatusSummary,
   ExpensePlanWithStatus,
   AccountAllocationSummaryResponse,
+  CoveragePeriodType,
 } from '@/types/expense-plan-types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -137,99 +133,6 @@ export async function deleteExpensePlan(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// TRANSACTIONS
-// ═══════════════════════════════════════════════════════════════════════════
-
-export async function fetchExpensePlanTransactions(
-  token: string,
-  planId: number
-): Promise<ExpensePlanTransaction[]> {
-  const response = await fetch(`${API_URL}/expense-plans/${planId}/transactions`, {
-    headers: getHeaders(token),
-  });
-
-  return handleResponse<ExpensePlanTransaction[]>(response);
-}
-
-export async function contributeToExpensePlan(
-  token: string,
-  planId: number,
-  data: ContributeDto
-): Promise<ExpensePlanTransaction> {
-  const response = await fetch(`${API_URL}/expense-plans/${planId}/contribute`, {
-    method: 'POST',
-    headers: getHeaders(token),
-    body: JSON.stringify(data),
-  });
-
-  return handleResponse<ExpensePlanTransaction>(response);
-}
-
-export async function withdrawFromExpensePlan(
-  token: string,
-  planId: number,
-  data: WithdrawDto
-): Promise<ExpensePlanTransaction> {
-  const response = await fetch(`${API_URL}/expense-plans/${planId}/withdraw`, {
-    method: 'POST',
-    headers: getHeaders(token),
-    body: JSON.stringify(data),
-  });
-
-  return handleResponse<ExpensePlanTransaction>(response);
-}
-
-export async function adjustExpensePlanBalance(
-  token: string,
-  planId: number,
-  data: AdjustBalanceDto
-): Promise<ExpensePlanTransaction> {
-  const response = await fetch(`${API_URL}/expense-plans/${planId}/adjust`, {
-    method: 'POST',
-    headers: getHeaders(token),
-    body: JSON.stringify(data),
-  });
-
-  return handleResponse<ExpensePlanTransaction>(response);
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// TRANSACTION LINKING
-// ═══════════════════════════════════════════════════════════════════════════
-
-export async function linkTransactionToExpensePlan(
-  token: string,
-  planTransactionId: number,
-  data: LinkTransactionDto
-): Promise<ExpensePlanTransaction> {
-  const response = await fetch(
-    `${API_URL}/expense-plans/transactions/${planTransactionId}/link`,
-    {
-      method: 'POST',
-      headers: getHeaders(token),
-      body: JSON.stringify(data),
-    }
-  );
-
-  return handleResponse<ExpensePlanTransaction>(response);
-}
-
-export async function unlinkTransactionFromExpensePlan(
-  token: string,
-  planTransactionId: number
-): Promise<ExpensePlanTransaction> {
-  const response = await fetch(
-    `${API_URL}/expense-plans/transactions/${planTransactionId}/link`,
-    {
-      method: 'DELETE',
-      headers: getHeaders(token),
-    }
-  );
-
-  return handleResponse<ExpensePlanTransaction>(response);
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
 // ADJUSTMENT OPERATIONS
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -298,9 +201,16 @@ export async function fetchExpenseTimeline(
 }
 
 export async function fetchCoverageSummary(
-  token: string
+  token: string,
+  period?: CoveragePeriodType
 ): Promise<CoverageSummaryResponse> {
-  const response = await fetch(`${API_URL}/expense-plans/summary/coverage`, {
+  const params = new URLSearchParams();
+  if (period) {
+    params.append('period', period);
+  }
+
+  const url = `${API_URL}/expense-plans/summary/coverage${params.toString() ? `?${params}` : ''}`;
+  const response = await fetch(url, {
     headers: getHeaders(token),
   });
 
@@ -334,19 +244,26 @@ export async function fetchExpensePlansWithStatus(
 }
 
 /**
- * Fetch account allocation summary showing what each account should hold TODAY.
+ * Fetch account allocation summary showing what each account should hold.
  * For fixed_monthly plans: requiredToday = targetAmount
  * For sinking funds: requiredToday = expectedFundedByNow
+ *
+ * @param token - JWT token
+ * @param period - Time period for allocation calculation (defaults to this_month)
  */
 export async function fetchAccountAllocationSummary(
-  token: string
+  token: string,
+  period?: CoveragePeriodType
 ): Promise<AccountAllocationSummaryResponse> {
-  const response = await fetch(
-    `${API_URL}/expense-plans/summary/account-allocation`,
-    {
-      headers: getHeaders(token),
-    }
-  );
+  const params = new URLSearchParams();
+  if (period) {
+    params.append('period', period);
+  }
+
+  const url = `${API_URL}/expense-plans/summary/account-allocation${params.toString() ? `?${params}` : ''}`;
+  const response = await fetch(url, {
+    headers: getHeaders(token),
+  });
 
   return handleResponse<AccountAllocationSummaryResponse>(response);
 }

@@ -16,6 +16,10 @@ import {
   Trash2,
   Calendar,
   TrendingUp,
+  CheckCircle2,
+  Clock,
+  AlertCircle,
+  ArrowUpCircle,
 } from "lucide-react";
 import {
   IncomePlan,
@@ -24,6 +28,8 @@ import {
   getReliabilityIcon,
   getStatusLabel,
   getStatusColor,
+  getEntryStatusLabel,
+  getEntryStatusColor,
   formatCurrency,
   getAnnualTotal,
   getMonthlyAverage,
@@ -31,12 +37,59 @@ import {
   MONTH_LABELS,
   MonthName,
   MONTH_NAMES,
+  IncomePlanEntryStatus,
 } from "@/types/income-plan-types";
+import { useIncomePlanTrackingSummary } from "@/hooks/useIncomePlans";
 
 interface IncomePlanCardProps {
   plan: IncomePlan;
   onEdit: (plan: IncomePlan) => void;
   onDelete: (id: number) => void;
+}
+
+// Get tracking status icon component
+function getTrackingStatusIcon(status: IncomePlanEntryStatus) {
+  switch (status) {
+    case 'received':
+      return <CheckCircle2 className="h-4 w-4" />;
+    case 'exceeded':
+      return <ArrowUpCircle className="h-4 w-4" />;
+    case 'partial':
+      return <AlertCircle className="h-4 w-4" />;
+    case 'pending':
+    default:
+      return <Clock className="h-4 w-4" />;
+  }
+}
+
+// Get background color for current month section based on status
+function getTrackingSectionStyle(status: IncomePlanEntryStatus | undefined) {
+  switch (status) {
+    case 'received':
+      return 'bg-green-50 border-green-200';
+    case 'exceeded':
+      return 'bg-blue-50 border-blue-200';
+    case 'partial':
+      return 'bg-yellow-50 border-yellow-200';
+    case 'pending':
+    default:
+      return 'bg-gray-50 border-gray-200';
+  }
+}
+
+// Get text color for current month section based on status
+function getTrackingTextStyle(status: IncomePlanEntryStatus | undefined) {
+  switch (status) {
+    case 'received':
+      return { label: 'text-green-700', value: 'text-green-800' };
+    case 'exceeded':
+      return { label: 'text-blue-700', value: 'text-blue-800' };
+    case 'partial':
+      return { label: 'text-yellow-700', value: 'text-yellow-800' };
+    case 'pending':
+    default:
+      return { label: 'text-gray-600', value: 'text-gray-800' };
+  }
 }
 
 export default function IncomePlanCard({
@@ -47,12 +100,28 @@ export default function IncomePlanCard({
   const annualTotal = getAnnualTotal(plan);
   const monthlyAverage = getMonthlyAverage(plan);
   const currentMonthAmount = getCurrentMonthAmount(plan);
-  const currentMonthIndex = new Date().getMonth();
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonthIndex = now.getMonth();
   const currentMonthName = MONTH_NAMES[currentMonthIndex];
+
+  // Fetch current month tracking status (month is 1-indexed for API)
+  const { data: trackingStatus, isLoading: isTrackingLoading } = useIncomePlanTrackingSummary(
+    plan.id,
+    currentYear,
+    currentMonthIndex + 1
+  );
 
   // Find months with different amounts for display
   const uniqueAmounts = new Set(MONTH_NAMES.map(m => plan[m as MonthName]));
   const hasVariableAmounts = uniqueAmounts.size > 1;
+
+  // Tracking display values
+  const actualAmount = trackingStatus?.actualAmount ?? 0;
+  const expectedAmount = trackingStatus?.expectedAmount ?? currentMonthAmount;
+  const status = trackingStatus?.status ?? 'pending';
+  const hasTracking = trackingStatus?.hasEntry ?? false;
+  const percentageReceived = trackingStatus?.percentageReceived ?? 0;
 
   return (
     <Card className="flex flex-col">
@@ -106,20 +175,63 @@ export default function IncomePlanCard({
               Variable
             </Badge>
           )}
+          {/* Tracking Status Badge */}
+          {!isTrackingLoading && (
+            <Badge variant="outline" className={getEntryStatusColor(status)}>
+              {getTrackingStatusIcon(status)}
+              <span className="ml-1">{getEntryStatusLabel(status)}</span>
+            </Badge>
+          )}
         </div>
       </CardHeader>
 
       <CardContent className="flex-grow">
-        {/* Current Month Highlight */}
-        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-green-700">
+        {/* Current Month Tracking Status */}
+        <div className={`mb-4 p-3 border rounded-lg ${getTrackingSectionStyle(status)}`}>
+          {/* Header with month and status */}
+          <div className="flex items-center justify-between mb-2">
+            <span className={`text-sm font-medium ${getTrackingTextStyle(status).label}`}>
               <Calendar className="h-4 w-4 inline mr-1" />
-              {MONTH_LABELS[currentMonthName]} Expected
+              {MONTH_LABELS[currentMonthName]}
             </span>
-            <span className="font-bold text-green-800">
-              {formatCurrency(currentMonthAmount)}
-            </span>
+            {!isTrackingLoading && hasTracking && (
+              <span className={`text-xs ${getTrackingTextStyle(status).label}`}>
+                {percentageReceived.toFixed(0)}% received
+              </span>
+            )}
+          </div>
+
+          {/* Expected vs Received */}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <span className={`text-sm ${getTrackingTextStyle(status).label}`}>
+                Expected
+              </span>
+              <span className={`font-medium ${getTrackingTextStyle(status).value}`}>
+                {formatCurrency(expectedAmount)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className={`text-sm ${getTrackingTextStyle(status).label}`}>
+                Received
+              </span>
+              <span className={`font-bold ${getTrackingTextStyle(status).value}`}>
+                {isTrackingLoading ? '...' : formatCurrency(actualAmount)}
+              </span>
+            </div>
+            {/* Difference indicator */}
+            {!isTrackingLoading && hasTracking && actualAmount !== expectedAmount && (
+              <div className="flex items-center justify-between pt-1 border-t border-current/10">
+                <span className={`text-xs ${getTrackingTextStyle(status).label}`}>
+                  Difference
+                </span>
+                <span className={`text-sm font-medium ${
+                  actualAmount > expectedAmount ? 'text-blue-600' : 'text-yellow-600'
+                }`}>
+                  {actualAmount > expectedAmount ? '+' : ''}{formatCurrency(actualAmount - expectedAmount)}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 

@@ -355,3 +355,45 @@ export async function fetchCurrentMonthStatus(
 
   return handleResponse<{ status: IncomePlanEntryStatus }>(response);
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TRANSACTION SUGGESTIONS
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface TransactionSuggestion {
+  transactionId: number;
+  description: string;
+  amount: number;
+  date: string;
+  categoryId: number | null;
+  categoryName: string | null;
+  merchantName: string | null;
+  confidence: number;
+  matchReasons: string[];
+}
+
+export interface TransactionSuggestionsResponse {
+  incomePlanId: number;
+  incomePlanName: string;
+  year: number;
+  month: number;
+  expectedAmount: number;
+  suggestions: TransactionSuggestion[];
+  alreadyLinkedTransactionId: number | null;
+}
+
+export async function fetchTransactionSuggestions(
+  token: string,
+  incomePlanId: number,
+  year: number,
+  month: number
+): Promise<TransactionSuggestionsResponse> {
+  const response = await fetch(
+    `${API_URL}/income-plans/${incomePlanId}/suggest-transactions/${year}/${month}`,
+    {
+      headers: getHeaders(token),
+    }
+  );
+
+  return handleResponse<TransactionSuggestionsResponse>(response);
+}

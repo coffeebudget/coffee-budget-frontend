@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +21,9 @@ import {
   Clock,
   AlertCircle,
   ArrowUpCircle,
+  Link2,
 } from "lucide-react";
+import LinkTransactionDialog from "./LinkTransactionDialog";
 import {
   IncomePlan,
   getReliabilityLabel,
@@ -97,6 +100,8 @@ export default function IncomePlanCard({
   onEdit,
   onDelete,
 }: IncomePlanCardProps) {
+  const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
+
   const annualTotal = getAnnualTotal(plan);
   const monthlyAverage = getMonthlyAverage(plan);
   const currentMonthAmount = getCurrentMonthAmount(plan);
@@ -106,7 +111,7 @@ export default function IncomePlanCard({
   const currentMonthName = MONTH_NAMES[currentMonthIndex];
 
   // Fetch current month tracking status (month is 1-indexed for API)
-  const { data: trackingStatus, isLoading: isTrackingLoading } = useIncomePlanTrackingSummary(
+  const { data: trackingStatus, isLoading: isTrackingLoading, refetch: refetchTracking } = useIncomePlanTrackingSummary(
     plan.id,
     currentYear,
     currentMonthIndex + 1
@@ -233,6 +238,17 @@ export default function IncomePlanCard({
               </div>
             )}
           </div>
+
+          {/* Link Transaction Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full mt-2"
+            onClick={() => setIsLinkDialogOpen(true)}
+          >
+            <Link2 className="h-4 w-4 mr-2" />
+            {trackingStatus?.transactionId ? "Change Linked Transaction" : "Link Transaction"}
+          </Button>
         </div>
 
         {/* Details */}
@@ -294,6 +310,19 @@ export default function IncomePlanCard({
           </div>
         )}
       </CardContent>
+
+      {/* Link Transaction Dialog */}
+      <LinkTransactionDialog
+        open={isLinkDialogOpen}
+        onOpenChange={setIsLinkDialogOpen}
+        plan={plan}
+        year={currentYear}
+        month={currentMonthIndex + 1}
+        onComplete={() => {
+          setIsLinkDialogOpen(false);
+          refetchTracking();
+        }}
+      />
     </Card>
   );
 }

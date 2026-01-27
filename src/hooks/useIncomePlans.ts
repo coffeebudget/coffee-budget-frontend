@@ -28,6 +28,7 @@ import {
   fetchMonthlyTrackingSummary,
   fetchAnnualTrackingSummary,
   fetchCurrentMonthStatus,
+  fetchTransactionSuggestions,
 } from '@/lib/api/income-plans';
 import {
   IncomePlanStatus,
@@ -302,6 +303,30 @@ export function useIncomePlanCurrentStatus(incomePlanId: number) {
     queryFn: () =>
       fetchCurrentMonthStatus(session!.user!.accessToken as string, incomePlanId),
     enabled: !!session && !!incomePlanId,
+    staleTime: 60 * 1000,
+  });
+}
+
+/**
+ * Fetch transaction suggestions for linking to an income plan.
+ */
+export function useTransactionSuggestions(
+  incomePlanId: number,
+  year: number,
+  month: number
+) {
+  const { data: session } = useSession();
+
+  return useQuery({
+    queryKey: ['income-plan-suggestions', incomePlanId, year, month],
+    queryFn: () =>
+      fetchTransactionSuggestions(
+        session!.user!.accessToken as string,
+        incomePlanId,
+        year,
+        month
+      ),
+    enabled: !!session && !!incomePlanId && !!year && !!month,
     staleTime: 60 * 1000,
   });
 }

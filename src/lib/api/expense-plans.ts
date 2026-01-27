@@ -16,6 +16,7 @@ import {
   LongTermStatusSummary,
   ExpensePlanWithStatus,
   AccountAllocationSummaryResponse,
+  CoveragePeriodType,
 } from '@/types/expense-plan-types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -200,9 +201,16 @@ export async function fetchExpenseTimeline(
 }
 
 export async function fetchCoverageSummary(
-  token: string
+  token: string,
+  period?: CoveragePeriodType
 ): Promise<CoverageSummaryResponse> {
-  const response = await fetch(`${API_URL}/expense-plans/summary/coverage`, {
+  const params = new URLSearchParams();
+  if (period) {
+    params.append('period', period);
+  }
+
+  const url = `${API_URL}/expense-plans/summary/coverage${params.toString() ? `?${params}` : ''}`;
+  const response = await fetch(url, {
     headers: getHeaders(token),
   });
 
@@ -236,19 +244,26 @@ export async function fetchExpensePlansWithStatus(
 }
 
 /**
- * Fetch account allocation summary showing what each account should hold TODAY.
+ * Fetch account allocation summary showing what each account should hold.
  * For fixed_monthly plans: requiredToday = targetAmount
  * For sinking funds: requiredToday = expectedFundedByNow
+ *
+ * @param token - JWT token
+ * @param period - Time period for allocation calculation (defaults to this_month)
  */
 export async function fetchAccountAllocationSummary(
-  token: string
+  token: string,
+  period?: CoveragePeriodType
 ): Promise<AccountAllocationSummaryResponse> {
-  const response = await fetch(
-    `${API_URL}/expense-plans/summary/account-allocation`,
-    {
-      headers: getHeaders(token),
-    }
-  );
+  const params = new URLSearchParams();
+  if (period) {
+    params.append('period', period);
+  }
+
+  const url = `${API_URL}/expense-plans/summary/account-allocation${params.toString() ? `?${params}` : ''}`;
+  const response = await fetch(url, {
+    headers: getHeaders(token),
+  });
 
   return handleResponse<AccountAllocationSummaryResponse>(response);
 }

@@ -28,6 +28,7 @@ import {
   ExpensePlanStatus,
   CreateExpensePlanDto,
   UpdateExpensePlanDto,
+  CoveragePeriodType,
 } from '@/types/expense-plan-types';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -94,13 +95,13 @@ export function useExpenseTimeline(months: number = 12) {
   });
 }
 
-export function useCoverageSummary() {
+export function useCoverageSummary(period?: CoveragePeriodType) {
   const { data: session } = useSession();
 
   return useQuery({
-    queryKey: ['expense-plans-coverage'],
+    queryKey: ['expense-plans-coverage', period],
     queryFn: () =>
-      fetchCoverageSummary(session!.user!.accessToken as string),
+      fetchCoverageSummary(session!.user!.accessToken as string, period),
     enabled: !!session,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -139,18 +140,20 @@ export function useExpensePlansWithStatus() {
 }
 
 /**
- * Fetch account allocation summary showing what each account should hold TODAY.
+ * Fetch account allocation summary showing what each account should hold.
  * Answers the question: "How much should my account have right now?"
  * - For fixed_monthly: requiredToday = targetAmount (full payment ready)
  * - For sinking funds: requiredToday = expectedFundedByNow (savings progress)
+ *
+ * @param period - Time period for allocation calculation (defaults to this_month)
  */
-export function useAccountAllocationSummary() {
+export function useAccountAllocationSummary(period?: CoveragePeriodType) {
   const { data: session } = useSession();
 
   return useQuery({
-    queryKey: ['expense-plans-account-allocation'],
+    queryKey: ['expense-plans-account-allocation', period],
     queryFn: () =>
-      fetchAccountAllocationSummary(session!.user!.accessToken as string),
+      fetchAccountAllocationSummary(session!.user!.accessToken as string, period),
     enabled: !!session,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

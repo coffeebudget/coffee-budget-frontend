@@ -23,6 +23,8 @@ import {
   PlanAtRisk,
   LongTermStatusSummary,
   PlanNeedingAttention,
+  CoveragePeriodType,
+  VALID_COVERAGE_PERIODS,
 } from "@/types/expense-plan-types";
 import FundingStatusBadge from "@/app/expense-plans/components/FundingStatusBadge";
 import { useState } from "react";
@@ -32,8 +34,19 @@ interface CoverageSectionProps {
   className?: string;
 }
 
+// Period display labels
+const PERIOD_LABELS: Record<CoveragePeriodType, string> = {
+  this_month: "This Month",
+  next_month: "Next Month",
+  next_3_months: "Next 3 Months",
+  next_30_days: "Next 30 Days",
+  next_60_days: "Next 60 Days",
+  next_90_days: "Next 90 Days",
+};
+
 export default function CoverageSection({ className = "" }: CoverageSectionProps) {
-  const { data, isLoading, error, refetch } = useCoverageSummary();
+  const [period, setPeriod] = useState<CoveragePeriodType>("next_30_days");
+  const { data, isLoading, error, refetch } = useCoverageSummary(period);
   const { data: longTermStatus, isLoading: longTermLoading } = useLongTermStatus();
   const [expandedAccounts, setExpandedAccounts] = useState<Set<number>>(new Set());
 
@@ -165,11 +178,23 @@ export default function CoverageSection({ className = "" }: CoverageSectionProps
               Coverage Monitor
             </h3>
             <p className={`${statusConfig.subtitleColor} text-sm`}>
-              30-day expense coverage status
+              {data.period?.label || PERIOD_LABELS[period]}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {/* Period Selector */}
+          <select
+            value={period}
+            onChange={(e) => setPeriod(e.target.value as CoveragePeriodType)}
+            className="text-sm bg-white border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            {VALID_COVERAGE_PERIODS.map((p) => (
+              <option key={p} value={p}>
+                {PERIOD_LABELS[p]}
+              </option>
+            ))}
+          </select>
           <Link
             href="/expense-plans"
             className="hidden sm:flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors"

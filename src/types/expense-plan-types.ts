@@ -288,6 +288,28 @@ export const COVERAGE_STATUSES = ['all_covered', 'has_shortfall', 'no_data'] as 
 export type CoverageStatus = (typeof COVERAGE_STATUSES)[number];
 
 /**
+ * Available coverage period types for filtering expense plan obligations.
+ */
+export const VALID_COVERAGE_PERIODS = [
+  'this_month',
+  'next_month',
+  'next_3_months',
+  'next_30_days',
+  'next_60_days',
+  'next_90_days',
+] as const;
+export type CoveragePeriodType = (typeof VALID_COVERAGE_PERIODS)[number];
+
+/**
+ * Represents a date range with a human-readable label.
+ */
+export interface PeriodRange {
+  start: string;
+  end: string;
+  label: string;
+}
+
+/**
  * Expense plan at risk of not being covered
  */
 export interface PlanAtRisk {
@@ -328,6 +350,8 @@ export interface UnassignedPlanSummary {
  * Complete coverage summary response
  */
 export interface CoverageSummaryResponse {
+  /** The period for which coverage is calculated */
+  period: PeriodRange;
   accounts: AccountCoverage[];
   unassignedPlans: UnassignedPlanSummary;
   overallStatus: CoverageStatus;
@@ -529,6 +553,8 @@ export interface AccountAllocationSummary {
  * Response containing allocation summaries for all accounts with linked plans.
  */
 export interface AccountAllocationSummaryResponse {
+  /** The period for which allocation is calculated */
+  period: PeriodRange;
   accounts: AccountAllocationSummary[];
   /** Overall health status across all accounts */
   overallStatus: AccountHealthStatus;

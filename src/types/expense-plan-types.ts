@@ -310,6 +310,19 @@ export interface PeriodRange {
 }
 
 /**
+ * Source of the balance information
+ */
+export type BalanceSource = 'gocardless' | 'manual' | 'unknown';
+
+/**
+ * Type of obligation calculation
+ * - 'fixed': Known exact amount (fixed_monthly, yearly_fixed)
+ * - 'estimated': Amount based on historical data or estimates (yearly_variable, seasonal)
+ * - 'prorated': Amount calculated as progress toward a goal (sinking funds)
+ */
+export type ObligationType = 'fixed' | 'estimated' | 'prorated';
+
+/**
  * Expense plan at risk of not being covered
  */
 export interface PlanAtRisk {
@@ -319,6 +332,7 @@ export interface PlanAtRisk {
   nextDueDate: string | null;
   daysUntilDue: number;
   icon: string | null;
+  obligationType: ObligationType;
 }
 
 /**
@@ -329,6 +343,10 @@ export interface AccountCoverage {
   accountName: string;
   institution: string | null;
   currentBalance: number;
+  /** Source of the balance information */
+  balanceSource: BalanceSource;
+  /** When the balance was last updated */
+  balanceLastUpdated: string | null;
   upcomingPlansTotal: number;
   planCount: number;
   projectedBalance: number;
@@ -527,6 +545,10 @@ export interface AccountAllocationSummary {
   accountName: string;
   /** Current bank account balance */
   currentBalance: number;
+  /** Source of the balance information */
+  balanceSource: BalanceSource;
+  /** When the balance was last updated */
+  balanceLastUpdated: string | null;
   /** Total amount that should be allocated today */
   totalRequiredToday: number;
   /** Amount short (positive) or surplus (negative) */

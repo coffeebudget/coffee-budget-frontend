@@ -42,15 +42,6 @@ export const CONTRIBUTION_SOURCES = [
   'historical',
 ] as const;
 
-export const INITIAL_BALANCE_SOURCES = ['zero', 'historical', 'custom'] as const;
-
-export const EXPENSE_PLAN_TRANSACTION_TYPES = [
-  'contribution',
-  'withdrawal',
-  'adjustment',
-  'rollover',
-] as const;
-
 export const FUNDING_STATUSES = ['funded', 'almost_ready', 'on_track', 'behind'] as const;
 
 export const DISTRIBUTION_STRATEGIES = ['priority', 'proportional', 'fixed'] as const;
@@ -68,8 +59,6 @@ export type ExpensePlanPriority = (typeof EXPENSE_PLAN_PRIORITIES)[number];
 export type ExpensePlanFrequency = (typeof EXPENSE_PLAN_FREQUENCIES)[number];
 export type ExpensePlanStatus = (typeof EXPENSE_PLAN_STATUSES)[number];
 export type ContributionSource = (typeof CONTRIBUTION_SOURCES)[number];
-export type InitialBalanceSource = (typeof INITIAL_BALANCE_SOURCES)[number];
-export type ExpensePlanTransactionType = (typeof EXPENSE_PLAN_TRANSACTION_TYPES)[number];
 export type FundingStatus = (typeof FUNDING_STATUSES)[number];
 export type DistributionStrategy = (typeof DISTRIBUTION_STRATEGIES)[number];
 export type PaymentAccountType = (typeof PAYMENT_ACCOUNT_TYPES)[number];
@@ -112,7 +101,6 @@ export interface ExpensePlan {
 
   // Financial
   targetAmount: number;
-  currentBalance: number;
   monthlyContribution: number;
   contributionSource: ContributionSource;
 
@@ -123,17 +111,12 @@ export interface ExpensePlan {
   dueDay: number | null;
   targetDate: string | null;
   seasonalMonths: number[] | null;
-  lastFundedDate: string | null;
   nextDueDate: string | null;
 
   // Tracking
   status: ExpensePlanStatus;
   autoCalculate: boolean;
   rolloverSurplus: boolean;
-
-  // Initialization
-  initialBalanceSource: InitialBalanceSource;
-  initialBalanceCustom: number | null;
 
   // Metadata
   createdAt: string;
@@ -146,30 +129,8 @@ export interface ExpensePlan {
   adjustmentSuggestedAt: string | null;
   adjustmentDismissedAt: string | null;
 
-  // Relations (optional, loaded on demand)
-  transactions?: ExpensePlanTransaction[];
-
   // Fixed monthly status (only populated for fixed_monthly plans with status endpoint)
   fixedMonthlyStatus?: FixedMonthlyStatus | null;
-}
-
-export interface ExpensePlanTransaction {
-  id: number;
-  expensePlanId: number;
-  type: ExpensePlanTransactionType;
-  amount: number;
-  date: string;
-  balanceAfter: number;
-  transactionId: number | null;
-  transaction?: {
-    id: number;
-    description: string;
-    amount: number;
-    date: string;
-  } | null;
-  note: string | null;
-  isAutomatic: boolean;
-  createdAt: string;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -248,8 +209,6 @@ export interface CreateExpensePlanDto {
   seasonalMonths?: number[];
   autoCalculate?: boolean;
   rolloverSurplus?: boolean;
-  initialBalanceSource?: InitialBalanceSource;
-  initialBalanceCustom?: number;
   // Payment source (optional - for coverage tracking)
   paymentAccountType?: PaymentAccountType;
   paymentAccountId?: number;
@@ -279,25 +238,6 @@ export interface UpdateExpensePlanDto {
   // Payment source (optional - for coverage tracking)
   paymentAccountType?: PaymentAccountType;
   paymentAccountId?: number;
-}
-
-export interface ContributeDto {
-  amount: number;
-  note?: string;
-}
-
-export interface WithdrawDto {
-  amount: number;
-  note?: string;
-}
-
-export interface AdjustBalanceDto {
-  newBalance: number;
-  note?: string;
-}
-
-export interface LinkTransactionDto {
-  transactionId: number;
 }
 
 // Income Distribution DTOs
@@ -408,10 +348,6 @@ export interface FixedMonthlyStatus {
   currentMonthPaymentMade: boolean;
   /** Date of current month payment */
   paymentDate: string | null;
-  /** Whether balance is sufficient for next payment */
-  readyForNextMonth: boolean;
-  /** Amount short of next payment (targetAmount - currentBalance) */
-  amountShort: number | null;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -438,9 +374,8 @@ export interface ExpensePlanSummaryItem {
   name: string;
   icon: string | null;
   monthlyContribution: number;
-  currentBalance: number;
   targetAmount: number;
-  progress: number;
+  nextDueDate: string | null;
 }
 
 export interface TimelineEntry {
@@ -449,8 +384,7 @@ export interface TimelineEntry {
   planName: string;
   icon: string | null;
   amount: number;
-  currentBalance: number;
-  status: FundingStatus;
+  status: 'funded' | 'on_track' | 'behind';
   monthsAway: number;
 }
 
@@ -469,9 +403,6 @@ export interface ExpensePlanWithStatus extends ExpensePlan {
   amountNeeded: number | null;
   requiredMonthlyContribution: number | null;
   progressPercent: number;
-  // Expected funding fields (override to ensure they're included)
-  expectedFundedByNow: number | null;
-  fundingGapFromExpected: number | null;
 }
 
 /**
@@ -488,10 +419,6 @@ export interface PlanNeedingAttention {
   requiredMonthly: number;
   currentMonthly: number;
   shortfallPerMonth: number;
-  // Expected funding fields
-  expectedFundedByNow: number | null;
-  currentBalance: number;
-  fundingGapFromExpected: number | null;
 }
 
 /**
@@ -520,12 +447,12 @@ export type AccountHealthStatus = 'healthy' | 'tight' | 'shortfall';
 /**
  * Status for fixed monthly plan allocation
  */
-export type FixedMonthlyAllocationStatus = 'paid' | 'pending' | 'short';
+export type FixedMonthlyAllocationStatus = 'paid' | 'pending';
 
 /**
  * Status for sinking fund plan allocation
  */
-export type SinkingFundAllocationStatus = 'ahead' | 'on_track' | 'behind';
+export type SinkingFundAllocationStatus = 'on_track' | 'behind';
 
 /**
  * Individual fixed monthly plan allocation within the account summary.
@@ -537,16 +464,10 @@ export interface FixedMonthlyPlanAllocation {
   icon: string | null;
   /** Required amount (full payment) */
   requiredToday: number;
-  /** Current balance in the plan */
-  currentBalance: number;
   /** Whether current month payment has been made */
   paymentMade: boolean;
-  /** Whether ready for next payment */
-  readyForNextMonth: boolean;
-  /** Payment status: paid, pending, or short */
-  status: FixedMonthlyAllocationStatus;
-  /** Amount short if not ready */
-  amountShort: number | null;
+  /** Payment status: paid or pending */
+  status: 'paid' | 'pending';
 }
 
 /**
@@ -559,18 +480,14 @@ export interface SinkingFundPlanAllocation {
   icon: string | null;
   /** Expected funded amount by today (required allocation) */
   requiredToday: number;
-  /** Current balance in the plan */
-  currentBalance: number;
   /** Target total amount */
   targetAmount: number;
   /** Monthly contribution */
   monthlyContribution: number;
-  /** Progress percentage */
+  /** Progress percentage (time-based) */
   progressPercent: number;
   /** Funding status relative to schedule */
-  status: SinkingFundAllocationStatus;
-  /** Gap from expected (positive = behind schedule) */
-  gapFromExpected: number | null;
+  status: 'on_track' | 'behind';
   /** Next due date */
   nextDueDate: string | null;
   /** Months until due */
@@ -631,8 +548,6 @@ export interface ExpensePlanCardProps {
   plan: ExpensePlan;
   onEdit?: (plan: ExpensePlan) => void;
   onDelete?: (id: number) => void;
-  onContribute?: (plan: ExpensePlan) => void;
-  onWithdraw?: (plan: ExpensePlan) => void;
   showActions?: boolean;
 }
 
@@ -656,8 +571,6 @@ export interface ExpensePlanFormData {
   seasonalMonths: number[];
   autoCalculate: boolean;
   rolloverSurplus: boolean;
-  initialBalanceSource: InitialBalanceSource;
-  initialBalanceCustom: string;
   paymentAccountType: PaymentAccountType | null;
   paymentAccountId: number | null;
 }
@@ -741,15 +654,6 @@ export function getFundingStatusLabel(status: FundingStatus): string {
   return labels[status] || status;
 }
 
-export function getTransactionTypeLabel(type: ExpensePlanTransactionType): string {
-  const labels: Record<ExpensePlanTransactionType, string> = {
-    contribution: 'Contribution',
-    withdrawal: 'Withdrawal',
-    adjustment: 'Adjustment',
-    rollover: 'Rollover',
-  };
-  return labels[type] || type;
-}
 
 export function getCoverageStatusLabel(status: CoverageStatus): string {
   const labels: Record<CoverageStatus, string> = {
@@ -811,7 +715,6 @@ export function getFixedMonthlyAllocationStatusLabel(status: FixedMonthlyAllocat
   const labels: Record<FixedMonthlyAllocationStatus, string> = {
     paid: 'Paid',
     pending: 'Ready',
-    short: 'Short',
   };
   return labels[status] || status;
 }
@@ -820,14 +723,12 @@ export function getFixedMonthlyAllocationStatusColor(status: FixedMonthlyAllocat
   const colors: Record<FixedMonthlyAllocationStatus, string> = {
     paid: 'bg-green-100 text-green-800',
     pending: 'bg-blue-100 text-blue-800',
-    short: 'bg-red-100 text-red-800',
   };
   return colors[status] || 'bg-gray-100 text-gray-800';
 }
 
 export function getSinkingFundAllocationStatusLabel(status: SinkingFundAllocationStatus): string {
   const labels: Record<SinkingFundAllocationStatus, string> = {
-    ahead: 'Ahead',
     on_track: 'On Track',
     behind: 'Behind',
   };
@@ -836,7 +737,6 @@ export function getSinkingFundAllocationStatusLabel(status: SinkingFundAllocatio
 
 export function getSinkingFundAllocationStatusColor(status: SinkingFundAllocationStatus): string {
   const colors: Record<SinkingFundAllocationStatus, string> = {
-    ahead: 'bg-green-100 text-green-800',
     on_track: 'bg-blue-100 text-blue-800',
     behind: 'bg-red-100 text-red-800',
   };
@@ -915,61 +815,6 @@ export function getDefaultPurposeForPlanType(planType: ExpensePlanType): Expense
     return 'spending_budget';
   }
   return 'sinking_fund';
-}
-
-/**
- * Calculate funding status for a sinking fund plan.
- * Mirrors backend calculateStatus logic.
- * Returns null if no due date set.
- */
-export function calculateFundingStatus(plan: {
-  currentBalance: number;
-  targetAmount: number;
-  monthlyContribution: number;
-  nextDueDate: string | null;
-  purpose?: ExpensePlanPurpose;
-}): FundingStatus | null {
-  // Only calculate for sinking funds with a due date
-  if (!plan.nextDueDate) {
-    return null;
-  }
-
-  // If already funded
-  if (plan.currentBalance >= plan.targetAmount) {
-    return 'funded';
-  }
-
-  // Calculate months until due
-  const now = new Date();
-  const dueDate = new Date(plan.nextDueDate);
-  const monthsUntilDue = Math.max(
-    0,
-    (dueDate.getFullYear() - now.getFullYear()) * 12 +
-      (dueDate.getMonth() - now.getMonth())
-  );
-
-  // If due date is in the past or this month
-  if (monthsUntilDue <= 0) {
-    return plan.currentBalance >= plan.targetAmount ? 'funded' : 'behind';
-  }
-
-  // Calculate required monthly contribution
-  const amountNeeded = plan.targetAmount - plan.currentBalance;
-  const requiredMonthly = amountNeeded / monthsUntilDue;
-
-  // On track if current contribution is within 10% of required
-  const isOnTrack = requiredMonthly <= plan.monthlyContribution * 1.1;
-
-  if (isOnTrack) {
-    // Almost ready if 90%+ funded
-    const progress = (plan.currentBalance / plan.targetAmount) * 100;
-    if (progress >= 90) {
-      return 'almost_ready';
-    }
-    return 'on_track';
-  }
-
-  return 'behind';
 }
 
 export function formatCurrency(amount: number): string {
@@ -1056,26 +901,6 @@ export function calculateExpectedFundedByNow(plan: {
   return Math.round(expectedFundedByNow * 100) / 100;
 }
 
-/**
- * Calculate the funding gap from expected.
- * Positive value means behind schedule.
- */
-export function calculateFundingGapFromExpected(plan: {
-  purpose?: ExpensePlanPurpose;
-  monthlyContribution: number;
-  targetAmount: number;
-  currentBalance: number;
-  createdAt: string;
-  nextDueDate: string | null;
-  targetDate?: string | null;
-}): number | null {
-  const expectedFundedByNow = calculateExpectedFundedByNow(plan);
-  if (expectedFundedByNow === null) {
-    return null;
-  }
-  return Math.max(0, expectedFundedByNow - plan.currentBalance);
-}
-
 export function getMonthName(month: number): string {
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -1105,8 +930,6 @@ export function getDefaultFormData(): ExpensePlanFormData {
     seasonalMonths: [],
     autoCalculate: true,
     rolloverSurplus: true,
-    initialBalanceSource: 'zero',
-    initialBalanceCustom: '',
     paymentAccountType: null,
     paymentAccountId: null,
   };
@@ -1399,7 +1222,6 @@ export function mapWizardPlanToCreateDto(
     dueDay,
     autoCalculate: true,
     rolloverSurplus: true,
-    initialBalanceSource: 'zero',
     // Payment source (optional)
     paymentAccountType: plan.paymentAccountType || undefined,
     paymentAccountId: plan.paymentAccountId || undefined,

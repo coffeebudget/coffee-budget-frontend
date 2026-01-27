@@ -7,13 +7,8 @@
 
 import {
   ExpensePlan,
-  ExpensePlanTransaction,
   CreateExpensePlanDto,
   UpdateExpensePlanDto,
-  ContributeDto,
-  WithdrawDto,
-  AdjustBalanceDto,
-  LinkTransactionDto,
   MonthlyDepositSummary,
   TimelineEntry,
   ExpensePlanStatus,
@@ -134,99 +129,6 @@ export async function deleteExpensePlan(
   });
 
   return handleResponse<void>(response);
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// TRANSACTIONS
-// ═══════════════════════════════════════════════════════════════════════════
-
-export async function fetchExpensePlanTransactions(
-  token: string,
-  planId: number
-): Promise<ExpensePlanTransaction[]> {
-  const response = await fetch(`${API_URL}/expense-plans/${planId}/transactions`, {
-    headers: getHeaders(token),
-  });
-
-  return handleResponse<ExpensePlanTransaction[]>(response);
-}
-
-export async function contributeToExpensePlan(
-  token: string,
-  planId: number,
-  data: ContributeDto
-): Promise<ExpensePlanTransaction> {
-  const response = await fetch(`${API_URL}/expense-plans/${planId}/contribute`, {
-    method: 'POST',
-    headers: getHeaders(token),
-    body: JSON.stringify(data),
-  });
-
-  return handleResponse<ExpensePlanTransaction>(response);
-}
-
-export async function withdrawFromExpensePlan(
-  token: string,
-  planId: number,
-  data: WithdrawDto
-): Promise<ExpensePlanTransaction> {
-  const response = await fetch(`${API_URL}/expense-plans/${planId}/withdraw`, {
-    method: 'POST',
-    headers: getHeaders(token),
-    body: JSON.stringify(data),
-  });
-
-  return handleResponse<ExpensePlanTransaction>(response);
-}
-
-export async function adjustExpensePlanBalance(
-  token: string,
-  planId: number,
-  data: AdjustBalanceDto
-): Promise<ExpensePlanTransaction> {
-  const response = await fetch(`${API_URL}/expense-plans/${planId}/adjust`, {
-    method: 'POST',
-    headers: getHeaders(token),
-    body: JSON.stringify(data),
-  });
-
-  return handleResponse<ExpensePlanTransaction>(response);
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// TRANSACTION LINKING
-// ═══════════════════════════════════════════════════════════════════════════
-
-export async function linkTransactionToExpensePlan(
-  token: string,
-  planTransactionId: number,
-  data: LinkTransactionDto
-): Promise<ExpensePlanTransaction> {
-  const response = await fetch(
-    `${API_URL}/expense-plans/transactions/${planTransactionId}/link`,
-    {
-      method: 'POST',
-      headers: getHeaders(token),
-      body: JSON.stringify(data),
-    }
-  );
-
-  return handleResponse<ExpensePlanTransaction>(response);
-}
-
-export async function unlinkTransactionFromExpensePlan(
-  token: string,
-  planTransactionId: number
-): Promise<ExpensePlanTransaction> {
-  const response = await fetch(
-    `${API_URL}/expense-plans/transactions/${planTransactionId}/link`,
-    {
-      method: 'DELETE',
-      headers: getHeaders(token),
-    }
-  );
-
-  return handleResponse<ExpensePlanTransaction>(response);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

@@ -35,6 +35,7 @@ const protectedLinks = [
   { href: '/transactions', label: 'Transactions' },
   { href: '/pending-duplicates', label: 'Duplicates' },
   { href: '/expense-plans', label: 'Expense Plans' },
+  { href: '/income-plans', label: 'Income Plans' },
   { href: '/categories', label: 'Categories' },
   { href: '/tags', label: 'Tags' },
 ];

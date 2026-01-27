@@ -11,6 +11,7 @@ import MonthlySummaryChart from "./components/MonthlySummaryChart";
 import AIAnalysisCard from "./components/AIAnalysisCard";
 import BudgetManagementCard from "./components/BudgetManagementCard";
 import ExpensePlanDashboardCard from "./components/ExpensePlanDashboardCard";
+import BudgetCalculationCard from "./components/BudgetCalculationCard";
 import CoverageSection from "./components/CoverageSection";
 import FinancialOverview from "./components/FinancialOverview";
 import SmartAlerts from "./components/SmartAlerts";
@@ -123,6 +124,9 @@ export default function DashboardPage() {
 
       {/* Budget Management Card */}
       <BudgetManagementCard />
+
+      {/* Budget Calculation Card - Income vs Expenses */}
+      <BudgetCalculationCard />
 
       {/* Expense Plans Card */}
       <ExpensePlanDashboardCard />

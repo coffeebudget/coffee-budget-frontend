@@ -12,6 +12,7 @@ import AIAnalysisCard from "./components/AIAnalysisCard";
 import BudgetManagementCard from "./components/BudgetManagementCard";
 import ExpensePlanDashboardCard from "./components/ExpensePlanDashboardCard";
 import BudgetCalculationCard from "./components/BudgetCalculationCard";
+import FreeToSpendWidget from "./components/FreeToSpendWidget";
 import CoverageSection from "./components/CoverageSection";
 import FinancialOverview from "./components/FinancialOverview";
 import SmartAlerts from "./components/SmartAlerts";
@@ -107,6 +108,9 @@ export default function DashboardPage() {
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6">Financial Dashboard</h1>
       
+      {/* Free to Spend - Hero Widget */}
+      <FreeToSpendWidget className="mb-8" />
+
       {/* Hero Section - Financial Overview */}
       <FinancialOverview className="mb-8" />
 

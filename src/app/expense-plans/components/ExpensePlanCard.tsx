@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +37,7 @@ import {
 
 interface ExpensePlanCardProps {
   plan: ExpensePlan;
-  onEdit: (plan: ExpensePlan) => void;
+  onEdit?: (plan: ExpensePlan) => void;
   onDelete: (id: number) => void;
   onReviewAdjustment?: (plan: ExpensePlan) => void;
   /** Account coverage info - shows warning if account has shortfall */
@@ -92,6 +93,7 @@ export default function ExpensePlanCard({
   onReviewAdjustment,
   accountCoverage,
 }: ExpensePlanCardProps) {
+  const router = useRouter();
   const fundingStatus = calculateTimeFundingStatus(plan);
   const monthsUntilDue = getMonthsUntilDue(plan);
 
@@ -140,7 +142,7 @@ export default function ExpensePlanCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onEdit(plan)}>
+              <DropdownMenuItem onClick={() => router.push(`/expense-plans/${plan.id}`)}>
                 <Edit className="h-4 w-4 mr-2" />
                 Edit
               </DropdownMenuItem>

@@ -24,6 +24,8 @@ import { TimingSection } from "./TimingSection";
 import { StatusSection } from "./StatusSection";
 import { OptionsSection } from "./OptionsSection";
 import { AdjustmentAlert } from "./AdjustmentAlert";
+import { PaymentsSection } from "./PaymentsSection";
+import { LinkTransactionDialog } from "./LinkTransactionDialog";
 
 interface ExpensePlanDetailViewProps {
   id: number;
@@ -37,6 +39,7 @@ export function ExpensePlanDetailView({ id }: ExpensePlanDetailViewProps) {
 
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showLinkDialog, setShowLinkDialog] = useState(false);
 
   const handleDelete = async () => {
     try {
@@ -128,6 +131,19 @@ export function ExpensePlanDetailView({ id }: ExpensePlanDetailViewProps) {
       <OptionsSection
         plan={plan}
         isEditing={isEditing}
+      />
+
+      {/* Payments Section */}
+      <PaymentsSection
+        plan={plan}
+        onLinkTransaction={() => setShowLinkDialog(true)}
+      />
+
+      {/* Link Transaction Dialog */}
+      <LinkTransactionDialog
+        open={showLinkDialog}
+        onOpenChange={setShowLinkDialog}
+        plan={plan}
       />
 
       {/* Delete Confirmation Dialog */}

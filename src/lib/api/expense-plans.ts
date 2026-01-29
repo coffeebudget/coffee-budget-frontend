@@ -17,6 +17,8 @@ import {
   ExpensePlanWithStatus,
   AccountAllocationSummaryResponse,
   CoveragePeriodType,
+  ExpensePlanPayment,
+  LinkTransactionDto,
 } from '@/types/expense-plan-types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -266,4 +268,72 @@ export async function fetchAccountAllocationSummary(
   });
 
   return handleResponse<AccountAllocationSummaryResponse>(response);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PAYMENT OPERATIONS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Fetch payments for an expense plan
+ */
+export async function fetchExpensePlanPayments(
+  token: string,
+  planId: number,
+  year?: number,
+  month?: number
+): Promise<ExpensePlanPayment[]> {
+  const params = new URLSearchParams();
+  if (year) {
+    params.append('year', year.toString());
+  }
+  if (month) {
+    params.append('month', month.toString());
+  }
+
+  const url = `${API_URL}/expense-plans/${planId}/payments${params.toString() ? `?${params}` : ''}`;
+  const response = await fetch(url, {
+    headers: getHeaders(token),
+  });
+
+  return handleResponse<ExpensePlanPayment[]>(response);
+}
+
+/**
+ * Link a transaction to an expense plan
+ */
+export async function linkTransactionToExpensePlan(
+  token: string,
+  planId: number,
+  data: LinkTransactionDto
+): Promise<ExpensePlanPayment> {
+  const response = await fetch(
+    `${API_URL}/expense-plans/${planId}/link-transaction`,
+    {
+      method: 'POST',
+      headers: getHeaders(token),
+      body: JSON.stringify(data),
+    }
+  );
+
+  return handleResponse<ExpensePlanPayment>(response);
+}
+
+/**
+ * Delete a payment (unlink transaction from expense plan)
+ */
+export async function deleteExpensePlanPayment(
+  token: string,
+  planId: number,
+  paymentId: number
+): Promise<void> {
+  const response = await fetch(
+    `${API_URL}/expense-plans/${planId}/payments/${paymentId}`,
+    {
+      method: 'DELETE',
+      headers: getHeaders(token),
+    }
+  );
+
+  return handleResponse<void>(response);
 }

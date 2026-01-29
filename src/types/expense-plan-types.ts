@@ -134,6 +134,43 @@ export interface ExpensePlan {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// EXPENSE PLAN PAYMENT INTERFACES
+// ═══════════════════════════════════════════════════════════════════════════
+
+export const EXPENSE_PLAN_PAYMENT_TYPES = [
+  'auto_linked',
+  'manual',
+  'unlinked',
+] as const;
+
+export type ExpensePlanPaymentType = (typeof EXPENSE_PLAN_PAYMENT_TYPES)[number];
+
+export interface ExpensePlanPayment {
+  id: number;
+  expensePlanId: number;
+  year: number;
+  month: number;
+  period: string;
+  amount: number;
+  paymentDate: string;
+  paymentType: ExpensePlanPaymentType;
+  transactionId: number | null;
+  transaction: {
+    id: number;
+    description: string;
+    amount: number;
+    executionDate: string | null;
+  } | null;
+  notes: string | null;
+  createdAt: string;
+}
+
+export interface LinkTransactionDto {
+  transactionId: number;
+  notes?: string;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // INCOME DISTRIBUTION INTERFACES
 // ═══════════════════════════════════════════════════════════════════════════
 

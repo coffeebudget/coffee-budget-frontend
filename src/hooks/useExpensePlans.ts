@@ -23,6 +23,9 @@ import {
   fetchLongTermStatus,
   fetchExpensePlansWithStatus,
   fetchAccountAllocationSummary,
+  fetchExpensePlanPayments,
+  linkTransactionToExpensePlan,
+  deleteExpensePlanPayment,
 } from '@/lib/api/expense-plans';
 import {
   ExpensePlanStatus,
@@ -260,6 +263,91 @@ export function useDismissAdjustment() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to dismiss adjustment');
+    },
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PAYMENT HOOKS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Fetch payments for an expense plan
+ */
+export function useExpensePlanPayments(
+  planId: number,
+  year?: number,
+  month?: number
+) {
+  const { data: session } = useSession();
+
+  return useQuery({
+    queryKey: ['expense-plan-payments', planId, year, month],
+    queryFn: () =>
+      fetchExpensePlanPayments(
+        session!.user!.accessToken as string,
+        planId,
+        year,
+        month
+      ),
+    enabled: !!session && !!planId,
+    staleTime: 60 * 1000, // 1 minute
+  });
+}
+
+/**
+ * Link a transaction to an expense plan
+ */
+export function useLinkTransaction() {
+  const { data: session } = useSession();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      planId,
+      transactionId,
+      notes,
+    }: {
+      planId: number;
+      transactionId: number;
+      notes?: string;
+    }) =>
+      linkTransactionToExpensePlan(session!.user!.accessToken as string, planId, {
+        transactionId,
+        notes,
+      }),
+    onSuccess: (_, { planId }) => {
+      queryClient.invalidateQueries({ queryKey: ['expense-plan-payments', planId] });
+      queryClient.invalidateQueries({ queryKey: ['expense-plan', planId] });
+      toast.success('Transaction linked successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to link transaction');
+    },
+  });
+}
+
+/**
+ * Delete a payment (unlink transaction)
+ */
+export function useDeletePayment() {
+  const { data: session } = useSession();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ planId, paymentId }: { planId: number; paymentId: number }) =>
+      deleteExpensePlanPayment(
+        session!.user!.accessToken as string,
+        planId,
+        paymentId
+      ),
+    onSuccess: (_, { planId }) => {
+      queryClient.invalidateQueries({ queryKey: ['expense-plan-payments', planId] });
+      queryClient.invalidateQueries({ queryKey: ['expense-plan', planId] });
+      toast.success('Payment unlinked');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete payment');
     },
   });
 }

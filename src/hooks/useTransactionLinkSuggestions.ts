@@ -74,10 +74,11 @@ export function useApproveLinkSuggestion() {
       queryClient.invalidateQueries({ queryKey: ['transaction-link-suggestions'] });
       queryClient.invalidateQueries({ queryKey: ['expense-plans'] });
       queryClient.invalidateQueries({ queryKey: ['expense-plan-transactions'] });
-      toast.success(`Transazione collegata! Nuovo saldo: €${result.newBalance.toFixed(2)}`);
+      queryClient.invalidateQueries({ queryKey: ['expense-plan-payments'] });
+      toast.success(`Transaction linked successfully`);
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Impossibile collegare la transazione');
+      toast.error(error.message || 'Failed to link transaction');
     },
   });
 }
@@ -94,10 +95,10 @@ export function useRejectLinkSuggestion() {
       rejectSuggestion(session!.user!.accessToken as string, id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transaction-link-suggestions'] });
-      toast.success('Suggerimento ignorato');
+      toast.success('Suggestion dismissed');
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Impossibile ignorare il suggerimento');
+      toast.error(error.message || 'Failed to dismiss suggestion');
     },
   });
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,11 +36,20 @@ import {
   Zap,
   Link2,
   Unlink,
+  Lightbulb,
+  Check,
+  X,
+  Calendar,
 } from "lucide-react";
 import {
   useExpensePlanPayments,
   useDeletePayment,
 } from "@/hooks/useExpensePlans";
+import {
+  usePendingLinkSuggestions,
+  useApproveLinkSuggestion,
+  useRejectLinkSuggestion,
+} from "@/hooks/useTransactionLinkSuggestions";
 import {
   ExpensePlan,
   ExpensePlanPayment,
@@ -54,8 +63,43 @@ interface PaymentsSectionProps {
 
 export function PaymentsSection({ plan, onLinkTransaction }: PaymentsSectionProps) {
   const { data: payments = [], isLoading } = useExpensePlanPayments(plan.id);
+  const { data: allSuggestions = [], isLoading: suggestionsLoading } = usePendingLinkSuggestions();
   const deletePaymentMutation = useDeletePayment();
+  const approveMutation = useApproveLinkSuggestion();
+  const rejectMutation = useRejectLinkSuggestion();
   const [paymentToDelete, setPaymentToDelete] = useState<ExpensePlanPayment | null>(null);
+  const [processingIds, setProcessingIds] = useState<Set<number>>(new Set());
+
+  // Filter suggestions for this specific plan
+  const planSuggestions = useMemo(() => {
+    return allSuggestions.filter((s) => s.expensePlanId === plan.id);
+  }, [allSuggestions, plan.id]);
+
+  const handleApproveSuggestion = async (suggestionId: number) => {
+    setProcessingIds((prev) => new Set(prev).add(suggestionId));
+    try {
+      await approveMutation.mutateAsync({ id: suggestionId });
+    } finally {
+      setProcessingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(suggestionId);
+        return next;
+      });
+    }
+  };
+
+  const handleRejectSuggestion = async (suggestionId: number) => {
+    setProcessingIds((prev) => new Set(prev).add(suggestionId));
+    try {
+      await rejectMutation.mutateAsync({ id: suggestionId });
+    } finally {
+      setProcessingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(suggestionId);
+        return next;
+      });
+    }
+  };
 
   const handleDeletePayment = async () => {
     if (!paymentToDelete) return;
@@ -138,6 +182,75 @@ export function PaymentsSection({ plan, onLinkTransaction }: PaymentsSectionProp
               <span className="font-semibold">
                 {formatCurrency(currentMonthTotal)}
               </span>
+            </div>
+          </div>
+        )}
+
+        {/* Pending Suggestions */}
+        {planSuggestions.length > 0 && (
+          <div className="mb-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+            <div className="flex items-center gap-2 mb-3">
+              <Lightbulb className="h-5 w-5 text-amber-600" />
+              <span className="font-medium text-amber-800">
+                Suggested Matches ({planSuggestions.length})
+              </span>
+            </div>
+            <div className="space-y-2">
+              {planSuggestions.map((suggestion) => {
+                const isProcessing = processingIds.has(suggestion.id);
+                return (
+                  <div
+                    key={suggestion.id}
+                    className="flex items-center justify-between p-3 bg-white rounded-md border border-amber-100"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">
+                        {suggestion.transactionDescription}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1 text-sm text-gray-500">
+                        <Calendar className="h-3 w-3" />
+                        <span>{formatDate(suggestion.transactionDate)}</span>
+                        <span className="text-gray-300">|</span>
+                        <span className="font-medium text-red-600">
+                          {formatCurrency(Math.abs(suggestion.transactionAmount))}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 ml-4">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleRejectSuggestion(suggestion.id)}
+                        disabled={isProcessing}
+                        className="h-8 w-8 p-0 text-gray-500 hover:text-red-600 hover:border-red-300"
+                        title="Reject suggestion"
+                      >
+                        {isProcessing ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <X className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleApproveSuggestion(suggestion.id)}
+                        disabled={isProcessing}
+                        className="h-8 bg-green-600 hover:bg-green-700"
+                        title="Approve suggestion"
+                      >
+                        {isProcessing ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <>
+                            <Check className="h-4 w-4 mr-1" />
+                            Link
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

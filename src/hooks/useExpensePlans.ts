@@ -319,6 +319,8 @@ export function useLinkTransaction() {
     onSuccess: (_, { planId }) => {
       queryClient.invalidateQueries({ queryKey: ['expense-plan-payments', planId] });
       queryClient.invalidateQueries({ queryKey: ['expense-plan', planId] });
+      // Invalidate suggestions since the linked transaction may have had a pending suggestion
+      queryClient.invalidateQueries({ queryKey: ['transaction-link-suggestions'] });
       toast.success('Transaction linked successfully');
     },
     onError: (error: Error) => {

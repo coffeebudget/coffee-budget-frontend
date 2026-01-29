@@ -26,6 +26,8 @@ import {
   fetchExpensePlanPayments,
   linkTransactionToExpensePlan,
   deleteExpensePlanPayment,
+  fetchLinkedPlansByTransactions,
+  LinkedPlanInfo,
 } from '@/lib/api/expense-plans';
 import {
   ExpensePlanStatus,
@@ -321,6 +323,8 @@ export function useLinkTransaction() {
       queryClient.invalidateQueries({ queryKey: ['expense-plan', planId] });
       // Invalidate suggestions since the linked transaction may have had a pending suggestion
       queryClient.invalidateQueries({ queryKey: ['transaction-link-suggestions'] });
+      // Invalidate linked plans cache so transaction list shows the new link
+      queryClient.invalidateQueries({ queryKey: ['linked-plans-by-transactions'] });
       toast.success('Transaction linked successfully');
     },
     onError: (error: Error) => {
@@ -353,3 +357,29 @@ export function useDeletePayment() {
     },
   });
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TRANSACTION LINK INFO HOOKS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Fetch linked expense plans for multiple transactions
+ * Returns a map of transactionId -> linked plan info
+ */
+export function useLinkedPlansByTransactions(transactionIds: number[]) {
+  const { data: session } = useSession();
+
+  return useQuery({
+    queryKey: ['linked-plans-by-transactions', transactionIds],
+    queryFn: () =>
+      fetchLinkedPlansByTransactions(
+        session!.user!.accessToken as string,
+        transactionIds
+      ),
+    enabled: !!session && transactionIds.length > 0,
+    staleTime: 60 * 1000, // 1 minute
+  });
+}
+
+// Re-export the type for convenience
+export type { LinkedPlanInfo };

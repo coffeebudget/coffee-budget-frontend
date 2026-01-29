@@ -337,3 +337,33 @@ export async function deleteExpensePlanPayment(
 
   return handleResponse<void>(response);
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TRANSACTION LINK INFO
+// ═══════════════════════════════════════════════════════════════════════════
+
+export interface LinkedPlanInfo {
+  planId: number;
+  planName: string;
+  planIcon: string | null;
+}
+
+/**
+ * Get linked expense plans for multiple transactions
+ * Returns a map of transactionId -> linked plan info
+ */
+export async function fetchLinkedPlansByTransactions(
+  token: string,
+  transactionIds: number[]
+): Promise<Record<number, LinkedPlanInfo[]>> {
+  const response = await fetch(
+    `${API_URL}/expense-plans/linked-plans-by-transactions`,
+    {
+      method: 'POST',
+      headers: getHeaders(token),
+      body: JSON.stringify({ transactionIds }),
+    }
+  );
+
+  return handleResponse<Record<number, LinkedPlanInfo[]>>(response);
+}

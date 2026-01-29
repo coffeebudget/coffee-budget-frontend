@@ -75,6 +75,7 @@ export function useApproveLinkSuggestion() {
       queryClient.invalidateQueries({ queryKey: ['expense-plans'] });
       queryClient.invalidateQueries({ queryKey: ['expense-plan-transactions'] });
       queryClient.invalidateQueries({ queryKey: ['expense-plan-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['linked-plans-by-transactions'] });
       toast.success(`Transaction linked successfully`);
     },
     onError: (error: Error) => {

@@ -1,15 +1,40 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Transaction, Category, Tag, BankAccount, CreditCard } from "@/utils/types";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, AlertCircle, Loader2, ChevronDown, Tags } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Edit,
+  Trash2,
+  AlertCircle,
+  Loader2,
+  ChevronDown,
+  Tags,
+  MoreVertical,
+  Link2,
+  Wallet,
+} from "lucide-react";
+import { useLinkedPlansByTransactions } from "@/hooks/useExpensePlans";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import TransactionLearningPrompt from "./TransactionLearningPrompt";
 import BulkToolbar from "./BulkToolbar";
 import BulkCategorizeSheet from "./BulkCategorizeSheet";
 import BulkTagSheet from "./BulkTagSheet";
+import { ExpensePlanSelectorDialog } from "./ExpensePlanSelectorDialog";
 
 import {
   Table,
@@ -61,6 +86,17 @@ export default function TransactionList({
   } | null>(null);
   const [isCategorizeSheetOpen, setIsCategorizeSheetOpen] = useState(false);
   const [isTagSheetOpen, setIsTagSheetOpen] = useState(false);
+  const [expensePlanDialogOpen, setExpensePlanDialogOpen] = useState(false);
+  const [transactionToLink, setTransactionToLink] = useState<Transaction | null>(null);
+
+  // Get transaction IDs for linked plans lookup
+  const transactionIds = useMemo(
+    () => transactions.map((t) => t.id).filter((id): id is number => id !== undefined),
+    [transactions]
+  );
+
+  // Fetch linked expense plans for all transactions
+  const { data: linkedPlansMap = {} } = useLinkedPlansByTransactions(transactionIds);
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -399,6 +435,37 @@ export default function TransactionList({
                         <div className="break-words">
                           {transaction.description}
                         </div>
+                        {transaction.id && linkedPlansMap[transaction.id]?.length > 0 && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="mt-1">
+                                  <Badge
+                                    variant="outline"
+                                    className="bg-blue-50 text-blue-700 border-blue-200 text-xs cursor-help"
+                                  >
+                                    <Wallet className="h-3 w-3 mr-1" />
+                                    {linkedPlansMap[transaction.id].length === 1
+                                      ? linkedPlansMap[transaction.id][0].planIcon
+                                        ? `${linkedPlansMap[transaction.id][0].planIcon} ${linkedPlansMap[transaction.id][0].planName}`
+                                        : linkedPlansMap[transaction.id][0].planName
+                                      : `${linkedPlansMap[transaction.id].length} plans`}
+                                  </Badge>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <div className="text-sm">
+                                  <div className="font-medium mb-1">Linked to:</div>
+                                  {linkedPlansMap[transaction.id].map((plan) => (
+                                    <div key={plan.planId}>
+                                      {plan.planIcon} {plan.planName}
+                                    </div>
+                                  ))}
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Badge variant={transaction.type === 'expense' ? 'destructive' : 'default'}>
@@ -477,19 +544,44 @@ export default function TransactionList({
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button
-                            variant={confirmDelete === transaction.id ? "destructive" : "ghost"}
-                            size="icon"
-                            onClick={() => handleDeleteClick(transaction.id!)}
-                            title={confirmDelete === transaction.id ? "Confirm Delete" : "Delete Transaction"}
-                            disabled={loadingId === transaction.id}
-                          >
-                            {loadingId === transaction.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-4 w-4" />
-                            )}
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                disabled={loadingId === transaction.id}
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {transaction.type === "expense" && (
+                                <>
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setTransactionToLink(transaction);
+                                      setExpensePlanDialogOpen(true);
+                                    }}
+                                  >
+                                    <Link2 className="h-4 w-4 mr-2" />
+                                    Link to Expense Plan
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                </>
+                              )}
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteClick(transaction.id!)}
+                                className="text-red-600"
+                              >
+                                {loadingId === transaction.id ? (
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                ) : (
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                )}
+                                {confirmDelete === transaction.id ? "Confirm Delete" : "Delete"}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -521,6 +613,15 @@ export default function TransactionList({
         tags={tags}
         transactionCount={selectedIds.length}
         onSubmit={handleApplyTags}
+      />
+
+      <ExpensePlanSelectorDialog
+        open={expensePlanDialogOpen}
+        onOpenChange={(open) => {
+          setExpensePlanDialogOpen(open);
+          if (!open) setTransactionToLink(null);
+        }}
+        transaction={transactionToLink}
       />
     </>
   );

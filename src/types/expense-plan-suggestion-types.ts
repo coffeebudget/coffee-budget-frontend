@@ -35,6 +35,25 @@ export enum FrequencyType {
 export type SuggestionStatus = 'pending' | 'approved' | 'rejected' | 'expired';
 export type ExpensePlanPurpose = 'sinking_fund' | 'spending_budget';
 
+// v4: Template IDs (PRD-006)
+export type TemplateId =
+  | 'monthly-bill'
+  | 'irregular-payments'
+  | 'emergency-fund'
+  | 'seasonal-goal'
+  | 'monthly-budget'
+  | 'envelope-budget'
+  | 'yearly-budget';
+
+export interface SuggestedConfig {
+  dueDay?: number;
+  dueMonth?: number;
+  paymentSchedule?: { month: number; estimatedAmount: number }[];
+  spendingWindows?: number[];
+  autoTrackCategory?: boolean;
+  paymentAccountId?: number;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // RESPONSE TYPES
 // ═══════════════════════════════════════════════════════════════════════════
@@ -71,6 +90,11 @@ export interface ExpensePlanSuggestion {
     amountRange?: { min: number; max: number };
     sourceVersion?: string;
   };
+  // v4: Template detection (PRD-006)
+  suggestedTemplate?: TemplateId | null;
+  templateConfidence?: number | null;
+  templateReasons?: string[] | null;
+  suggestedConfig?: SuggestedConfig | null;
 }
 
 export interface SuggestionListResponse {
@@ -274,4 +298,64 @@ export function getSuggestedPurposeColor(purpose: ExpensePlanPurpose | null): st
     spending_budget: 'bg-purple-100 text-purple-800',
   };
   return colors[purpose] || 'bg-gray-100 text-gray-800';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TEMPLATE HELPERS (v4: PRD-006)
+// ═══════════════════════════════════════════════════════════════════════════
+
+export function getTemplateLabel(templateId: TemplateId | null | undefined): string {
+  if (!templateId) return 'Unknown';
+  const labels: Record<TemplateId, string> = {
+    'monthly-bill': 'Monthly Bill',
+    'irregular-payments': 'Irregular Payments',
+    'emergency-fund': 'Emergency Fund',
+    'seasonal-goal': 'Seasonal Goal',
+    'monthly-budget': 'Monthly Budget',
+    'envelope-budget': 'Envelope Budget',
+    'yearly-budget': 'Yearly Budget',
+  };
+  return labels[templateId] || templateId;
+}
+
+export function getTemplateIcon(templateId: TemplateId | null | undefined): string {
+  if (!templateId) return '📋';
+  const icons: Record<TemplateId, string> = {
+    'monthly-bill': '📅',
+    'irregular-payments': '📆',
+    'emergency-fund': '🛟',
+    'seasonal-goal': '🎯',
+    'monthly-budget': '📊',
+    'envelope-budget': '✉️',
+    'yearly-budget': '📈',
+  };
+  return icons[templateId] || '📋';
+}
+
+export function getTemplateColor(templateId: TemplateId | null | undefined): string {
+  if (!templateId) return 'bg-gray-100 text-gray-800';
+  const colors: Record<TemplateId, string> = {
+    'monthly-bill': 'bg-green-100 text-green-800',
+    'irregular-payments': 'bg-orange-100 text-orange-800',
+    'emergency-fund': 'bg-red-100 text-red-800',
+    'seasonal-goal': 'bg-teal-100 text-teal-800',
+    'monthly-budget': 'bg-blue-100 text-blue-800',
+    'envelope-budget': 'bg-purple-100 text-purple-800',
+    'yearly-budget': 'bg-indigo-100 text-indigo-800',
+  };
+  return colors[templateId] || 'bg-gray-100 text-gray-800';
+}
+
+export function getTemplateDescription(templateId: TemplateId | null | undefined): string {
+  if (!templateId) return '';
+  const descriptions: Record<TemplateId, string> = {
+    'monthly-bill': 'Fixed monthly payment like utilities or subscriptions',
+    'irregular-payments': 'Quarterly, semi-annual, or annual payments',
+    'emergency-fund': 'Savings buffer for unexpected expenses',
+    'seasonal-goal': 'Expenses concentrated in specific periods',
+    'monthly-budget': 'Variable spending tracked by category',
+    'envelope-budget': 'Category-based spending limits',
+    'yearly-budget': 'Occasional expenses tracked annually',
+  };
+  return descriptions[templateId] || '';
 }

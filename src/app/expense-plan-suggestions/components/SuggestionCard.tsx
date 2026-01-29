@@ -10,6 +10,10 @@ import {
   getSuggestedPurposeLabel,
   getSuggestedPurposeIcon,
   getSuggestedPurposeColor,
+  getTemplateLabel,
+  getTemplateIcon,
+  getTemplateColor,
+  getTemplateDescription,
 } from '@/types/expense-plan-suggestion-types';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -71,13 +75,24 @@ export function SuggestionCard({
               </label>
             )}
 
-            {/* Purpose badge - prominent display */}
-            {suggestion.suggestedPurpose && (
-              <Badge className={cn('mb-2', getSuggestedPurposeColor(suggestion.suggestedPurpose))}>
-                <span className="mr-1">{getSuggestedPurposeIcon(suggestion.suggestedPurpose)}</span>
-                {getSuggestedPurposeLabel(suggestion.suggestedPurpose)}
-              </Badge>
-            )}
+            {/* Purpose and template badges - prominent display */}
+            <div className="flex flex-wrap gap-2 mb-2">
+              {suggestion.suggestedPurpose && (
+                <Badge className={cn(getSuggestedPurposeColor(suggestion.suggestedPurpose))}>
+                  <span className="mr-1">{getSuggestedPurposeIcon(suggestion.suggestedPurpose)}</span>
+                  {getSuggestedPurposeLabel(suggestion.suggestedPurpose)}
+                </Badge>
+              )}
+              {suggestion.suggestedTemplate && (
+                <Badge
+                  className={cn(getTemplateColor(suggestion.suggestedTemplate))}
+                  title={getTemplateDescription(suggestion.suggestedTemplate)}
+                >
+                  <span className="mr-1">{getTemplateIcon(suggestion.suggestedTemplate)}</span>
+                  {getTemplateLabel(suggestion.suggestedTemplate)}
+                </Badge>
+              )}
+            </div>
 
             {/* Name and badges */}
             <div className="flex flex-wrap items-center gap-2">
@@ -188,6 +203,34 @@ export function SuggestionCard({
                 }).format(suggestion.metadata.amountRange.max)}
               </p>
             )}
+            {/* Template detection details (v4: PRD-006) */}
+            {suggestion.suggestedTemplate && (
+              <div className="mt-2 pt-2 border-t border-gray-100">
+                <p className="font-medium text-gray-700 mb-1">
+                  Suggested template: {getTemplateIcon(suggestion.suggestedTemplate)} {getTemplateLabel(suggestion.suggestedTemplate)}
+                </p>
+                <p className="text-xs text-gray-500 mb-2">
+                  {getTemplateDescription(suggestion.suggestedTemplate)}
+                </p>
+                {suggestion.templateReasons && suggestion.templateReasons.length > 0 && (
+                  <ul className="text-xs text-gray-600 list-disc list-inside">
+                    {suggestion.templateReasons.map((reason, idx) => (
+                      <li key={idx}>{reason}</li>
+                    ))}
+                  </ul>
+                )}
+                {suggestion.suggestedConfig?.dueDay && (
+                  <p className="text-xs text-gray-600 mt-1">
+                    <span className="font-medium">Suggested due day:</span> {suggestion.suggestedConfig.dueDay}
+                  </p>
+                )}
+                {suggestion.templateConfidence && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Template confidence: {suggestion.templateConfidence}%
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         )}
       </CardContent>
@@ -290,6 +333,14 @@ export function SuggestionCardCompact({
           {suggestion.suggestedPurpose && (
             <Badge className={cn('text-xs shrink-0', getSuggestedPurposeColor(suggestion.suggestedPurpose))}>
               {getSuggestedPurposeIcon(suggestion.suggestedPurpose)} {getSuggestedPurposeLabel(suggestion.suggestedPurpose)}
+            </Badge>
+          )}
+          {suggestion.suggestedTemplate && (
+            <Badge
+              className={cn('text-xs shrink-0', getTemplateColor(suggestion.suggestedTemplate))}
+              title={getTemplateDescription(suggestion.suggestedTemplate)}
+            >
+              {getTemplateIcon(suggestion.suggestedTemplate)} {getTemplateLabel(suggestion.suggestedTemplate)}
             </Badge>
           )}
         </div>

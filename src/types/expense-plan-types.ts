@@ -1039,7 +1039,596 @@ export function getDistributionStrategyDescription(strategy: DistributionStrateg
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// WIZARD TYPES
+// PLAN TEMPLATES - Template-Based Creation (PRD-005)
+// ═══════════════════════════════════════════════════════════════════════════
+
+export const TEMPLATE_CATEGORIES = ['bills', 'savings', 'budgets'] as const;
+export type TemplateCategory = (typeof TEMPLATE_CATEGORIES)[number];
+
+export const TEMPLATE_FIELD_TYPES = [
+  'text',
+  'number',
+  'date',
+  'select',
+  'category',
+  'account',
+  'month-picker',
+  'payment-schedule',
+  'spending-windows',
+] as const;
+export type TemplateFieldType = (typeof TEMPLATE_FIELD_TYPES)[number];
+
+/**
+ * Configuration for a single field in a wizard step.
+ */
+export interface WizardField {
+  name: keyof CreateExpensePlanDto | 'dueDay' | 'spendingWindows' | 'paymentSchedule';
+  label: string;
+  type: TemplateFieldType;
+  required: boolean;
+  helpText?: string;
+  placeholder?: string;
+  options?: { value: string; label: string }[];
+}
+
+/**
+ * A step in the template wizard.
+ */
+export interface WizardStep {
+  id: string;
+  title: string;
+  description?: string;
+  fields: WizardField[];
+}
+
+/**
+ * Template definition for expense plan creation.
+ * Each template provides pre-configured settings and a wizard flow.
+ */
+export interface PlanTemplate {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  category: TemplateCategory;
+  examples: string[];
+
+  /**
+   * Default values for CreateExpensePlanDto fields.
+   * These will be applied automatically when creating from this template.
+   */
+  defaults: Partial<CreateExpensePlanDto>;
+
+  /**
+   * Wizard configuration - steps and fields for this template.
+   */
+  wizard: {
+    steps: WizardStep[];
+  };
+
+  /**
+   * Optional validation rules specific to this template.
+   */
+  validation?: {
+    required?: (keyof CreateExpensePlanDto)[];
+  };
+}
+
+/**
+ * Plan Template Catalog
+ *
+ * Contains all available templates organized by category:
+ * - Bills: Monthly bills, irregular payments
+ * - Savings: Emergency fund, seasonal savings
+ * - Budgets: Monthly budget, envelope budget, yearly budget
+ */
+export const PLAN_TEMPLATES: PlanTemplate[] = [
+  // ─── BILLS ───────────────────────────────────────────────────────────────────
+  {
+    id: 'monthly-bill',
+    name: 'Monthly Bill',
+    description: 'Recurring monthly expenses like utilities, subscriptions, or rent',
+    icon: '📄',
+    category: 'bills',
+    examples: ['Electricity', 'Internet', 'Netflix', 'Rent'],
+    defaults: {
+      planType: 'fixed_monthly',
+      frequency: 'monthly',
+      priority: 'essential',
+      purpose: 'sinking_fund',
+      autoCalculate: true,
+    },
+    wizard: {
+      steps: [
+        {
+          id: 'basics',
+          title: 'Bill Details',
+          fields: [
+            {
+              name: 'name',
+              label: 'Bill Name',
+              type: 'text',
+              required: true,
+              placeholder: 'e.g., Electricity',
+            },
+            {
+              name: 'targetAmount',
+              label: 'Monthly Amount',
+              type: 'number',
+              required: true,
+              helpText: 'Approximate monthly cost',
+            },
+            {
+              name: 'categoryId',
+              label: 'Category',
+              type: 'category',
+              required: false,
+            },
+          ],
+        },
+        {
+          id: 'schedule',
+          title: 'Payment Schedule',
+          fields: [
+            {
+              name: 'dueDay',
+              label: 'Due Day',
+              type: 'number',
+              required: false,
+              helpText: 'Day of month bill is due (1-31)',
+            },
+            {
+              name: 'paymentAccountId',
+              label: 'Payment Account',
+              type: 'account',
+              required: false,
+            },
+          ],
+        },
+        {
+          id: 'tracking',
+          title: 'Tracking Options',
+          fields: [
+            {
+              name: 'autoTrackCategory',
+              label: 'Auto-link transactions',
+              type: 'select',
+              required: false,
+              options: [
+                { value: 'true', label: 'Yes, link matching transactions' },
+                { value: 'false', label: 'No, I\'ll link manually' },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    validation: {
+      required: ['name', 'targetAmount'],
+    },
+  },
+
+  {
+    id: 'irregular-payments',
+    name: 'Irregular Payments',
+    description: 'Bills with non-monthly schedules like quarterly insurance or annual fees',
+    icon: '📅',
+    category: 'bills',
+    examples: ['Car Insurance', 'Property Tax', 'Annual Subscriptions'],
+    defaults: {
+      planType: 'yearly_variable',
+      frequency: 'yearly',
+      priority: 'essential',
+      purpose: 'sinking_fund',
+      autoCalculate: true,
+    },
+    wizard: {
+      steps: [
+        {
+          id: 'basics',
+          title: 'Payment Details',
+          fields: [
+            {
+              name: 'name',
+              label: 'Name',
+              type: 'text',
+              required: true,
+              placeholder: 'e.g., Car Insurance',
+            },
+            {
+              name: 'targetAmount',
+              label: 'Annual Total',
+              type: 'number',
+              required: true,
+              helpText: 'Total for all payments this year',
+            },
+            {
+              name: 'categoryId',
+              label: 'Category',
+              type: 'category',
+              required: false,
+            },
+          ],
+        },
+        {
+          id: 'schedule',
+          title: 'Payment Schedule',
+          description: 'When is this payment due?',
+          fields: [
+            {
+              name: 'dueMonth',
+              label: 'Due Month',
+              type: 'month-picker',
+              required: false,
+              helpText: 'Month when payment is due',
+            },
+            {
+              name: 'paymentAccountId',
+              label: 'Payment Account',
+              type: 'account',
+              required: false,
+            },
+          ],
+        },
+      ],
+    },
+    validation: {
+      required: ['name', 'targetAmount'],
+    },
+  },
+
+  // ─── SAVINGS ─────────────────────────────────────────────────────────────────
+  {
+    id: 'emergency-fund',
+    name: 'Emergency Fund',
+    description: 'Build and maintain a safety net for unexpected expenses',
+    icon: '🛡️',
+    category: 'savings',
+    examples: ['Emergency Fund', 'Rainy Day Fund', 'Safety Net'],
+    defaults: {
+      planType: 'emergency_fund',
+      priority: 'essential',
+      purpose: 'sinking_fund',
+      frequency: 'one_time',
+      autoCalculate: false,
+    },
+    wizard: {
+      steps: [
+        {
+          id: 'target',
+          title: 'Your Safety Net',
+          fields: [
+            {
+              name: 'name',
+              label: 'Name',
+              type: 'text',
+              required: true,
+              placeholder: 'Emergency Fund',
+            },
+            {
+              name: 'targetAmount',
+              label: 'Target Amount',
+              type: 'number',
+              required: true,
+              helpText: 'Recommended: 3-6 months of expenses',
+            },
+            {
+              name: 'monthlyContribution',
+              label: 'Monthly Savings',
+              type: 'number',
+              required: true,
+              helpText: 'How much to save each month',
+            },
+          ],
+        },
+        {
+          id: 'account',
+          title: 'Where to Keep It',
+          fields: [
+            {
+              name: 'paymentAccountId',
+              label: 'Account',
+              type: 'account',
+              required: false,
+              helpText: 'Where is this money stored?',
+            },
+          ],
+        },
+      ],
+    },
+    validation: {
+      required: ['name', 'targetAmount', 'monthlyContribution'],
+    },
+  },
+
+  {
+    id: 'seasonal-goal',
+    name: 'Seasonal Savings',
+    description: 'Save for expenses with specific spending windows like vacations',
+    icon: '🏖️',
+    category: 'savings',
+    examples: ['Summer Vacation', 'Christmas Gifts', 'Back to School'],
+    defaults: {
+      planType: 'seasonal',
+      frequency: 'seasonal',
+      priority: 'important',
+      purpose: 'sinking_fund',
+      autoCalculate: true,
+    },
+    wizard: {
+      steps: [
+        {
+          id: 'goal',
+          title: 'Your Goal',
+          fields: [
+            {
+              name: 'name',
+              label: 'Name',
+              type: 'text',
+              required: true,
+              placeholder: 'Summer Vacation',
+            },
+            {
+              name: 'targetAmount',
+              label: 'Total Budget',
+              type: 'number',
+              required: true,
+            },
+          ],
+        },
+        {
+          id: 'windows',
+          title: 'Spending Windows',
+          description: 'When will you spend this money?',
+          fields: [
+            {
+              name: 'seasonalMonths',
+              label: 'Active Months',
+              type: 'spending-windows',
+              required: true,
+              helpText: 'Select months when spending occurs',
+            },
+          ],
+        },
+        {
+          id: 'account',
+          title: 'Tracking',
+          fields: [
+            {
+              name: 'paymentAccountId',
+              label: 'Account',
+              type: 'account',
+              required: false,
+            },
+            {
+              name: 'categoryId',
+              label: 'Category',
+              type: 'category',
+              required: false,
+            },
+          ],
+        },
+      ],
+    },
+    validation: {
+      required: ['name', 'targetAmount', 'seasonalMonths'],
+    },
+  },
+
+  // ─── BUDGETS ─────────────────────────────────────────────────────────────────
+  {
+    id: 'monthly-budget',
+    name: 'Monthly Budget',
+    description: 'Track spending in a category with a monthly limit',
+    icon: '📊',
+    category: 'budgets',
+    examples: ['Groceries', 'Dining Out', 'Entertainment'],
+    defaults: {
+      planType: 'goal',
+      frequency: 'monthly',
+      priority: 'important',
+      purpose: 'spending_budget',
+      autoTrackCategory: true,
+      autoCalculate: false,
+    },
+    wizard: {
+      steps: [
+        {
+          id: 'budget',
+          title: 'Budget Details',
+          fields: [
+            {
+              name: 'name',
+              label: 'Name',
+              type: 'text',
+              required: true,
+              placeholder: 'Groceries',
+            },
+            {
+              name: 'targetAmount',
+              label: 'Monthly Budget',
+              type: 'number',
+              required: true,
+              helpText: 'Maximum monthly spending',
+            },
+            {
+              name: 'categoryId',
+              label: 'Category to Track',
+              type: 'category',
+              required: true,
+              helpText: 'Transactions in this category will be tracked',
+            },
+          ],
+        },
+      ],
+    },
+    validation: {
+      required: ['name', 'targetAmount', 'categoryId'],
+    },
+  },
+
+  {
+    id: 'envelope-budget',
+    name: 'Envelope Budget',
+    description: 'Transfer money monthly to a dedicated account for specific spending',
+    icon: '✉️',
+    category: 'budgets',
+    examples: ['Personal Care', 'Clothing', 'Hobbies'],
+    defaults: {
+      planType: 'goal',
+      frequency: 'monthly',
+      priority: 'discretionary',
+      purpose: 'spending_budget',
+      autoCalculate: false,
+    },
+    wizard: {
+      steps: [
+        {
+          id: 'envelope',
+          title: 'Envelope Details',
+          fields: [
+            {
+              name: 'name',
+              label: 'Name',
+              type: 'text',
+              required: true,
+              placeholder: 'Personal Care',
+            },
+            {
+              name: 'monthlyContribution',
+              label: 'Monthly Transfer',
+              type: 'number',
+              required: true,
+              helpText: 'Amount to add each month',
+            },
+          ],
+        },
+        {
+          id: 'account',
+          title: 'Envelope Account',
+          fields: [
+            {
+              name: 'paymentAccountId',
+              label: 'Account',
+              type: 'account',
+              required: false,
+              helpText: 'Where this money is kept',
+            },
+            {
+              name: 'categoryId',
+              label: 'Category',
+              type: 'category',
+              required: false,
+            },
+            {
+              name: 'autoTrackCategory',
+              label: 'Auto-track spending',
+              type: 'select',
+              required: false,
+              options: [
+                { value: 'true', label: 'Yes' },
+                { value: 'false', label: 'No' },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    validation: {
+      required: ['name', 'monthlyContribution'],
+    },
+  },
+
+  {
+    id: 'yearly-budget',
+    name: 'Annual Budget',
+    description: 'Track spending over a full year for occasional expenses',
+    icon: '📆',
+    category: 'budgets',
+    examples: ['Gifts', 'Home Maintenance', 'Medical'],
+    defaults: {
+      planType: 'yearly_fixed',
+      frequency: 'yearly',
+      priority: 'important',
+      purpose: 'spending_budget',
+      autoTrackCategory: true,
+      autoCalculate: true,
+    },
+    wizard: {
+      steps: [
+        {
+          id: 'budget',
+          title: 'Annual Budget',
+          fields: [
+            {
+              name: 'name',
+              label: 'Name',
+              type: 'text',
+              required: true,
+              placeholder: 'Gifts',
+            },
+            {
+              name: 'targetAmount',
+              label: 'Annual Budget',
+              type: 'number',
+              required: true,
+            },
+            {
+              name: 'categoryId',
+              label: 'Category to Track',
+              type: 'category',
+              required: true,
+            },
+          ],
+        },
+        {
+          id: 'account',
+          title: 'Payment Account',
+          fields: [
+            {
+              name: 'paymentAccountId',
+              label: 'Account',
+              type: 'account',
+              required: false,
+            },
+          ],
+        },
+      ],
+    },
+    validation: {
+      required: ['name', 'targetAmount', 'categoryId'],
+    },
+  },
+];
+
+/**
+ * Get a template by its ID.
+ */
+export function getTemplateById(templateId: string): PlanTemplate | undefined {
+  return PLAN_TEMPLATES.find((t) => t.id === templateId);
+}
+
+/**
+ * Get all templates in a specific category.
+ */
+export function getTemplatesByCategory(category: TemplateCategory): PlanTemplate[] {
+  return PLAN_TEMPLATES.filter((t) => t.category === category);
+}
+
+/**
+ * Get template category display name.
+ */
+export function getTemplateCategoryLabel(category: TemplateCategory): string {
+  const labels: Record<TemplateCategory, string> = {
+    bills: 'Bills',
+    savings: 'Savings',
+    budgets: 'Budgets',
+  };
+  return labels[category];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// WIZARD TYPES (Legacy - Category-Based)
 // ═══════════════════════════════════════════════════════════════════════════
 
 export const WIZARD_EXPENSE_CATEGORIES = [

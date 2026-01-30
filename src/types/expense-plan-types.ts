@@ -253,28 +253,28 @@ export interface CreateExpensePlanDto {
 
 export interface UpdateExpensePlanDto {
   name?: string;
-  description?: string;
-  icon?: string;
+  description?: string | null;
+  icon?: string | null;
   planType?: ExpensePlanType;
   priority?: ExpensePlanPriority;
-  categoryId?: number;
+  categoryId?: number | null;
   autoTrackCategory?: boolean;
   purpose?: ExpensePlanPurpose;
   targetAmount?: number;
-  monthlyContribution?: number;
+  monthlyContribution?: number | null;
   contributionSource?: ContributionSource;
   frequency?: ExpensePlanFrequency;
-  frequencyYears?: number;
-  dueMonth?: number;
-  dueDay?: number;
-  targetDate?: string;
-  seasonalMonths?: number[];
+  frequencyYears?: number | null;
+  dueMonth?: number | null;
+  dueDay?: number | null;
+  targetDate?: string | null;
+  seasonalMonths?: number[] | null;
   status?: ExpensePlanStatus;
   autoCalculate?: boolean;
   rolloverSurplus?: boolean;
   // Payment source (optional - for coverage tracking)
   paymentAccountType?: PaymentAccountType;
-  paymentAccountId?: number;
+  paymentAccountId?: number | null;
 }
 
 // Income Distribution DTOs

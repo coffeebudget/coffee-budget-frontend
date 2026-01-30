@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -21,6 +22,9 @@ import {
   getMonthName,
 } from "@/types/expense-plan-types";
 
+// All months for the seasonal selector
+const ALL_MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+
 interface TimingSectionProps {
   plan: ExpensePlan;
   isEditing: boolean;
@@ -34,6 +38,7 @@ export function TimingSection({ plan, isEditing }: TimingSectionProps) {
     dueMonth: plan.dueMonth?.toString() || "",
     dueDay: plan.dueDay?.toString() || "",
     targetDate: plan.targetDate || "",
+    seasonalMonths: plan.seasonalMonths || [],
   });
 
   // Reset form data when plan changes
@@ -44,19 +49,32 @@ export function TimingSection({ plan, isEditing }: TimingSectionProps) {
       dueMonth: plan.dueMonth?.toString() || "",
       dueDay: plan.dueDay?.toString() || "",
       targetDate: plan.targetDate || "",
+      seasonalMonths: plan.seasonalMonths || [],
     });
-  }, [plan.frequency, plan.frequencyYears, plan.dueMonth, plan.dueDay, plan.targetDate]);
+  }, [plan.frequency, plan.frequencyYears, plan.dueMonth, plan.dueDay, plan.targetDate, plan.seasonalMonths]);
 
   const handleSave = async () => {
     await updateMutation.mutateAsync({
       id: plan.id,
       data: {
         frequency: formData.frequency,
-        frequencyYears: formData.frequencyYears ? parseInt(formData.frequencyYears) : undefined,
-        dueMonth: formData.dueMonth ? parseInt(formData.dueMonth) : undefined,
-        dueDay: formData.dueDay ? parseInt(formData.dueDay) : undefined,
-        targetDate: formData.targetDate || undefined,
+        frequencyYears: formData.frequencyYears ? parseInt(formData.frequencyYears) : null,
+        dueMonth: formData.dueMonth ? parseInt(formData.dueMonth) : null,
+        dueDay: formData.dueDay ? parseInt(formData.dueDay) : null,
+        targetDate: formData.targetDate || null,
+        seasonalMonths: formData.seasonalMonths.length > 0 ? formData.seasonalMonths : null,
       },
+    });
+  };
+
+  const toggleSeasonalMonth = (month: number) => {
+    setFormData((prev) => {
+      const current = prev.seasonalMonths || [];
+      const isSelected = current.includes(month);
+      const updated = isSelected
+        ? current.filter((m) => m !== month)
+        : [...current, month].sort((a, b) => a - b);
+      return { ...prev, seasonalMonths: updated };
     });
   };
 
@@ -65,7 +83,8 @@ export function TimingSection({ plan, isEditing }: TimingSectionProps) {
     (formData.frequencyYears || "") !== (plan.frequencyYears?.toString() || "") ||
     (formData.dueMonth || "") !== (plan.dueMonth?.toString() || "") ||
     (formData.dueDay || "") !== (plan.dueDay?.toString() || "") ||
-    (formData.targetDate || "") !== (plan.targetDate || "");
+    (formData.targetDate || "") !== (plan.targetDate || "") ||
+    JSON.stringify(formData.seasonalMonths || []) !== JSON.stringify(plan.seasonalMonths || []);
 
   const formatDueDate = () => {
     if (plan.dueMonth && plan.dueDay) {
@@ -247,6 +266,30 @@ export function TimingSection({ plan, isEditing }: TimingSectionProps) {
           </div>
         </div>
 
+        {/* Seasonal months selector */}
+        {formData.frequency === "seasonal" && (
+          <div className="pt-2">
+            <Label className="mb-2 block">Active Months</Label>
+            <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
+              {ALL_MONTHS.map((month) => (
+                <div key={month} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`month-${month}`}
+                    checked={(formData.seasonalMonths || []).includes(month)}
+                    onCheckedChange={() => toggleSeasonalMonth(month)}
+                  />
+                  <label
+                    htmlFor={`month-${month}`}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                  >
+                    {getMonthName(month)}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Next Due Date (read-only) */}
         {plan.nextDueDate && (
           <div className="p-3 bg-gray-50 rounded-md">
@@ -269,6 +312,7 @@ export function TimingSection({ plan, isEditing }: TimingSectionProps) {
                   dueMonth: plan.dueMonth?.toString() || "",
                   dueDay: plan.dueDay?.toString() || "",
                   targetDate: plan.targetDate || "",
+                  seasonalMonths: plan.seasonalMonths || [],
                 });
               }}
             >

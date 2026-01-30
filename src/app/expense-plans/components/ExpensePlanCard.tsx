@@ -33,6 +33,7 @@ import {
   getStatusColor,
   formatCurrency,
   calculateExpectedFundedByNow,
+  getEffectiveTargetForNextDue,
 } from "@/types/expense-plan-types";
 
 interface ExpensePlanCardProps {
@@ -47,9 +48,12 @@ interface ExpensePlanCardProps {
 /**
  * Calculate time-based funding status for sinking funds.
  * Based on contribution rate vs required rate.
+ * Only applies to sinking funds that are NOT fixed_monthly (which are bills, not savings).
  */
 function calculateTimeFundingStatus(plan: ExpensePlan): 'on_track' | 'behind' | null {
-  if (plan.purpose !== 'sinking_fund' || !plan.nextDueDate) {
+  // Only calculate for sinking funds that are NOT fixed_monthly
+  // Fixed monthly plans are bills, not savings goals - they don't need contribution tracking
+  if (plan.purpose !== 'sinking_fund' || plan.planType === 'fixed_monthly' || !plan.nextDueDate) {
     return null;
   }
 
@@ -65,7 +69,9 @@ function calculateTimeFundingStatus(plan: ExpensePlan): 'on_track' | 'behind' | 
     return 'behind'; // Past due
   }
 
-  const requiredMonthly = plan.targetAmount / monthsUntilDue;
+  // Use effective target (per-occurrence for seasonal plans)
+  const effectiveTarget = getEffectiveTargetForNextDue(plan);
+  const requiredMonthly = effectiveTarget / monthsUntilDue;
   // On track if current contribution is within 10% of required
   return requiredMonthly <= plan.monthlyContribution * 1.1 ? 'on_track' : 'behind';
 }
@@ -97,18 +103,24 @@ export default function ExpensePlanCard({
   const fundingStatus = calculateTimeFundingStatus(plan);
   const monthsUntilDue = getMonthsUntilDue(plan);
 
-  // Calculate expected funding for sinking funds
-  const expectedFundedByNow = plan.purpose === 'sinking_fund'
+  // Calculate expected funding for sinking funds (excluding fixed_monthly which are bills)
+  const expectedFundedByNow = plan.purpose === 'sinking_fund' && plan.planType !== 'fixed_monthly'
     ? calculateExpectedFundedByNow(plan)
     : null;
 
-  // Calculate required monthly contribution
+  // Get effective target (per-occurrence for seasonal plans)
+  const effectiveTarget = getEffectiveTargetForNextDue(plan);
+
+  // Calculate required monthly contribution using effective target
   const requiredMonthly = monthsUntilDue !== null && monthsUntilDue > 0
-    ? plan.targetAmount / monthsUntilDue
+    ? effectiveTarget / monthsUntilDue
     : null;
 
   // Check if contribution rate needs adjustment
-  const needsIncrease = requiredMonthly !== null &&
+  // Only for sinking funds that are NOT fixed_monthly (bills don't need contribution tracking)
+  const needsIncrease = plan.purpose === 'sinking_fund' &&
+    plan.planType !== 'fixed_monthly' &&
+    requiredMonthly !== null &&
     plan.monthlyContribution < requiredMonthly * 0.9;
 
   const formatDate = (dateStr: string | null) => {
@@ -180,12 +192,21 @@ export default function ExpensePlanCard({
       </CardHeader>
 
       <CardContent className="flex-grow">
-        {/* Target & Schedule Info for Sinking Funds */}
-        {plan.purpose === 'sinking_fund' && (
+        {/* Target & Schedule Info for Sinking Funds (excluding fixed_monthly which are bills) */}
+        {plan.purpose === 'sinking_fund' && plan.planType !== 'fixed_monthly' && (
           <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
             <div className="flex justify-between text-sm mb-2">
-              <span className="text-gray-600">Target</span>
-              <span className="font-medium">{formatCurrency(plan.targetAmount)}</span>
+              <span className="text-gray-600">
+                {plan.frequency === 'seasonal' && plan.seasonalMonths && plan.seasonalMonths.length > 1
+                  ? 'Per Occurrence'
+                  : 'Target'}
+              </span>
+              <div className="text-right">
+                <span className="font-medium">{formatCurrency(effectiveTarget)}</span>
+                {plan.frequency === 'seasonal' && plan.seasonalMonths && plan.seasonalMonths.length > 1 && (
+                  <span className="text-xs text-gray-400 block">({formatCurrency(plan.targetAmount)} yearly)</span>
+                )}
+              </div>
             </div>
             {monthsUntilDue !== null && (
               <div className="flex justify-between text-sm mb-2">

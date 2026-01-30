@@ -53,7 +53,40 @@ export function TimingSection({ plan, isEditing }: TimingSectionProps) {
     });
   }, [plan.frequency, plan.frequencyYears, plan.dueMonth, plan.dueDay, plan.targetDate, plan.seasonalMonths]);
 
+  /**
+   * Determine the appropriate planType based on frequency and purpose.
+   * This syncs planType when frequency changes to avoid misalignment.
+   */
+  const inferPlanType = (frequency: string, currentPlanType: string, purpose: string) => {
+    // If frequency is seasonal with seasonalMonths, planType should be seasonal
+    if (frequency === 'seasonal' && formData.seasonalMonths.length > 0) {
+      return 'seasonal';
+    }
+
+    // If frequency is monthly and it's a sinking fund with dueDay, likely a bill
+    if (frequency === 'monthly' && purpose === 'sinking_fund') {
+      return 'fixed_monthly';
+    }
+
+    // If frequency is yearly or multi_year and it's a sinking fund
+    if ((frequency === 'yearly' || frequency === 'multi_year') && purpose === 'sinking_fund') {
+      return frequency === 'multi_year' ? 'multi_year' : 'yearly_fixed';
+    }
+
+    // For spending_budget, yearly_variable is typically appropriate
+    if (purpose === 'spending_budget' && currentPlanType !== 'seasonal') {
+      return 'yearly_variable';
+    }
+
+    // Keep current planType if no clear mapping
+    return currentPlanType;
+  };
+
   const handleSave = async () => {
+    // Determine if planType needs to be updated based on frequency change
+    const newPlanType = inferPlanType(formData.frequency, plan.planType, plan.purpose);
+    const planTypeChanged = newPlanType !== plan.planType;
+
     await updateMutation.mutateAsync({
       id: plan.id,
       data: {
@@ -63,6 +96,8 @@ export function TimingSection({ plan, isEditing }: TimingSectionProps) {
         dueDay: formData.dueDay ? parseInt(formData.dueDay) : null,
         targetDate: formData.targetDate || null,
         seasonalMonths: formData.seasonalMonths.length > 0 ? formData.seasonalMonths : null,
+        // Sync planType if frequency changed
+        ...(planTypeChanged && { planType: newPlanType }),
       },
     });
   };
@@ -299,6 +334,19 @@ export function TimingSection({ plan, isEditing }: TimingSectionProps) {
             </div>
           </div>
         )}
+
+        {/* Warning when planType will be updated */}
+        {hasChanges && (() => {
+          const newPlanType = inferPlanType(formData.frequency, plan.planType, plan.purpose);
+          const planTypeWillChange = newPlanType !== plan.planType;
+          return planTypeWillChange ? (
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800">
+              <span className="font-medium">Note:</span> Plan type will be updated from{" "}
+              <span className="font-mono">{plan.planType}</span> to{" "}
+              <span className="font-mono">{newPlanType}</span> to match the frequency setting.
+            </div>
+          ) : null;
+        })()}
 
         {hasChanges && (
           <div className="flex justify-end gap-2 pt-2">

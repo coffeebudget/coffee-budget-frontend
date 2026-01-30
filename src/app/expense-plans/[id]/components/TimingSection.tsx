@@ -57,7 +57,11 @@ export function TimingSection({ plan, isEditing }: TimingSectionProps) {
    * Determine the appropriate planType based on frequency and purpose.
    * This syncs planType when frequency changes to avoid misalignment.
    */
-  const inferPlanType = (frequency: string, currentPlanType: string, purpose: string) => {
+  const inferPlanType = (
+    frequency: string,
+    currentPlanType: ExpensePlan['planType'],
+    purpose: string
+  ): ExpensePlan['planType'] => {
     // If frequency is seasonal with seasonalMonths, planType should be seasonal
     if (frequency === 'seasonal' && formData.seasonalMonths.length > 0) {
       return 'seasonal';

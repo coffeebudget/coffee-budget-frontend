@@ -912,6 +912,31 @@ export function formatCurrency(amount: number): string {
 }
 
 /**
+ * Get the effective target amount for the next due date.
+ * For seasonal plans, this is the per-occurrence amount (targetAmount / seasonalMonths.length).
+ * For other plans, this is the full targetAmount.
+ */
+export function getEffectiveTargetForNextDue(plan: {
+  frequency?: ExpensePlanFrequency;
+  seasonalMonths?: number[] | null;
+  targetAmount: number;
+}): number {
+  const targetAmount = plan.targetAmount;
+
+  if (
+    plan.frequency === 'seasonal' &&
+    plan.seasonalMonths &&
+    plan.seasonalMonths.length > 0
+  ) {
+    // For seasonal plans, targetAmount is the yearly total
+    // Divide by number of occurrences to get per-occurrence amount
+    return targetAmount / plan.seasonalMonths.length;
+  }
+
+  return targetAmount;
+}
+
+/**
  * Calculate the expected funded amount by now based on when savings
  * SHOULD have started to reach the target by the due date.
  *
@@ -921,6 +946,8 @@ export function formatCurrency(amount: number): string {
  * 3. How many months have elapsed since then?
  * 4. Expected = elapsed months × monthly contribution
  *
+ * For seasonal plans, uses per-occurrence amount instead of yearly total.
+ *
  * Example: Summer vacation €4,000, €400/month, due July 2026
  * - Months needed: 4000/400 = 10 months
  * - Should have started: July - 10 = September 2025
@@ -929,6 +956,8 @@ export function formatCurrency(amount: number): string {
  */
 export function calculateExpectedFundedByNow(plan: {
   purpose?: ExpensePlanPurpose;
+  frequency?: ExpensePlanFrequency;
+  seasonalMonths?: number[] | null;
   monthlyContribution: number;
   targetAmount: number;
   createdAt: string;
@@ -947,6 +976,9 @@ export function calculateExpectedFundedByNow(plan: {
     return null;
   }
 
+  // Use effective target (per-occurrence for seasonal plans)
+  const effectiveTarget = getEffectiveTargetForNextDue(plan);
+
   const now = new Date();
 
   // Get the due date (prefer nextDueDate, fall back to targetDate)
@@ -958,8 +990,8 @@ export function calculateExpectedFundedByNow(plan: {
 
   const dueDate = new Date(dueDateStr);
 
-  // Calculate how many months are needed to save the full target
-  const monthsNeededToSave = targetAmount / monthlyContribution;
+  // Calculate how many months are needed to save the effective target
+  const monthsNeededToSave = effectiveTarget / monthlyContribution;
 
   // Calculate when saving should have started
   const savingStartDate = new Date(dueDate);
@@ -977,10 +1009,10 @@ export function calculateExpectedFundedByNow(plan: {
   const monthsElapsed = Math.max(0, yearsDiff * 12 + monthsDiff + daysDiff / 30);
 
   // Expected funded amount = months elapsed × monthly contribution
-  // Capped at target amount
+  // Capped at effective target (per-occurrence for seasonal)
   const expectedFundedByNow = Math.min(
     monthsElapsed * monthlyContribution,
-    targetAmount
+    effectiveTarget
   );
 
   return Math.round(expectedFundedByNow * 100) / 100;

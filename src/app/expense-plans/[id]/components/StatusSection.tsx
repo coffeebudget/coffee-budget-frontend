@@ -13,6 +13,7 @@ import {
   ExpensePlan,
   formatCurrency,
   calculateExpectedFundedByNow,
+  getEffectiveTargetForNextDue,
 } from "@/types/expense-plan-types";
 
 interface StatusSectionProps {
@@ -20,6 +21,9 @@ interface StatusSectionProps {
 }
 
 export function StatusSection({ plan }: StatusSectionProps) {
+  // Get effective target (per-occurrence for seasonal plans)
+  const effectiveTarget = getEffectiveTargetForNextDue(plan);
+
   // Calculate time-based funding status for sinking funds
   const calculateTimeFundingStatus = (): "on_track" | "behind" | "funded" | null => {
     if (plan.purpose !== "sinking_fund" || !plan.nextDueDate) {
@@ -38,7 +42,8 @@ export function StatusSection({ plan }: StatusSectionProps) {
       return "behind"; // Past due
     }
 
-    const requiredMonthly = plan.targetAmount / monthsUntilDue;
+    // Use effective target (per-occurrence for seasonal plans)
+    const requiredMonthly = effectiveTarget / monthsUntilDue;
     // On track if current contribution is within 10% of required
     if (requiredMonthly <= plan.monthlyContribution * 1.1) {
       return "on_track";
@@ -62,10 +67,10 @@ export function StatusSection({ plan }: StatusSectionProps) {
   const monthsUntilDue = getMonthsUntilDue();
   const expectedFundedByNow = calculateExpectedFundedByNow(plan);
 
-  // Calculate required monthly for sinking funds
+  // Calculate required monthly for sinking funds (using effective target)
   const requiredMonthly =
     monthsUntilDue !== null && monthsUntilDue > 0
-      ? plan.targetAmount / monthsUntilDue
+      ? effectiveTarget / monthsUntilDue
       : null;
 
   const needsIncrease =
@@ -143,9 +148,10 @@ export function StatusSection({ plan }: StatusSectionProps) {
 
   // For sinking funds
   if (plan.purpose === "sinking_fund") {
+    // Use effective target (per-occurrence for seasonal plans)
     const progressPercent =
-      expectedFundedByNow !== null && plan.targetAmount > 0
-        ? Math.min((expectedFundedByNow / plan.targetAmount) * 100, 100)
+      expectedFundedByNow !== null && effectiveTarget > 0
+        ? Math.min((expectedFundedByNow / effectiveTarget) * 100, 100)
         : 0;
 
     return (
@@ -185,20 +191,30 @@ export function StatusSection({ plan }: StatusSectionProps) {
                 {expectedFundedByNow !== null
                   ? formatCurrency(expectedFundedByNow)
                   : "N/A"}{" "}
-                / {formatCurrency(plan.targetAmount)}
+                / {formatCurrency(effectiveTarget)}
               </span>
             </div>
             <Progress value={progressPercent} className="h-2" />
             <p className="text-xs text-gray-500 mt-1">
               {Math.round(progressPercent)}% of target
+              {plan.frequency === "seasonal" && plan.seasonalMonths && plan.seasonalMonths.length > 1 && (
+                <span className="text-gray-400"> (per occurrence)</span>
+              )}
             </p>
           </div>
 
           {/* Stats grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
             <div>
-              <p className="text-sm text-gray-500">Target</p>
-              <p className="text-lg font-semibold">{formatCurrency(plan.targetAmount)}</p>
+              <p className="text-sm text-gray-500">
+                {plan.frequency === "seasonal" && plan.seasonalMonths && plan.seasonalMonths.length > 1
+                  ? "Per Occurrence"
+                  : "Target"}
+              </p>
+              <p className="text-lg font-semibold">{formatCurrency(effectiveTarget)}</p>
+              {plan.frequency === "seasonal" && plan.seasonalMonths && plan.seasonalMonths.length > 1 && (
+                <p className="text-xs text-gray-400">({formatCurrency(plan.targetAmount)} yearly)</p>
+              )}
             </div>
             <div>
               <p className="text-sm text-gray-500">Monthly Contribution</p>

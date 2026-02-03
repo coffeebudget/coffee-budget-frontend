@@ -12,7 +12,6 @@ import {
 import {
   Wallet,
   TrendingUp,
-  TrendingDown,
   ShoppingBag,
   RefreshCw,
   AlertTriangle,
@@ -24,6 +23,8 @@ import {
   CheckCircle2,
   AlertCircle,
   HelpCircle,
+  Banknote,
+  Target,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -173,7 +174,7 @@ export default function FreeToSpendWidget({ className = "" }: FreeToSpendWidgetP
       </div>
 
       {/* Quick Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
         {/* Income */}
         <div className="bg-white rounded-lg p-4 border-l-4 border-green-500">
           <div className="flex items-center gap-2 mb-2">
@@ -215,6 +216,22 @@ export default function FreeToSpendWidget({ className = "" }: FreeToSpendWidgetP
             {data.discretionarySpending.transactionCount} transactions
           </div>
         </div>
+
+        {/* Truly Available (Envelope Buffer) */}
+        {data.trulyAvailable !== undefined && data.envelopeBuffer && (
+          <div className="bg-white rounded-lg p-4 border-l-4 border-teal-500">
+            <div className="flex items-center gap-2 mb-2">
+              <Banknote className="w-5 h-5 text-teal-600" />
+              <span className="text-sm text-gray-600">Truly Available</span>
+            </div>
+            <div className="text-2xl font-bold text-teal-700">
+              {formatCurrency(data.trulyAvailable)}
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              {formatCurrency(data.envelopeBuffer.total)} in envelopes
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Expandable Breakdown */}
@@ -344,6 +361,79 @@ export default function FreeToSpendWidget({ className = "" }: FreeToSpendWidgetP
               <p className="text-gray-500 text-sm">No discretionary spending this month</p>
             )}
           </div>
+
+          {/* Envelope Buffer Breakdown */}
+          {data.envelopeBuffer && data.envelopeBuffer.breakdown.length > 0 && (
+            <div className="bg-white rounded-lg p-4 border border-gray-200">
+              <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                <Banknote className="w-5 h-5 text-teal-600" />
+                Envelope Buffer
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                <div className="flex items-center justify-between p-3 bg-teal-50 rounded-lg border border-teal-200">
+                  <div className="flex items-center gap-2">
+                    <PiggyBank className="w-4 h-4 text-teal-600" />
+                    <span className="text-sm text-teal-800">Total in Envelopes</span>
+                  </div>
+                  <span className="font-semibold text-teal-700">
+                    {formatCurrency(data.envelopeBuffer.total)}
+                  </span>
+                </div>
+                {data.trulyAvailable !== undefined && (
+                  <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                    <div className="flex items-center gap-2">
+                      <Target className="w-4 h-4 text-emerald-600" />
+                      <span className="text-sm text-emerald-800">Truly Available</span>
+                    </div>
+                    <span className="font-semibold text-emerald-700">
+                      {formatCurrency(data.trulyAvailable)}
+                    </span>
+                  </div>
+                )}
+              </div>
+              <div className="space-y-3">
+                {data.envelopeBuffer.breakdown.map((envelope) => {
+                  const utilizationColor =
+                    envelope.status === 'under_budget' ? 'bg-emerald-500' :
+                    envelope.status === 'on_budget' ? 'bg-blue-500' :
+                    'bg-red-500';
+                  const statusLabel =
+                    envelope.status === 'under_budget' ? 'Under Budget' :
+                    envelope.status === 'on_budget' ? 'On Budget' :
+                    'Over Budget';
+                  return (
+                    <div key={envelope.planId} className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          {envelope.planIcon && (
+                            <span className="text-lg">{envelope.planIcon}</span>
+                          )}
+                          <span className="font-medium text-gray-800">{envelope.planName}</span>
+                        </div>
+                        <span className="font-semibold text-teal-700">
+                          {formatCurrency(envelope.currentBalance)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full transition-all duration-500 ${utilizationColor}`}
+                            style={{ width: `${Math.min(100, envelope.utilizationPercent)}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-gray-500 w-20 text-right">
+                          {envelope.utilizationPercent}% used
+                        </span>
+                      </div>
+                      {envelope.status && (
+                        <div className="mt-1 text-xs text-gray-500">{statusLabel}</div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Quick Links */}
           <div className="flex justify-center gap-4 pt-4 border-t border-gray-200">

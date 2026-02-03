@@ -126,6 +126,32 @@ export interface DiscretionarySpending {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// ENVELOPE BUFFER TYPES
+// ═══════════════════════════════════════════════════════════════════════════
+
+export const ENVELOPE_BALANCE_STATUSES = [
+  'under_budget',
+  'on_budget',
+  'over_budget',
+] as const;
+
+export type EnvelopeBalanceStatus = (typeof ENVELOPE_BALANCE_STATUSES)[number];
+
+export interface EnvelopeBufferItem {
+  planId: number;
+  planName: string;
+  planIcon: string | null;
+  currentBalance: number;
+  utilizationPercent: number;
+  status?: EnvelopeBalanceStatus;
+}
+
+export interface EnvelopeBuffer {
+  total: number;
+  breakdown: EnvelopeBufferItem[];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // MAIN RESPONSE TYPE
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -136,6 +162,10 @@ export interface FreeToSpendResponse {
   income: IncomeBreakdown;
   obligations: ObligationsBreakdown;
   discretionarySpending: DiscretionarySpending;
+  /** Envelope buffer showing unspent allocations across expense plans */
+  envelopeBuffer?: EnvelopeBuffer;
+  /** Amount truly available to spend (envelope buffer minus any budget deficit) */
+  trulyAvailable?: number;
   lastUpdated: string;
 }
 

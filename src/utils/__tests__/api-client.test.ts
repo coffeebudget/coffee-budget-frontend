@@ -21,11 +21,7 @@ import {
   createCreditCard,
   updateCreditCard,
   deleteCreditCard,
-  fetchBudgetSummary,
-  fetchBudgetCategories,
-  fetchCategoryTransactions,
   fetchCategories,
-  updateCategoryBudget
 } from '../api-client';
 
 // Mock fetch globally
@@ -621,85 +617,6 @@ describe('API Client Functions', () => {
     });
   });
 
-  describe('Budget Management API Functions', () => {
-    describe('fetchBudgetSummary', () => {
-      it('should fetch budget summary', async () => {
-        const mockBudgetSummary = {
-          totalIncome: 5000,
-          totalExpenses: 3000,
-          savings: 2000
-        };
-
-        mockFetch.mockResolvedValueOnce({
-          ok: true,
-          headers: new Headers({ 'content-type': 'application/json' }),
-          json: () => Promise.resolve(mockBudgetSummary)
-        } as Response);
-
-        const result = await fetchBudgetSummary();
-
-        expect(mockFetch).toHaveBeenCalledWith('/api/categories/budget-summary');
-        expect(result).toEqual(mockBudgetSummary);
-      });
-    });
-
-    describe('fetchBudgetCategories', () => {
-      it('should fetch budget categories', async () => {
-        const mockBudgetCategories = [
-          { id: 1, name: 'Groceries', monthlyBudget: 500, spent: 300 },
-          { id: 2, name: 'Utilities', monthlyBudget: 200, spent: 150 }
-        ];
-
-        mockFetch.mockResolvedValueOnce({
-          ok: true,
-          headers: new Headers({ 'content-type': 'application/json' }),
-          json: () => Promise.resolve(mockBudgetCategories)
-        } as Response);
-
-        const result = await fetchBudgetCategories();
-
-        expect(mockFetch).toHaveBeenCalledWith('/api/categories/budget-categories');
-        expect(result).toEqual(mockBudgetCategories);
-      });
-    });
-
-    describe('fetchCategoryTransactions', () => {
-      it('should fetch category transactions with default months', async () => {
-        const mockCategoryTransactions = [
-          { id: 1, description: 'Grocery Transaction', amount: 50, categoryId: 1 }
-        ];
-
-        mockFetch.mockResolvedValueOnce({
-          ok: true,
-          headers: new Headers({ 'content-type': 'application/json' }),
-          json: () => Promise.resolve(mockCategoryTransactions)
-        } as Response);
-
-        const result = await fetchCategoryTransactions(1);
-
-        expect(mockFetch).toHaveBeenCalledWith('/api/categories/1/transactions?months=12');
-        expect(result).toEqual(mockCategoryTransactions);
-      });
-
-      it('should fetch category transactions with custom months', async () => {
-        const mockCategoryTransactions = [
-          { id: 1, description: 'Grocery Transaction', amount: 50, categoryId: 1 }
-        ];
-
-        mockFetch.mockResolvedValueOnce({
-          ok: true,
-          headers: new Headers({ 'content-type': 'application/json' }),
-          json: () => Promise.resolve(mockCategoryTransactions)
-        } as Response);
-
-        const result = await fetchCategoryTransactions(1, 6);
-
-        expect(mockFetch).toHaveBeenCalledWith('/api/categories/1/transactions?months=6');
-        expect(result).toEqual(mockCategoryTransactions);
-      });
-    });
-  });
-
   describe('Category API Functions', () => {
     describe('fetchCategories', () => {
       it('should fetch all categories', async () => {
@@ -718,37 +635,6 @@ describe('API Client Functions', () => {
 
         expect(mockFetch).toHaveBeenCalledWith('/api/categories');
         expect(result).toEqual(mockCategories);
-      });
-    });
-
-    describe('updateCategoryBudget', () => {
-      it('should update category budget settings', async () => {
-        const budgetData = {
-          budgetLevel: 'primary' as const,
-          monthlyBudget: 500,
-          yearlyBudget: 6000,
-          maxThreshold: 600,
-          warningThreshold: 450
-        };
-
-        const mockUpdatedCategory = { id: 1, name: 'Groceries', ...budgetData };
-
-        mockFetch.mockResolvedValueOnce({
-          ok: true,
-          headers: new Headers({ 'content-type': 'application/json' }),
-          json: () => Promise.resolve(mockUpdatedCategory)
-        } as Response);
-
-        const result = await updateCategoryBudget(1, budgetData);
-
-        expect(mockFetch).toHaveBeenCalledWith('/api/categories/1', {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(budgetData),
-        });
-        expect(result).toEqual(mockUpdatedCategory);
       });
     });
   });

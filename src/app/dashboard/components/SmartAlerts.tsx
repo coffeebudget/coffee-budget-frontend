@@ -3,29 +3,18 @@
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { 
-  AlertTriangle, 
-  TrendingDown, 
-  CreditCard, 
-  PiggyBank,
+import {
+  AlertTriangle,
+  TrendingDown,
+  CreditCard,
   X,
   RefreshCw,
   Bell,
   CheckCircle,
-  ArrowRight
+  ArrowRight,
+  Wallet
 } from 'lucide-react';
-
-interface BudgetAlert {
-  type: 'budget_exceeded' | 'budget_warning' | 'savings_target';
-  severity: 'high' | 'medium' | 'low';
-  categoryName: string;
-  categoryId: number;
-  currentAmount: number;
-  budgetAmount: number;
-  percentage: number;
-  message: string;
-  alertScope: 'monthly' | 'annual' | 'average'; // Per rendere uniche le chiavi
-}
+import { fetchLongTermStatus } from '@/lib/api/expense-plans';
 
 interface CashFlowAlert {
   type: 'negative_trend' | 'low_balance' | 'unusual_spending';
@@ -43,8 +32,17 @@ interface DuplicateAlert {
   actionUrl: string;
 }
 
+interface ExpensePlanAlert {
+  type: 'plan_behind' | 'plan_at_risk' | 'shortfall';
+  severity: 'high' | 'medium' | 'low';
+  planName: string;
+  planId: number;
+  message: string;
+  amount?: number;
+}
+
 interface SmartAlertsData {
-  budgetAlerts: BudgetAlert[];
+  expensePlanAlerts: ExpensePlanAlert[];
   cashFlowAlerts: CashFlowAlert[];
   duplicateAlerts: DuplicateAlert[];
   totalAlerts: number;
@@ -62,28 +60,30 @@ export default function SmartAlerts({ className = '' }: { className?: string }) 
   useEffect(() => {
     if (!session?.user?.accessToken) return;
     loadSmartAlerts();
-  }, [session]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.accessToken]);
 
   const loadSmartAlerts = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const [budgetRes, dashboardRes, duplicatesRes] = await Promise.all([
-        fetch('/api/categories/budget-categories'),
+      const token = session?.user?.accessToken as string;
+
+      const [dashboardRes, duplicatesRes, expensePlansData] = await Promise.all([
         fetch('/api/dashboard/monthly-summary?months=3'),
         fetch('/api/pending-duplicates'),
+        fetchLongTermStatus(token).catch(() => null),
       ]);
 
-      if (!budgetRes.ok || !dashboardRes.ok) {
-        throw new Error('Failed to fetch alerts data');
+      if (!dashboardRes.ok) {
+        throw new Error('Failed to fetch dashboard data');
       }
 
-      const budgetData = await budgetRes.json();
       const dashboardData = await dashboardRes.json();
       const duplicatesData = duplicatesRes.ok ? await duplicatesRes.json() : [];
 
-      const processedAlerts = processAlerts(budgetData, dashboardData, duplicatesData);
+      const processedAlerts = processAlerts(dashboardData, duplicatesData, expensePlansData);
       setAlerts(processedAlerts);
 
     } catch (err) {
@@ -94,136 +94,66 @@ export default function SmartAlerts({ className = '' }: { className?: string }) 
     }
   };
 
-  const processAlerts = (budgetData: any[], dashboardData: any[], duplicatesData: any[]): SmartAlertsData => {
-    const budgetAlerts: BudgetAlert[] = [];
+  const processAlerts = (dashboardData: any[], duplicatesData: any[], expensePlansData: any): SmartAlertsData => {
+    const expensePlanAlerts: ExpensePlanAlert[] = [];
     const cashFlowAlerts: CashFlowAlert[] = [];
     const duplicateAlerts: DuplicateAlert[] = [];
 
-    // 1. BUDGET ALERTS (Mensili)
-    budgetData.forEach(category => {
-      if (category.budgetStatus === 'over') {
-        budgetAlerts.push({
-          type: 'budget_exceeded',
-          severity: 'high',
-          categoryName: category.categoryName,
-          categoryId: category.categoryId,
-          currentAmount: category.currentMonthSpent,
-          budgetAmount: category.monthlyBudget || category.maxThreshold,
-          percentage: Math.round((category.currentMonthSpent / (category.monthlyBudget || category.maxThreshold)) * 100),
-          message: `Budget superato del ${Math.round(((category.currentMonthSpent / (category.monthlyBudget || category.maxThreshold)) - 1) * 100)}%`,
-          alertScope: 'monthly'
-        });
-      } else if (category.budgetStatus === 'warning') {
-        budgetAlerts.push({
-          type: 'budget_warning',
-          severity: 'medium',
-          categoryName: category.categoryName,
-          categoryId: category.categoryId,
-          currentAmount: category.currentMonthSpent,
-          budgetAmount: category.monthlyBudget || category.maxThreshold,
-          percentage: Math.round((category.currentMonthSpent / (category.monthlyBudget || category.maxThreshold)) * 100),
-          message: `Utilizzato ${Math.round((category.currentMonthSpent / (category.monthlyBudget || category.maxThreshold)) * 100)}% del budget`,
-          alertScope: 'monthly'
-        });
-      }
-    });
-
-    // 1.1. BUDGET ALERTS ANNUALI (Rolling 12M)
-    budgetData.forEach(category => {
-      const monthlyAverage = category.averageMonthlySpending || 0;
-      const spending12M = monthlyAverage * 12;
-      
-      // Calcola budget annuale
-      let budget12M = 0;
-      if (category.budgetLevel === 'primary') {
-        budget12M = (category.monthlyBudget || monthlyAverage) * 12;
-      } else if (category.budgetLevel === 'secondary') {
-        budget12M = (category.maxThreshold || category.monthlyBudget || monthlyAverage * 1.2) * 12;
-      } else if (category.budgetLevel === 'optional') {
-        budget12M = (category.monthlyBudget || monthlyAverage * 1.5) * 12;
-      }
-
-      if (budget12M > 0) {
-        const percentage12M = (spending12M / budget12M) * 100;
-        const remainingBudget = budget12M - spending12M;
-        const currentMonth = new Date().getMonth() + 1;
-        const remainingMonths = 12 - currentMonth;
-        
-        if (percentage12M > 100) {
-          budgetAlerts.push({
-            type: 'budget_exceeded',
+    // 1. EXPENSE PLAN ALERTS
+    if (expensePlansData?.plansNeedingAttention) {
+      expensePlansData.plansNeedingAttention.forEach((plan: any) => {
+        if (plan.status === 'behind') {
+          expensePlanAlerts.push({
+            type: 'plan_behind',
             severity: 'high',
-            categoryName: category.categoryName + ' (12M)',
-            categoryId: category.categoryId,
-            currentAmount: spending12M,
-            budgetAmount: budget12M,
-            percentage: Math.round(percentage12M),
-            message: `🔔 Categoria ${category.categoryName} ha superato il budget annuo del ${Math.round(percentage12M - 100)}%`,
-            alertScope: 'annual'
+            planName: plan.name,
+            planId: plan.id,
+            message: `Piano in ritardo: mancano €${plan.amountNeeded?.toFixed(2) || '0'} con ${plan.monthsUntilDue || '?'} mesi alla scadenza`,
+            amount: plan.amountNeeded
           });
-        } else if (remainingBudget > 0 && remainingMonths <= 2) {
-          budgetAlerts.push({
-            type: 'savings_target',
-            severity: 'low',
-            categoryName: category.categoryName + ' (12M)',
-            categoryId: category.categoryId,
-            currentAmount: spending12M,
-            budgetAmount: budget12M,
-            percentage: Math.round(percentage12M),
-            message: `🔔 Hai ancora €${Math.round(remainingBudget)} disponibili per ${category.categoryName} nei prossimi ${remainingMonths} mesi`,
-            alertScope: 'annual'
+        } else if (plan.status === 'almost_ready') {
+          expensePlanAlerts.push({
+            type: 'plan_at_risk',
+            severity: 'medium',
+            planName: plan.name,
+            planId: plan.id,
+            message: `Piano quasi pronto ma necessita di €${plan.amountNeeded?.toFixed(2) || '0'} aggiuntivi`,
+            amount: plan.amountNeeded
           });
         }
-      }
+      });
+    }
 
-      // 🎯 NUOVO ALERT: Categorie Primary che superano la spesa media storica
-      if (category.budgetLevel === 'primary' && category.averageMonthlySpending && category.averageMonthlySpending > 0) {
-        const spendingVsAverage = category.currentMonthSpent / category.averageMonthlySpending;
-        
-        if (spendingVsAverage > 1.2) { // Più di 20% sopra la media
-          budgetAlerts.push({
-            type: 'savings_target',
-            severity: spendingVsAverage > 1.5 ? 'medium' : 'low',
-            categoryName: category.categoryName,
-            categoryId: category.categoryId,
-            currentAmount: category.currentMonthSpent,
-            budgetAmount: category.averageMonthlySpending,
-            percentage: Math.round(spendingVsAverage * 100),
-            message: `Spesa ${Math.round((spendingVsAverage - 1) * 100)}% sopra la media storica`,
-            alertScope: 'average'
-          });
-        } else if (category.currentMonthSpent > 0 && spendingVsAverage < 0.8) {
-          // Alert positivo per le categorie primary con spesa sotto la media
-          budgetAlerts.push({
-            type: 'savings_target',
-            severity: 'low',
-            categoryName: category.categoryName,
-            categoryId: category.categoryId,
-            currentAmount: category.currentMonthSpent,
-            budgetAmount: category.averageMonthlySpending,
-            percentage: Math.round(spendingVsAverage * 100),
-            message: `Spesa ${Math.round((1 - spendingVsAverage) * 100)}% sotto la media - Ottimo controllo!`,
-            alertScope: 'average'
-          });
-        }
+    // Check for overall shortfall
+    if (expensePlansData?.totalAmountNeeded > 0) {
+      const behindCount = expensePlansData.plansNeedingAttention?.filter((p: any) => p.status === 'behind').length || 0;
+      if (behindCount > 2) {
+        expensePlanAlerts.push({
+          type: 'shortfall',
+          severity: 'high',
+          planName: 'Riepilogo',
+          planId: 0,
+          message: `${behindCount} piani in ritardo - Importo totale necessario: €${expensePlansData.totalAmountNeeded.toFixed(2)}`,
+          amount: expensePlansData.totalAmountNeeded
+        });
       }
-    });
+    }
 
     // 2. CASH FLOW ALERTS
     if (dashboardData.length >= 2) {
       const currentMonth = dashboardData[dashboardData.length - 1];
       const previousMonth = dashboardData[dashboardData.length - 2];
-      
+
       const currentNet = currentMonth.income - currentMonth.expenses;
       const previousNet = previousMonth.income - previousMonth.expenses;
-      
+
       if (currentNet < previousNet && (previousNet - currentNet) > 200) {
         cashFlowAlerts.push({
           type: 'negative_trend',
           severity: 'medium',
           message: `Il flusso di cassa è peggiorato di €${(previousNet - currentNet).toFixed(2)} rispetto al mese scorso`,
           amount: previousNet - currentNet,
-          suggestion: 'Controlla le spese delle categorie secondarie'
+          suggestion: 'Controlla le spese recenti'
         });
       }
 
@@ -233,7 +163,7 @@ export default function SmartAlerts({ className = '' }: { className?: string }) 
           severity: currentNet < -500 ? 'high' : 'medium',
           message: `Flusso di cassa negativo: €${Math.abs(currentNet).toFixed(2)}`,
           amount: Math.abs(currentNet),
-          suggestion: 'Rivedi il budget e riduci le spese non essenziali'
+          suggestion: 'Rivedi i piani di spesa e riduci le spese non essenziali'
         });
       }
 
@@ -260,12 +190,12 @@ export default function SmartAlerts({ className = '' }: { className?: string }) 
       });
     }
 
-    const totalAlerts = budgetAlerts.length + cashFlowAlerts.length + duplicateAlerts.length;
-    const criticalAlerts = budgetAlerts.filter(a => a.severity === 'high').length + 
+    const totalAlerts = expensePlanAlerts.length + cashFlowAlerts.length + duplicateAlerts.length;
+    const criticalAlerts = expensePlanAlerts.filter(a => a.severity === 'high').length +
                           cashFlowAlerts.filter(a => a.severity === 'high').length;
 
     return {
-      budgetAlerts,
+      expensePlanAlerts,
       cashFlowAlerts,
       duplicateAlerts,
       totalAlerts,
@@ -279,13 +209,10 @@ export default function SmartAlerts({ className = '' }: { className?: string }) 
 
   const getAlertIcon = (type: string, severity: string) => {
     switch (type) {
-      case 'budget_exceeded':
-      case 'budget_warning':
-        return <AlertTriangle className={`w-5 h-5 ${severity === 'high' ? 'text-red-500' : 'text-yellow-500'}`} />;
-      case 'savings_target':
-        return severity === 'medium' ? 
-          <AlertTriangle className="w-5 h-5 text-orange-500" /> : 
-          <PiggyBank className="w-5 h-5 text-blue-500" />;
+      case 'plan_behind':
+      case 'plan_at_risk':
+      case 'shortfall':
+        return <Wallet className={`w-5 h-5 ${severity === 'high' ? 'text-red-500' : 'text-yellow-500'}`} />;
       case 'negative_trend':
       case 'low_balance':
         return <TrendingDown className="w-5 h-5 text-red-500" />;
@@ -349,11 +276,11 @@ export default function SmartAlerts({ className = '' }: { className?: string }) 
   }
 
   const visibleAlerts = [
-    ...alerts.budgetAlerts,
+    ...alerts.expensePlanAlerts,
     ...alerts.cashFlowAlerts,
     ...alerts.duplicateAlerts
   ].filter(alert => {
-    const alertId = `${alert.type}-${('categoryId' in alert) ? alert.categoryId : ('count' in alert) ? alert.count : 'general'}${('alertScope' in alert) ? `-${alert.alertScope}` : ''}`;
+    const alertId = `${alert.type}-${('planId' in alert) ? alert.planId : ('count' in alert) ? alert.count : 'general'}`;
     return !dismissedAlerts.has(alertId);
   });
 
@@ -392,10 +319,11 @@ export default function SmartAlerts({ className = '' }: { className?: string }) 
 
       {!collapsed && (
         <div className="p-4 space-y-3 max-h-96 overflow-y-auto">
-          {alerts.budgetAlerts.map((alert, index) => {
-            const alertId = `${alert.type}-${alert.categoryId}-${alert.alertScope}`;
+          {/* Expense Plan Alerts */}
+          {alerts.expensePlanAlerts.map((alert, index) => {
+            const alertId = `${alert.type}-${alert.planId}`;
             if (dismissedAlerts.has(alertId)) return null;
-            
+
             return (
               <div key={alertId} className={`p-3 rounded-lg border ${getAlertColor(alert.severity)}`}>
                 <div className="flex items-start justify-between">
@@ -403,27 +331,28 @@ export default function SmartAlerts({ className = '' }: { className?: string }) 
                     {getAlertIcon(alert.type, alert.severity)}
                     <div className="ml-3 flex-1">
                       <div className="flex items-center">
-                        <span className="font-medium text-gray-900">{alert.categoryName}</span>
+                        <span className="font-medium text-gray-900">{alert.planName}</span>
                         <span className={`ml-2 text-xs px-2 py-1 rounded ${
                           alert.severity === 'high' ? 'bg-red-200 text-red-800' :
                           alert.severity === 'medium' ? 'bg-yellow-200 text-yellow-800' :
                           'bg-blue-200 text-blue-800'
                         }`}>
-                          {alert.percentage}%
+                          {alert.type === 'plan_behind' ? 'In ritardo' :
+                           alert.type === 'plan_at_risk' ? 'A rischio' : 'Shortfall'}
                         </span>
                       </div>
                       <p className="text-sm text-gray-600 mt-1">{alert.message}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {formatCurrency(alert.currentAmount)} / {formatCurrency(alert.budgetAmount)}
-                      </p>
-                      {alert.type !== 'savings_target' && (
-                        <Link 
-                          href="/budget-management" 
-                          className="text-xs text-blue-600 hover:text-blue-800 mt-1 inline-flex items-center"
-                        >
-                          Gestisci budget <ArrowRight className="w-3 h-3 ml-1" />
-                        </Link>
+                      {alert.amount && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Importo necessario: {formatCurrency(alert.amount)}
+                        </p>
                       )}
+                      <Link
+                        href="/expense-plans"
+                        className="text-xs text-blue-600 hover:text-blue-800 mt-1 inline-flex items-center"
+                      >
+                        Gestisci piani spesa <ArrowRight className="w-3 h-3 ml-1" />
+                      </Link>
                     </div>
                   </div>
                   <button
@@ -437,10 +366,11 @@ export default function SmartAlerts({ className = '' }: { className?: string }) 
             );
           })}
 
+          {/* Cash Flow Alerts */}
           {alerts.cashFlowAlerts.map((alert, index) => {
             const alertId = `${alert.type}-${index}`;
             if (dismissedAlerts.has(alertId)) return null;
-            
+
             return (
               <div key={alertId} className={`p-3 rounded-lg border ${getAlertColor(alert.severity)}`}>
                 <div className="flex items-start justify-between">
@@ -454,8 +384,8 @@ export default function SmartAlerts({ className = '' }: { className?: string }) 
                           Importo: {formatCurrency(alert.amount)}
                         </p>
                       )}
-                      <Link 
-                        href="/transactions" 
+                      <Link
+                        href="/transactions"
                         className="text-xs text-blue-600 hover:text-blue-800 mt-1 inline-flex items-center"
                       >
                         Vedi transazioni <ArrowRight className="w-3 h-3 ml-1" />
@@ -477,7 +407,7 @@ export default function SmartAlerts({ className = '' }: { className?: string }) 
           {alerts.duplicateAlerts.map((alert, index) => {
             const alertId = `${alert.type}-${alert.count}`;
             if (dismissedAlerts.has(alertId)) return null;
-            
+
             return (
               <div key={alertId} className={`p-3 rounded-lg border ${getAlertColor(alert.severity)}`}>
                 <div className="flex items-start justify-between">
@@ -488,8 +418,8 @@ export default function SmartAlerts({ className = '' }: { className?: string }) 
                       <p className="text-sm text-gray-600 mt-1">
                         Rivedi e risolvi i duplicati per mantenere pulito il database delle transazioni
                       </p>
-                      <Link 
-                        href={alert.actionUrl} 
+                      <Link
+                        href={alert.actionUrl}
                         className="text-xs text-blue-600 hover:text-blue-800 mt-1 inline-flex items-center"
                       >
                         Gestisci duplicati <ArrowRight className="w-3 h-3 ml-1" />
@@ -510,4 +440,4 @@ export default function SmartAlerts({ className = '' }: { className?: string }) 
       )}
     </div>
   );
-} 
+}

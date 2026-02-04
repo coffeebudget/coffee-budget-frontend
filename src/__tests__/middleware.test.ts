@@ -159,7 +159,6 @@ describe('middleware', () => {
         '/dashboard/overview',
         '/transactions/import',
         '/categories/manage',
-        '/budget-management',
         '/bank-accounts',
         '/credit-cards',
         '/pending-duplicates',
@@ -229,7 +228,6 @@ describe('middleware', () => {
         '/dashboard/overview',
         '/transactions/import',
         '/categories/manage',
-        '/budget-management',
         '/bank-accounts/connect',
       ];
 

@@ -9,7 +9,6 @@ import {
 import ExpenseDistributionChart from "./components/ExpenseDistributionChart";
 import MonthlySummaryChart from "./components/MonthlySummaryChart";
 import AIAnalysisCard from "./components/AIAnalysisCard";
-import BudgetManagementCard from "./components/BudgetManagementCard";
 import ExpensePlanDashboardCard from "./components/ExpensePlanDashboardCard";
 import BudgetCalculationCard from "./components/BudgetCalculationCard";
 import FreeToSpendWidget from "./components/FreeToSpendWidget";
@@ -18,8 +17,6 @@ import FinancialOverview from "./components/FinancialOverview";
 import SmartAlerts from "./components/SmartAlerts";
 import TransactionLinkAlerts from "./components/TransactionLinkAlerts";
 import BankConnectionAlerts from "./components/BankConnectionAlerts";
-import CategoryPerformance12M from "./components/CategoryPerformance12M";
-import BudgetProgressRings from "./components/BudgetProgressRings";
 import CashFlowForecast from "./components/CashFlowForecast";
 import AccountHealthPanel from "./components/AccountHealthPanel";
 
@@ -126,9 +123,6 @@ export default function DashboardPage() {
       {/* Bank Connection Alerts */}
       <BankConnectionAlerts className="mb-6" />
 
-      {/* Budget Management Card */}
-      <BudgetManagementCard />
-
       {/* Budget Calculation Card - Income vs Expenses */}
       <BudgetCalculationCard />
 
@@ -141,13 +135,7 @@ export default function DashboardPage() {
       {/* Advanced Visualizations Section */}
       <div className="mb-8">
         <h2 className="text-xl font-semibold mb-6 text-gray-800">📊 Visualizzazioni Avanzate</h2>
-        
-        {/* Budget Progress Rings */}
-        <BudgetProgressRings className="mb-6" />
-        
-        {/* Category Performance 12M */}
-        <CategoryPerformance12M className="mb-6" />
-        
+
         {/* Cash Flow Forecast */}
         <CashFlowForecast className="mb-6" />
       </div>

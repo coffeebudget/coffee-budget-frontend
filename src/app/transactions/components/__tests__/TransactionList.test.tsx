@@ -12,6 +12,22 @@ jest.mock('react-hot-toast', () => ({
   },
 }));
 
+// Mock DropdownMenu to render items directly (no portal/overlay in JSDOM)
+jest.mock('@/components/ui/dropdown-menu', () => ({
+  DropdownMenu: ({ children }: any) => <div data-testid="dropdown-menu">{children}</div>,
+  DropdownMenuTrigger: ({ children, asChild }: any) => <div>{children}</div>,
+  DropdownMenuContent: ({ children }: any) => <div>{children}</div>,
+  DropdownMenuItem: ({ children, onClick, className }: any) => (
+    <button onClick={onClick} className={className} role="menuitem">{children}</button>
+  ),
+  DropdownMenuSeparator: () => <hr />,
+}));
+
+// Mock ExpensePlanSelectorDialog to avoid useExpensePlans hook crash in JSDOM
+jest.mock('../ExpensePlanSelectorDialog', () => ({
+  ExpensePlanSelectorDialog: () => null,
+}));
+
 // Mock fetch for bulk operations
 global.fetch = jest.fn();
 
@@ -187,25 +203,25 @@ describe('TransactionList', () => {
 
     it('should show delete confirmation when delete button is clicked', () => {
       renderWithProviders(<TransactionList {...defaultProps} />);
-      
-      const deleteButtons = screen.getAllByTitle(/delete transaction/i);
+
+      const deleteButtons = screen.getAllByRole('menuitem', { name: /delete/i });
       fireEvent.click(deleteButtons[0]);
-      
-      // Should show confirmation (delete button should still be there)
-      expect(deleteButtons[0]).toBeInTheDocument();
+
+      // Should show confirmation text
+      expect(screen.getByRole('menuitem', { name: /confirm delete/i })).toBeInTheDocument();
     });
 
     it('should call onDeleteTransaction when delete is confirmed', async () => {
       mockOnDeleteTransaction.mockResolvedValue(undefined);
-      
+
       renderWithProviders(<TransactionList {...defaultProps} />);
-      
-      const deleteButtons = screen.getAllByTitle(/delete transaction/i);
-      
+
+      const deleteButtons = screen.getAllByRole('menuitem', { name: /delete/i });
+
       // Click delete twice to confirm
       fireEvent.click(deleteButtons[0]);
       fireEvent.click(deleteButtons[0]);
-      
+
       await waitFor(() => {
         expect(mockOnDeleteTransaction).toHaveBeenCalledWith(mockTransactions[0].id);
       });
@@ -241,15 +257,15 @@ describe('TransactionList', () => {
   describe('Error Handling', () => {
     it('should display error message when delete fails', async () => {
       mockOnDeleteTransaction.mockRejectedValue(new Error('Delete failed'));
-      
+
       renderWithProviders(<TransactionList {...defaultProps} />);
-      
-      const deleteButtons = screen.getAllByTitle(/delete transaction/i);
-      
+
+      const deleteButtons = screen.getAllByRole('menuitem', { name: /delete/i });
+
       // Click delete twice to confirm
       fireEvent.click(deleteButtons[0]);
       fireEvent.click(deleteButtons[0]);
-      
+
       await waitFor(() => {
         expect(screen.getByText('Error deleting transaction')).toBeInTheDocument();
       });
@@ -259,15 +275,15 @@ describe('TransactionList', () => {
   describe('Loading States', () => {
     it('should show loading state during delete operation', async () => {
       mockOnDeleteTransaction.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
-      
+
       renderWithProviders(<TransactionList {...defaultProps} />);
-      
-      const deleteButtons = screen.getAllByTitle(/delete transaction/i);
-      
+
+      const deleteButtons = screen.getAllByRole('menuitem', { name: /delete/i });
+
       // Click delete twice to confirm
       fireEvent.click(deleteButtons[0]);
       fireEvent.click(deleteButtons[0]);
-      
+
       // Should show loading state (spinner icon with animate-spin class)
       const spinnerIcon = document.querySelector('.animate-spin');
       expect(spinnerIcon).toBeInTheDocument();
@@ -288,10 +304,10 @@ describe('TransactionList', () => {
 
     it('should have proper ARIA labels for action buttons', () => {
       renderWithProviders(<TransactionList {...defaultProps} />);
-      
+
       const editButtons = screen.getAllByTitle(/edit transaction/i);
-      const deleteButtons = screen.getAllByTitle(/delete transaction/i);
-      
+      const deleteButtons = screen.getAllByRole('menuitem', { name: /delete/i });
+
       expect(editButtons.length).toBe(mockTransactions.length);
       expect(deleteButtons.length).toBe(mockTransactions.length);
     });

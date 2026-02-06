@@ -12,8 +12,24 @@ jest.mock('react-hot-toast', () => ({
   },
 }));
 
-// Mock fetch
-global.fetch = jest.fn();
+// Mock next-auth/react
+jest.mock('next-auth/react', () => ({
+  useSession: () => ({
+    data: {
+      user: {
+        accessToken: 'mock-token',
+      },
+    },
+    status: 'authenticated',
+  }),
+  SessionProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
+// Mock fetch with a default response for connection status
+global.fetch = jest.fn().mockResolvedValue({
+  ok: true,
+  json: () => Promise.resolve({ alerts: [] }),
+});
 
 const defaultProps = {
   bankAccounts: mockBankAccounts,
@@ -25,7 +41,10 @@ const defaultProps = {
 describe('BankAccounts', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (global.fetch as jest.Mock).mockClear();
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ alerts: [] }),
+    });
   });
 
   describe('Rendering', () => {
@@ -254,14 +273,21 @@ describe('BankAccounts', () => {
     });
 
     it('should call onAccountUpdated after successful import', async () => {
-      const mockResponse = {
-        ok: true,
-        json: () => Promise.resolve({
-          newTransactionsCount: 5,
-          duplicatesCount: 2,
-        }),
-      };
-      (global.fetch as jest.Mock).mockResolvedValueOnce(mockResponse);
+      (global.fetch as jest.Mock).mockImplementation((url: string) => {
+        if (url === '/api/gocardless/import-single') {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({
+              newTransactionsCount: 5,
+              duplicatesCount: 2,
+            }),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ alerts: [] }),
+        });
+      });
 
       renderWithProviders(<BankAccounts {...defaultProps} />);
       

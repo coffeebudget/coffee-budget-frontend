@@ -399,11 +399,11 @@ export default function AddTransactionForm({ onAddTransaction, initialData = nul
             
             <div className="space-y-2">
               <Label htmlFor="type">Type</Label>
-              <Select 
-                value={type} 
+              <Select
+                value={type}
                 onValueChange={(value) => setType(value as 'expense' | 'income')}
               >
-                <SelectTrigger className="bg-background text-foreground">
+                <SelectTrigger id="type" className="bg-background text-foreground">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>

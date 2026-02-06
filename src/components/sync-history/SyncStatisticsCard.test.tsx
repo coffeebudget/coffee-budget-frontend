@@ -36,11 +36,12 @@ describe('SyncStatisticsCard', () => {
   });
 
   it('should display statistics when loaded', () => {
-    jest.spyOn(useSyncHistoryHook, 'useSyncStatistics').mockReturnValue({
-      data: mockStats,
-      isLoading: false,
-      error: null,
-    } as any);
+    jest.spyOn(useSyncHistoryHook, 'useSyncStatistics').mockImplementation((days?: number, source?: any) => {
+      if (!source) {
+        return { data: mockStats, isLoading: false, error: null } as any;
+      }
+      return { data: undefined, isLoading: false, error: null } as any;
+    });
 
     render(<SyncStatisticsCard />);
 
@@ -88,11 +89,12 @@ describe('SyncStatisticsCard', () => {
   });
 
   it('should not display source badge when source prop is not provided', () => {
-    jest.spyOn(useSyncHistoryHook, 'useSyncStatistics').mockReturnValue({
-      data: mockStats,
-      isLoading: false,
-      error: null,
-    } as any);
+    jest.spyOn(useSyncHistoryHook, 'useSyncStatistics').mockImplementation((days?: number, source?: any) => {
+      if (!source) {
+        return { data: mockStats, isLoading: false, error: null } as any;
+      }
+      return { data: undefined, isLoading: false, error: null } as any;
+    });
 
     render(<SyncStatisticsCard />);
 

@@ -1,16 +1,29 @@
-// Mock Request and Response first
-global.Request = class Request {
-  constructor(public url: string, public init?: RequestInit) {}
-} as any;
-
-global.Response = class Response {
-  constructor(public body: any, public init?: ResponseInit) {}
-  async json() { return this.body; }
-  async text() { return typeof this.body === 'string' ? this.body : JSON.stringify(this.body); }
-} as any;
-
 // Mock fetch
 global.fetch = jest.fn();
+
+// Mock next/server to avoid NextRequest polyfill issues
+jest.mock('next/server', () => {
+  class MockNextRequest {
+    url: string;
+    method: string;
+    private _body: string | undefined;
+    constructor(url: string, init?: { method?: string; body?: string }) {
+      this.url = url;
+      this.method = init?.method || 'GET';
+      this._body = init?.body;
+    }
+    async json() { return JSON.parse(this._body || '{}'); }
+  }
+  return {
+    NextRequest: MockNextRequest,
+    NextResponse: {
+      json: (body: unknown, init?: { status?: number }) => ({
+        status: init?.status || 200,
+        json: async () => body,
+      }),
+    },
+  };
+});
 
 // Mock next-auth (must include default export for NextAuth())
 jest.mock('next-auth', () => ({

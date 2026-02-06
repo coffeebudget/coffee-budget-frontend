@@ -69,8 +69,8 @@ describe('PaymentAccountForm', () => {
     const displayNameInput = screen.getByLabelText(/Display Name/i) as HTMLInputElement;
     expect(displayNameInput.value).toBe('My PayPal');
 
-    const activeCheckbox = screen.getByLabelText(/Active/i) as HTMLInputElement;
-    expect(activeCheckbox.checked).toBe(true);
+    const activeCheckbox = screen.getByLabelText(/Active/i);
+    expect(activeCheckbox).toBeChecked();
   });
 
   it('should call onSubmit with form data when submitted', async () => {

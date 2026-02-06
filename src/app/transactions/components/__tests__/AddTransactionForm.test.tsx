@@ -1,21 +1,38 @@
 // Mock all complex UI components first (before any imports)
 jest.mock('@/components/ui/searchable-select', () => ({
-  SearchableSelect: ({ value, onValueChange, options, placeholder }: any) => (
-    <select
-      data-testid="searchable-select"
-      value={value || ''}
-      onChange={(e) => onValueChange?.(e.target.value)}
-      aria-label={placeholder}
-    >
-      <option value="">Select...</option>
-      {options?.map((opt: any) => (
-        <option key={opt.value} value={opt.value}>
-          {opt.label}
-        </option>
-      ))}
-    </select>
+  SearchableSelect: ({ value, onChange, options, placeholder, label }: any) => (
+    <div>
+      {label && <label htmlFor={`searchable-${label}`}>{label}</label>}
+      <select
+        data-testid="searchable-select"
+        id={label ? `searchable-${label}` : undefined}
+        value={value || ''}
+        onChange={(e) => onChange?.(e.target.value || null)}
+        aria-label={!label ? placeholder : undefined}
+      >
+        <option value="">Select...</option>
+        {options?.map((opt: any) => (
+          <option key={opt.value || opt.id} value={opt.value || opt.id}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+    </div>
   ),
   SearchableSelectOption: ({ children }: any) => <option>{children}</option>,
+}));
+
+// Mock Shadcn Select to render as native elements in test env
+jest.mock('@/components/ui/select', () => ({
+  Select: ({ children, value, onValueChange }: any) => (
+    <div data-testid="select-root" data-value={value}>{children}</div>
+  ),
+  SelectTrigger: ({ children, id, className }: any) => (
+    <button role="combobox" id={id} className={className}>{children}</button>
+  ),
+  SelectValue: ({ placeholder }: any) => <span>{placeholder}</span>,
+  SelectContent: ({ children }: any) => <div>{children}</div>,
+  SelectItem: ({ value, children }: any) => <option value={value}>{children}</option>,
 }));
 
 jest.mock('@/components/TagSelector', () => {
@@ -159,7 +176,7 @@ describe('AddTransactionForm', () => {
     it('should render save and cancel buttons', () => {
       renderWithProviders(<AddTransactionForm {...defaultProps} />);
 
-      expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /add transaction/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument();
     });
 
@@ -194,7 +211,7 @@ describe('AddTransactionForm', () => {
     it('should not submit with empty required fields', async () => {
       renderWithProviders(<AddTransactionForm {...defaultProps} />);
 
-      const saveButton = screen.getByRole('button', { name: /save/i });
+      const saveButton = screen.getByRole('button', { name: /add transaction/i });
       fireEvent.click(saveButton);
 
       // Form should not submit with empty fields
@@ -219,7 +236,7 @@ describe('AddTransactionForm', () => {
       });
 
       // Submit form
-      const saveButton = screen.getByRole('button', { name: /save/i });
+      const saveButton = screen.getByRole('button', { name: /add transaction/i });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
@@ -246,7 +263,7 @@ describe('AddTransactionForm', () => {
       });
 
       // Submit form
-      const saveButton = screen.getByRole('button', { name: /save/i });
+      const saveButton = screen.getByRole('button', { name: /add transaction/i });
       fireEvent.click(saveButton);
 
       // Should handle error (component may show error message)
@@ -315,7 +332,7 @@ describe('AddTransactionForm', () => {
       fireEvent.change(amountInput, { target: { value: '100.50' } });
 
       // Submit form
-      const saveButton = screen.getByRole('button', { name: /save/i });
+      const saveButton = screen.getByRole('button', { name: /add transaction/i });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
@@ -345,7 +362,7 @@ describe('AddTransactionForm', () => {
       });
 
       // Submit form
-      const saveButton = screen.getByRole('button', { name: /save/i });
+      const saveButton = screen.getByRole('button', { name: /add transaction/i });
       fireEvent.click(saveButton);
 
       // Should show loading state

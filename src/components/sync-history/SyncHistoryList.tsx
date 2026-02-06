@@ -14,14 +14,20 @@ interface SyncHistoryListProps {
   onSourceFilterChange?: (source: SyncSource | undefined) => void;
 }
 
-export function SyncHistoryList({ sourceFilter, onSourceFilterChange }: SyncHistoryListProps) {
+export function SyncHistoryList({ sourceFilter: sourceFilterProp, onSourceFilterChange }: SyncHistoryListProps) {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<SyncStatus | undefined>();
+  const [internalSourceFilter, setInternalSourceFilter] = useState<SyncSource | undefined>();
+
+  // Support both controlled (via props) and uncontrolled (internal state) modes
+  const sourceFilter = onSourceFilterChange ? sourceFilterProp : internalSourceFilter;
   const { data, isLoading, error } = useSyncHistory(page, 10, statusFilter, sourceFilter);
 
   const handleSourceFilterChange = (source: SyncSource | undefined) => {
     if (onSourceFilterChange) {
       onSourceFilterChange(source);
+    } else {
+      setInternalSourceFilter(source);
     }
   };
 

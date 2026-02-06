@@ -29,6 +29,7 @@ import {
   fetchAnnualTrackingSummary,
   fetchCurrentMonthStatus,
   fetchTransactionSuggestions,
+  fetchTransferSuggestions,
 } from '@/lib/api/income-plans';
 import {
   IncomePlanStatus,
@@ -532,5 +533,25 @@ export function useUnlinkTransaction() {
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to unlink transaction');
     },
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TRANSFER SUGGESTIONS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Fetch transfer suggestions for income accounts.
+ * Advisory-only: calculates how much to transfer based on obligations.
+ */
+export function useTransferSuggestions(year?: number, month?: number) {
+  const { data: session } = useSession();
+
+  return useQuery({
+    queryKey: ['transfer-suggestions', year, month],
+    queryFn: () =>
+      fetchTransferSuggestions(session!.user!.accessToken as string, year, month),
+    enabled: !!session,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }

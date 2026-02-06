@@ -21,6 +21,7 @@ import {
   AnnualTrackingSummary,
   IncomePlanEntryStatus,
 } from '@/types/income-plan-types';
+import { TransferSuggestionsResponse } from '@/types/transfer-suggestion-types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -396,4 +397,25 @@ export async function fetchTransactionSuggestions(
   );
 
   return handleResponse<TransactionSuggestionsResponse>(response);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TRANSFER SUGGESTIONS
+// ═══════════════════════════════════════════════════════════════════════════
+
+export async function fetchTransferSuggestions(
+  token: string,
+  year?: number,
+  month?: number
+): Promise<TransferSuggestionsResponse> {
+  const params = new URLSearchParams();
+  if (year) params.append('year', year.toString());
+  if (month) params.append('month', month.toString());
+
+  const url = `${API_URL}/income-plans/transfer-suggestions${params.toString() ? `?${params}` : ''}`;
+  const response = await fetch(url, {
+    headers: getHeaders(token),
+  });
+
+  return handleResponse<TransferSuggestionsResponse>(response);
 }

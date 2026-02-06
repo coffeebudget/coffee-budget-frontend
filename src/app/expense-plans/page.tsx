@@ -37,7 +37,6 @@ import {
 import ExpensePlanCard from "./components/ExpensePlanCard";
 import ExpensePlanFormDialog from "./components/ExpensePlanFormDialog";
 import AdjustmentSuggestionModal from "./components/AdjustmentSuggestionModal";
-import IncomeDistributionSetup from "./components/IncomeDistributionSetup";
 import ExpensePlansByAccount from "./components/ExpensePlansByAccount";
 
 export default function ExpensePlansPage() {
@@ -61,7 +60,7 @@ export default function ExpensePlansPage() {
     return map;
   }, [coverageSummary]);
 
-  const [activeTab, setActiveTab] = useState<ExpensePlanStatus | "all" | "distribution">("all");
+  const [activeTab, setActiveTab] = useState<ExpensePlanStatus | "all">("all");
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<ExpensePlan | null>(null);
   const [adjustmentModalOpen, setAdjustmentModalOpen] = useState(false);
@@ -253,18 +252,15 @@ export default function ExpensePlansPage() {
 
       {/* Tabs & Content */}
       <div className="max-w-7xl mx-auto">
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ExpensePlanStatus | "all" | "distribution")}>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ExpensePlanStatus | "all")}>
           <TabsList className="mb-4">
             <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="active">Active</TabsTrigger>
             <TabsTrigger value="paused">Paused</TabsTrigger>
             <TabsTrigger value="completed">Completed</TabsTrigger>
-            <TabsTrigger value="distribution">Income Distribution</TabsTrigger>
           </TabsList>
 
-          {/* Plans Tabs */}
-          {activeTab !== "distribution" && (
-            <TabsContent value={activeTab} forceMount>
+          <TabsContent value={activeTab} forceMount>
               {isLoading ? (
                 <div className="flex justify-center py-12">
                   <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
@@ -372,12 +368,6 @@ export default function ExpensePlansPage() {
                 </div>
               )}
             </TabsContent>
-          )}
-
-          {/* Income Distribution Tab */}
-          <TabsContent value="distribution">
-            <IncomeDistributionSetup />
-          </TabsContent>
         </Tabs>
       </div>
       </div>

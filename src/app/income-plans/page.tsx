@@ -32,6 +32,7 @@ import {
 } from "@/types/income-plan-types";
 import IncomePlanCard from "./components/IncomePlanCard";
 import IncomePlanFormDialog from "./components/IncomePlanFormDialog";
+import TransferSuggestionsSection from "./components/TransferSuggestionsSection";
 
 export default function IncomePlansPage() {
   const { data: session } = useSession();
@@ -268,6 +269,9 @@ export default function IncomePlansPage() {
             </Card>
           </div>
         )}
+
+        {/* Transfer Suggestions */}
+        <TransferSuggestionsSection />
 
         {/* Action Buttons */}
         <div className="max-w-7xl mx-auto mb-6">

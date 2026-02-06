@@ -12,8 +12,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowRightLeft, Loader2, Info, ChevronLeft, ChevronRight } from "lucide-react";
-import { MONTH_NAMES, MONTH_LABELS } from "@/types/income-plan-types";
+import {
+  ArrowRightLeft,
+  Loader2,
+  Info,
+  ChevronLeft,
+  ChevronRight,
+  Wallet,
+  PieChart,
+} from "lucide-react";
+import { MONTH_NAMES, MONTH_LABELS, formatCurrency } from "@/types/income-plan-types";
+import { getPriorityLabel } from "@/types/transfer-suggestion-types";
 import AccountTransferCard from "./AccountTransferCard";
 
 const MONTHS = MONTH_NAMES.map((name, index) => ({
@@ -129,6 +138,117 @@ export default function TransferSuggestionsSection() {
             />
           ))}
         </div>
+      )}
+
+      {/* Deficit Accounts */}
+      {data && data.deficitAccounts && data.deficitAccounts.length > 0 && (
+        <div className="mt-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Wallet className="h-5 w-5 text-red-500" />
+            <h3 className="text-lg font-semibold text-gray-900">
+              Accounts Needing Funding
+            </h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {data.deficitAccounts.map((deficit) => (
+              <Card key={deficit.accountId} className="border-red-200 bg-red-50/30">
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-semibold text-gray-900">
+                      {deficit.accountName}
+                    </span>
+                    <Badge className="bg-red-100 text-red-800">
+                      Needs {formatCurrency(deficit.totalNeed)}/mo
+                    </Badge>
+                  </div>
+                  <div className="space-y-1">
+                    {deficit.obligationDetails.map((ob) => (
+                      <div
+                        key={ob.planId}
+                        className="flex items-center justify-between text-sm"
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-gray-700">{ob.name}</span>
+                          <span className="text-[10px] text-gray-400">
+                            {getPriorityLabel(ob.priority)}
+                          </span>
+                        </div>
+                        <span className="text-gray-600">
+                          {formatCurrency(ob.monthlyContribution)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Plan Summary */}
+      {data && data.planSummary && data.planSummary.totalDeficit > 0 && (
+        <Card className="mt-6">
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-2 mb-3">
+              <PieChart className="h-4 w-4 text-gray-600" />
+              <span className="text-sm font-semibold text-gray-900">
+                Transfer Coverage Summary
+              </span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div>
+                <span className="text-gray-500 block">Total Need</span>
+                <span className="font-semibold text-gray-900">
+                  {formatCurrency(data.planSummary.totalDeficit)}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500 block">Available</span>
+                <span className="font-semibold text-green-700">
+                  {formatCurrency(data.planSummary.totalAvailable)}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500 block">Coverage</span>
+                <span
+                  className={`font-semibold ${
+                    data.planSummary.coveragePercent >= 100
+                      ? "text-green-700"
+                      : data.planSummary.coveragePercent >= 75
+                        ? "text-yellow-700"
+                        : "text-red-700"
+                  }`}
+                >
+                  {Math.round(data.planSummary.coveragePercent)}%
+                </span>
+              </div>
+              {data.planSummary.uncoveredAmount > 0 && (
+                <div>
+                  <span className="text-gray-500 block">Uncovered</span>
+                  <span className="font-semibold text-red-600">
+                    {formatCurrency(data.planSummary.uncoveredAmount)}
+                  </span>
+                </div>
+              )}
+            </div>
+            {/* Coverage bar */}
+            <div className="mt-3 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all ${
+                  data.planSummary.coveragePercent >= 100
+                    ? "bg-green-500"
+                    : data.planSummary.coveragePercent >= 75
+                      ? "bg-yellow-500"
+                      : "bg-red-500"
+                }`}
+                style={{
+                  width: `${Math.min(100, Math.round(data.planSummary.coveragePercent))}%`,
+                }}
+              />
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

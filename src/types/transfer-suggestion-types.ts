@@ -26,6 +26,26 @@ export interface ObligationDetail {
   isDirectlyAssigned: boolean;
 }
 
+export interface TransferRoute {
+  toAccountId: number;
+  toAccountName: string;
+  amount: number;
+}
+
+export interface DeficitAccount {
+  accountId: number;
+  accountName: string;
+  totalNeed: number;
+  obligationDetails: ObligationDetail[];
+}
+
+export interface TransferPlanSummary {
+  totalDeficit: number;
+  totalAvailable: number;
+  coveragePercent: number;
+  uncoveredAmount: number;
+}
+
 export interface AccountTransferSuggestion {
   accountId: number;
   accountName: string;
@@ -40,6 +60,7 @@ export interface AccountTransferSuggestion {
   safetyMargin: number;
   suggestedTransfer: number;
   status: TransferSuggestionStatus;
+  transferRoutes: TransferRoute[];
 }
 
 export interface TransferSuggestionsResponse {
@@ -49,6 +70,8 @@ export interface TransferSuggestionsResponse {
   unassignedTotal: number;
   distinctIncomeAccountCount: number;
   sharePerAccount: number;
+  deficitAccounts: DeficitAccount[];
+  planSummary: TransferPlanSummary;
 }
 
 export function getTransferStatusColor(status: TransferSuggestionStatus): string {

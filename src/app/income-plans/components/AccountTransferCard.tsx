@@ -13,6 +13,7 @@ import { formatCurrency, MONTH_NAMES } from "@/types/income-plan-types";
 import {
   ArrowDownRight,
   ArrowUpRight,
+  ArrowRightLeft,
   Shield,
   TrendingUp,
   AlertTriangle,
@@ -188,6 +189,29 @@ export default function AccountTransferCard({
             </span>
           </div>
         </div>
+
+        {/* Transfer Destinations */}
+        {suggestion.transferRoutes && suggestion.transferRoutes.length > 0 && (
+          <>
+            <div className="border-t border-gray-200" />
+            <div>
+              <div className="flex items-center gap-1.5 mb-2">
+                <ArrowRightLeft className="h-3.5 w-3.5 text-blue-600" />
+                <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                  Transfer To
+                </span>
+              </div>
+              <div className="space-y-1 pl-5">
+                {suggestion.transferRoutes.map((route) => (
+                  <div key={route.toAccountId} className="flex items-center justify-between text-sm">
+                    <span className="text-gray-700">{route.toAccountName}</span>
+                    <span className="text-blue-600 font-medium">{formatCurrency(route.amount)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );

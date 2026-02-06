@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useCurrentFreeToSpend } from "@/hooks/useFreeToSpend";
+import { useFreeToSpend } from "@/hooks/useFreeToSpend";
 import {
   formatCurrency,
-  formatMonth,
+  getCurrentMonth,
   getIncomePercentage,
   getStatusConfig,
   FreeToSpendStatus,
@@ -30,11 +30,13 @@ import Link from "next/link";
 
 interface FreeToSpendWidgetProps {
   className?: string;
+  selectedMonth?: string;
 }
 
-export default function FreeToSpendWidget({ className = "" }: FreeToSpendWidgetProps) {
+export default function FreeToSpendWidget({ className = "", selectedMonth }: FreeToSpendWidgetProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const { data, isLoading, error, refetch, dataUpdatedAt } = useCurrentFreeToSpend();
+  const month = selectedMonth ?? getCurrentMonth();
+  const { data, isLoading, error, refetch, dataUpdatedAt } = useFreeToSpend(month);
 
   // Format the last updated time
   const formatLastUpdated = () => {
@@ -115,9 +117,6 @@ export default function FreeToSpendWidget({ className = "" }: FreeToSpendWidgetP
             <h3 className="text-xl font-bold text-gray-900">
               Free to Spend
             </h3>
-            <p className="text-gray-600 text-sm">
-              {formatMonth(data.month)}
-            </p>
           </div>
         </div>
         <div className="flex items-center gap-3">

@@ -1,191 +1,85 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSession } from "next-auth/react";
-import { 
-  fetchExpenseDistribution, 
-  fetchMonthlySummary
-} from "@/utils/api";
-import ExpenseDistributionChart from "./components/ExpenseDistributionChart";
-import MonthlySummaryChart from "./components/MonthlySummaryChart";
-import AIAnalysisCard from "./components/AIAnalysisCard";
-import ExpensePlanDashboardCard from "./components/ExpensePlanDashboardCard";
-import BudgetCalculationCard from "./components/BudgetCalculationCard";
-import FreeToSpendWidget from "./components/FreeToSpendWidget";
-import CoverageSection from "./components/CoverageSection";
-import FinancialOverview from "./components/FinancialOverview";
-import SmartAlerts from "./components/SmartAlerts";
-import TransactionLinkAlerts from "./components/TransactionLinkAlerts";
-import BankConnectionAlerts from "./components/BankConnectionAlerts";
-import CashFlowForecast from "./components/CashFlowForecast";
-import AccountHealthPanel from "./components/AccountHealthPanel";
+import { getCurrentMonth } from "@/types/free-to-spend-types";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+import OverviewTab from "./components/OverviewTab";
+import BudgetTab from "./components/BudgetTab";
+import AnalyticsTab from "./components/AnalyticsTab";
+
+import DashboardHeader from "./components/DashboardHeader";
+import BottomTabBar from "./components/BottomTabBar";
+import NotificationDrawer from "./components/NotificationDrawer";
+import { useNotifications } from "./hooks/useNotifications";
 
 export default function DashboardPage() {
   const { data: session } = useSession();
-  const token = session?.user?.accessToken || "";
-  
-  // State for data
-  const [expenseDistribution, setExpenseDistribution] = useState([]);
-  const [monthlySummary, setMonthlySummary] = useState([]);
-  
-  // Months to display in monthly summary chart
-  const [summaryMonths, setSummaryMonths] = useState(12);
-  
-  // Loading and error states
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  // Load initial data
-  useEffect(() => {
-    if (!token) return;
-    
-    const loadDashboardData = async () => {
-      setLoading(true);
-      setError(null);
-      
-      try {
-        // Load initial analytics data
-        await refreshDashboardData();
-      } catch (err) {
-        console.error(err);
-        setError("Failed to load dashboard data");
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadDashboardData();
-  }, [token]);
-  
-  // Update monthly summary when months change
-  useEffect(() => {
-    if (!token) return;
-    
-    const fetchSummaryData = async () => {
-      try {
-        const summaryData = await fetchMonthlySummary(token, summaryMonths);
-        setMonthlySummary(summaryData);
-      } catch (err) {
-        console.error(err);
-        setError("Failed to fetch monthly summary data");
-      }
-    };
-    
-    fetchSummaryData();
-  }, [token, summaryMonths]);
-  
-  
-  // Function to refresh dashboard analytics data
-  const refreshDashboardData = async () => {
-    if (!token) return;
-    
-    try {
-      // Load current year expense distribution
-      const startOfYear = new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0];
-      const today = new Date().toISOString().split('T')[0];
-      
-      const distributionData = await fetchExpenseDistribution(token, startOfYear, today);
-      setExpenseDistribution(distributionData);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to refresh dashboard data");
-    }
-  };
-  
-  // Handle summary months change
-  const handleSummaryMonthsChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSummaryMonths(parseInt(e.target.value));
-  };
+  // Dashboard layout state
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
+  const [activeTab, setActiveTab] = useState("overview");
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Notifications for bell badge + drawer
+  const {
+    notifications,
+    count: notificationCount,
+    dismiss,
+    refresh: refreshNotifications,
+    isLoading: notificationsLoading,
+  } = useNotifications();
 
   if (!session) {
     return <div className="text-center p-8">Please log in to view your dashboard</div>;
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Financial Dashboard</h1>
-      
-      {/* Free to Spend - Hero Widget */}
-      <FreeToSpendWidget className="mb-8" />
+    <div className="container mx-auto p-4 pb-20 md:pb-4">
+      <DashboardHeader
+        selectedMonth={selectedMonth}
+        onMonthChange={setSelectedMonth}
+        notificationCount={notificationCount}
+        onBellClick={() => setDrawerOpen(true)}
+      />
 
-      {/* Hero Section - Financial Overview */}
-      <FinancialOverview className="mb-8" />
-
-      {/* Account Health Panel */}
-      <AccountHealthPanel className="mb-6" />
-
-      {/* Smart Alerts */}
-      <SmartAlerts className="mb-6" />
-
-      {/* Transaction Link Suggestions */}
-      <TransactionLinkAlerts className="mb-6" />
-
-      {/* Bank Connection Alerts */}
-      <BankConnectionAlerts className="mb-6" />
-
-      {/* Budget Calculation Card - Income vs Expenses */}
-      <BudgetCalculationCard />
-
-      {/* Expense Plans Card */}
-      <ExpensePlanDashboardCard />
-
-      {/* Coverage Monitor */}
-      <CoverageSection className="mb-8" />
-
-      {/* Advanced Visualizations Section */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-6 text-gray-800">📊 Visualizzazioni Avanzate</h2>
-
-        {/* Cash Flow Forecast */}
-        <CashFlowForecast className="mb-6" />
+      {/* Desktop tabs - hidden on mobile */}
+      <div className="hidden md:block mb-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="w-full justify-start">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="budget">Budget</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
-      {/* AI Analysis Card */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-6 text-gray-800">🤖 Analisi Beta</h2>
-        <AIAnalysisCard 
-          totalTransactions={0}
-          hasUncategorized={false}
+      {/* Tab content */}
+      {activeTab === "overview" && (
+        <OverviewTab
+          selectedMonth={selectedMonth}
+          onNavigateToBudget={() => setActiveTab("budget")}
         />
-      </div>
-
-      {loading ? (
-        <div className="text-center p-8">Loading dashboard data...</div>
-      ) : error ? (
-        <div className="text-red-500 text-center p-4">{error}</div>
-      ) : (
-        <>
-          {/* Traditional Charts Section */}
-          <div className="mb-8">
-            <h2 className="text-xl font-semibold mb-6 text-gray-800">📈 Analisi Tradizionali</h2>
-            
-            {/* Monthly Summary Chart */}
-            <div className="bg-white p-4 rounded-lg shadow mb-6">
-              <div className="flex flex-col md:flex-row justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold">Entrate & Spese Mensili</h2>
-                <div className="mt-2 md:mt-0">
-                  <select
-                    value={summaryMonths}
-                    onChange={handleSummaryMonthsChange}
-                    className="p-2 border rounded"
-                  >
-                    <option value="3">Ultimi 3 mesi</option>
-                    <option value="6">Ultimi 6 mesi</option>
-                    <option value="12">Ultimi 12 mesi</option>
-                  </select>
-                </div>
-              </div>
-              <MonthlySummaryChart data={monthlySummary} />
-            </div>
-
-            {/* Expense Distribution */}
-            <div className="bg-white p-4 rounded-lg shadow mb-6">
-              <h2 className="text-lg font-semibold mb-4">Distribuzione Spese per Categoria</h2>
-              <ExpenseDistributionChart data={expenseDistribution} />
-            </div>
-          </div>
-        </>
       )}
+
+      {activeTab === "budget" && (
+        <BudgetTab selectedMonth={selectedMonth} />
+      )}
+
+      {activeTab === "analytics" && (
+        <AnalyticsTab />
+      )}
+
+      <BottomTabBar activeTab={activeTab} onTabChange={setActiveTab} />
+      <NotificationDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        notifications={notifications}
+        isLoading={notificationsLoading}
+        onDismiss={dismiss}
+        onRefresh={refreshNotifications}
+      />
     </div>
   );
-} 
+}

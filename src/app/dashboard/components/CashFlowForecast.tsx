@@ -32,7 +32,7 @@ export default function CashFlowForecast({ className = '' }: CashFlowForecastPro
   const [error, setError] = useState<string | null>(null);
   
   // Controls
-  const [mode, setMode] = useState<'historical' | 'recurring'>('historical');
+  const [mode, setMode] = useState<'historical' | 'expense-plans'>('historical');
   const [months, setMonths] = useState(12);
 
   useEffect(() => {
@@ -128,11 +128,11 @@ export default function CashFlowForecast({ className = '' }: CashFlowForecastPro
             <label className="text-sm text-gray-600">Modalità:</label>
             <select
               value={mode}
-              onChange={(e) => setMode(e.target.value as 'historical' | 'recurring')}
+              onChange={(e) => setMode(e.target.value as 'historical' | 'expense-plans')}
               className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="historical">📊 Storico</option>
-              <option value="recurring">🔄 Transazioni Ricorrenti</option>
+              <option value="expense-plans">📋 Piani di Spesa</option>
             </select>
           </div>
           
@@ -283,13 +283,14 @@ export default function CashFlowForecast({ className = '' }: CashFlowForecastPro
             <span className="text-sm text-gray-700">
               {mode === 'historical' ? (
                 <span>
-                  <strong>Modalità Storico:</strong> Le previsioni sono basate sulla media delle tue transazioni passate, 
+                  <strong>Modalità Storico:</strong> Le previsioni sono basate sulla media delle tue transazioni passate,
                   considerando la stagionalità (stesso mese degli anni precedenti).
                 </span>
               ) : (
                 <span>
-                  <strong>Modalità Transazioni Ricorrenti:</strong> Le previsioni utilizzano solo le transazioni ricorrenti programmate 
-                  (stipendi, bollette, abbonamenti).
+                  <strong>Modalità Piani di Spesa:</strong> Le entrate provengono dai piani di entrata attivi (garantiti e previsti).
+                  Le spese utilizzano i piani di spesa per le categorie pianificate e la media storica per quelle non pianificate.
+                  Le spese non mensili vengono mostrate nel mese di scadenza effettivo.
                 </span>
               )}
             </span>

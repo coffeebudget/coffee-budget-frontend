@@ -21,7 +21,7 @@ import {
   Star,
   Check,
 } from "lucide-react";
-import { useLinkTransaction } from "@/hooks/useExpensePlans";
+import { useLinkTransaction, useLinkedPlansByTransactions } from "@/hooks/useExpensePlans";
 import { ExpensePlan, formatCurrency } from "@/types/expense-plan-types";
 
 interface Transaction {
@@ -78,6 +78,13 @@ export function LinkTransactionDialog({
     staleTime: 30 * 1000, // 30 seconds
   });
 
+  // Fetch linked plans for fetched transactions to exclude already-linked ones
+  const transactionIds = useMemo(
+    () => transactions.map((t) => t.id),
+    [transactions]
+  );
+  const { data: linkedPlansMap = {} } = useLinkedPlansByTransactions(transactionIds);
+
   // Reset selection when dialog opens
   useEffect(() => {
     if (open) {
@@ -88,7 +95,11 @@ export function LinkTransactionDialog({
 
   // Filter and sort transactions
   const filteredTransactions = useMemo(() => {
-    let filtered = transactions;
+    // Exclude transactions already linked to any expense plan
+    const linkedTransactionIds = new Set(
+      Object.keys(linkedPlansMap).map(Number).filter((id) => linkedPlansMap[id]?.length > 0)
+    );
+    let filtered = transactions.filter((t) => !linkedTransactionIds.has(t.id));
 
     // Filter by search term
     if (searchTerm.trim()) {

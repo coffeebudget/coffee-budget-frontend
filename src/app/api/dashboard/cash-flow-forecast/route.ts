@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   }
 
   const { searchParams } = new URL(request.url);
-  const mode = searchParams.get('mode') || 'historical'; // 'historical' | 'recurring'
+  const mode = searchParams.get('mode') || 'historical'; // 'historical' | 'expense-plans'
   const months = searchParams.get('months') || '24';
 
   try {

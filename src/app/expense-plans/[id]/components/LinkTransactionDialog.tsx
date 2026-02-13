@@ -124,7 +124,7 @@ export function LinkTransactionDialog({
       const bDate = b.executionDate || b.createdAt;
       return new Date(bDate).getTime() - new Date(aDate).getTime();
     });
-  }, [transactions, searchTerm, plan.categoryId]);
+  }, [transactions, searchTerm, plan.categoryId, linkedPlansMap]);
 
   // Separate matching and other transactions
   const matchingTransactions = filteredTransactions.filter(

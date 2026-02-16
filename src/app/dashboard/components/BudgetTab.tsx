@@ -1,9 +1,10 @@
 "use client";
 
-import BudgetCalculationCard from "./BudgetCalculationCard";
-import ExpensePlanDashboardCard from "./ExpensePlanDashboardCard";
-import AccountHealthPanel from "./AccountHealthPanel";
-import CoverageSection from "./CoverageSection";
+import BudgetSummaryBar from "./BudgetSummaryBar";
+import SavingsProgressTable from "./SavingsProgressTable";
+import AccountDistribution from "./AccountDistribution";
+import CoverageMonitorCompact from "./CoverageMonitorCompact";
+import CreditCardsSummary from "./CreditCardsSummary";
 
 interface BudgetTabProps {
   selectedMonth: string;
@@ -14,10 +15,11 @@ interface BudgetTabProps {
 export default function BudgetTab({ selectedMonth }: BudgetTabProps) {
   return (
     <div className="space-y-6">
-      <BudgetCalculationCard />
-      <ExpensePlanDashboardCard />
-      <AccountHealthPanel />
-      <CoverageSection />
+      <BudgetSummaryBar />
+      <SavingsProgressTable />
+      <AccountDistribution />
+      <CoverageMonitorCompact />
+      <CreditCardsSummary />
     </div>
   );
 }

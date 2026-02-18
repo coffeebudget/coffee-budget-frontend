@@ -114,7 +114,6 @@ export function useCoverageSummary(period?: CoveragePeriodType) {
 
 /**
  * Fetch long-term sinking fund status summary.
- * Used by CoverageSection to show sinking fund health.
  */
 export function useLongTermStatus() {
   const { data: session } = useSession();

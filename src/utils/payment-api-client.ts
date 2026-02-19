@@ -17,6 +17,7 @@ import type {
   GocardlessConnectionRequest,
   GocardlessConnectionResponse,
 } from '@/types/payment-types';
+import type { Transaction } from '@/utils/types';
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -298,7 +299,7 @@ export async function disconnectGocardless(paymentAccountId: number): Promise<Pa
 export async function searchTransactionsForReconciliation(
   paymentActivityId: number,
   searchTerm?: string
-): Promise<any[]> { // TODO: Replace `any` with Transaction type when available
+): Promise<Transaction[]> {
   const queryParams = new URLSearchParams();
   if (searchTerm) {
     queryParams.append('searchTerm', searchTerm);

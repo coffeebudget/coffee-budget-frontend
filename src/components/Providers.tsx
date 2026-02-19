@@ -1,6 +1,7 @@
 "use client";
 
 import { ReactNode, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { SessionProvider } from "next-auth/react";
 import { Toaster } from "react-hot-toast";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -13,6 +14,9 @@ interface ProvidersProps {
 }
 
 export default function Providers({ children }: ProvidersProps) {
+  const pathname = usePathname();
+  const isLandingPage = pathname === '/';
+
   // Create QueryClient instance with configuration
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
@@ -26,16 +30,20 @@ export default function Providers({ children }: ProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <SessionProvider>
-        <SidebarProvider>
-          <AppSidebar />
-          <SidebarInset>
-            <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4 md:flex hidden">
-              <SidebarTrigger className="-ml-1" />
-            </header>
-            <main className="flex-1 pb-20 md:pb-0">{children}</main>
-          </SidebarInset>
-          <MobileBottomNav />
-        </SidebarProvider>
+        {isLandingPage ? (
+          <main>{children}</main>
+        ) : (
+          <SidebarProvider>
+            <AppSidebar />
+            <SidebarInset>
+              <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4 md:flex hidden">
+                <SidebarTrigger className="-ml-1" />
+              </header>
+              <main className="flex-1 pb-20 md:pb-0">{children}</main>
+            </SidebarInset>
+            <MobileBottomNav />
+          </SidebarProvider>
+        )}
         <Toaster
           position="top-right"
           containerClassName=""

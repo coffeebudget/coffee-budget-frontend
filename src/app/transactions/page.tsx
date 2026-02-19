@@ -20,7 +20,8 @@ import TransactionList from "@/app/transactions/components/TransactionList";
 import TransactionFilters from "@/components/common/TransactionFilters";
 import { Transaction, Category, Tag, BankAccount, CreditCard } from "@/utils/types";
 import ImportTransactionsForm from "@/app/transactions/components/ImportTransactionsForm";
-import { Loader2, ReceiptIcon, PlusCircle, Upload, X, Brain } from "lucide-react";
+import { Loader2, ReceiptIcon, PlusCircle, Upload, X, Brain, Copy } from "lucide-react";
+import DuplicatesPanel from "@/app/transactions/components/DuplicatesPanel";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -321,6 +322,10 @@ export default function TransactionsPage() {
                 <Upload className="h-4 w-4" />
                 Import
               </TabsTrigger>
+              <TabsTrigger value="duplicates" className="flex items-center gap-1">
+                <Copy className="h-4 w-4" />
+                Duplicates
+              </TabsTrigger>
             </TabsList>
             
             {currentTransaction && (
@@ -416,11 +421,15 @@ export default function TransactionsPage() {
           
           <TabsContent value="import" className="mt-0">
             <Card className="w-full max-w-3xl mx-auto">
-              <ImportTransactionsForm 
-                onImportComplete={handleImportComplete} 
+              <ImportTransactionsForm
+                onImportComplete={handleImportComplete}
                 categories={categories}
               />
             </Card>
+          </TabsContent>
+
+          <TabsContent value="duplicates" className="mt-0">
+            <DuplicatesPanel />
           </TabsContent>
         </Tabs>
         

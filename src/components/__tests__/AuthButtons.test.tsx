@@ -9,9 +9,17 @@ import AuthButtons from '../AuthButtons';
 jest.mock('next-auth/react', () => ({
   useSession: jest.fn(),
   signIn: jest.fn(),
-  signOut: jest.fn(),
+  signOut: jest.fn().mockResolvedValue(undefined),
   SessionProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
+
+// Allow window.location.href assignment in tests
+beforeEach(() => {
+  Object.defineProperty(window, 'location', {
+    value: { href: '' },
+    writable: true,
+  });
+});
 
 // Mock lucide-react icons
 jest.mock('lucide-react', () => ({
@@ -212,7 +220,7 @@ describe('AuthButtons', () => {
       });
     });
 
-    it('calls signOut when logout clicked', async () => {
+    it('calls signOut and redirects to Auth0 logout when logout clicked', async () => {
       const user = userEvent.setup();
       renderWithProviders(<AuthButtons />);
 
@@ -224,6 +232,10 @@ describe('AuthButtons', () => {
       await user.click(logoutButton);
 
       expect(mockSignOut).toHaveBeenCalledTimes(1);
+      expect(mockSignOut).toHaveBeenCalledWith({ redirect: false });
+      await waitFor(() => {
+        expect(window.location.href).toBe('/api/auth/logout');
+      });
     });
 
     it('does not show login button', async () => {
@@ -273,7 +285,7 @@ describe('AuthButtons', () => {
       });
     });
 
-    it('calls signOut when mobile logout clicked', async () => {
+    it('calls signOut and redirects to Auth0 logout when mobile logout clicked', async () => {
       const user = userEvent.setup();
       renderWithProviders(<AuthButtons isMobile={true} />);
 
@@ -285,6 +297,10 @@ describe('AuthButtons', () => {
       await user.click(logoutButton);
 
       expect(mockSignOut).toHaveBeenCalledTimes(1);
+      expect(mockSignOut).toHaveBeenCalledWith({ redirect: false });
+      await waitFor(() => {
+        expect(window.location.href).toBe('/api/auth/logout');
+      });
     });
 
     it('does not show mobile login button', async () => {
@@ -521,6 +537,7 @@ describe('AuthButtons', () => {
       await user.click(logoutButton);
 
       expect(mockSignOut).toHaveBeenCalledTimes(3);
+      expect(mockSignOut).toHaveBeenCalledWith({ redirect: false });
     });
   });
 });

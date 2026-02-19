@@ -9,10 +9,15 @@ interface AuthButtonsProps {
   isMobile?: boolean;
 }
 
+async function handleLogout() {
+  await signOut({ redirect: false });
+  window.location.href = '/api/auth/logout';
+}
+
 export default function AuthButtons({ isMobile = false }: AuthButtonsProps) {
   const { data: session, status } = useSession();
   const [isClient, setIsClient] = useState(false);
-  
+
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -36,7 +41,7 @@ export default function AuthButtons({ isMobile = false }: AuthButtonsProps) {
   if (isMobile) {
     return isLoggedIn ? (
       <button
-        onClick={() => signOut()}
+        onClick={handleLogout}
         className="w-full px-2 py-2 flex items-center gap-2 text-red-600 hover:bg-red-50 rounded text-sm font-medium"
         data-testid="mobile-logout-button"
       >
@@ -59,7 +64,7 @@ export default function AuthButtons({ isMobile = false }: AuthButtonsProps) {
     <Button 
       variant="outline" 
       size="sm" 
-      onClick={() => signOut()}
+      onClick={handleLogout}
       className="flex items-center gap-1"
       data-testid="logout-button"
     >

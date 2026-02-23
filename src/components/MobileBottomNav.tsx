@@ -52,7 +52,7 @@ export default function MobileBottomNav() {
     <nav
       className={cn(
         'fixed bottom-0 left-0 right-0 z-50',
-        'bg-background border-t',
+        'bg-sidebar border-t border-sidebar-border',
         'h-16 pb-[env(safe-area-inset-bottom)]',
         'md:hidden',
         'flex items-stretch'
@@ -69,7 +69,7 @@ export default function MobileBottomNav() {
             className={cn(
               'flex flex-col items-center justify-center flex-1 py-2 gap-1',
               'transition-colors',
-              active ? 'text-primary' : 'text-muted-foreground'
+              active ? 'text-sidebar-primary' : 'text-sidebar-foreground'
             )}
             aria-current={active ? 'page' : undefined}
           >
@@ -84,7 +84,7 @@ export default function MobileBottomNav() {
         onClick={() => setOpenMobile(true)}
         className={cn(
           'flex flex-col items-center justify-center flex-1 py-2 gap-1',
-          'transition-colors text-muted-foreground'
+          'transition-colors text-sidebar-foreground'
         )}
         aria-label="More navigation options"
         data-testid="mobile-more-button"

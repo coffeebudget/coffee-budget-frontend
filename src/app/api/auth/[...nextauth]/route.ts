@@ -72,7 +72,6 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, account, user }) {
       // On initial sign-in, account will be present and we save the access token
       if (account?.access_token) {
-        console.log('✅ Saving access_token to JWT token');
         token.accessToken = account.access_token;
 
         // Fetch or create user ONLY on initial sign-in (when account is present)
@@ -82,9 +81,6 @@ export const authOptions: NextAuthOptions = {
           if (!userData) {
             // User doesn't exist, create new user
             await createUser(token.sub as string, user?.email as string || '', account.access_token);
-            console.log('✅ New user created on initial sign-in');
-          } else {
-            console.log('✅ Existing user found on initial sign-in');
           }
         } catch (error) {
           console.error('Error fetching/creating user on sign-in:', error);

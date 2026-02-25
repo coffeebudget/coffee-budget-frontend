@@ -93,10 +93,10 @@ describe('AppSidebar', () => {
       expect(allHrefs).not.toContain('/pending-duplicates');
     });
 
-    it('should have 13 total navigation items (Duplicates moved to Transactions tab)', () => {
+    it('should have 14 total navigation items', () => {
       const totalGroupItems = navGroups.reduce((sum, g) => sum + g.items.length, 0);
       const total = primaryItems.length + totalGroupItems;
-      expect(total).toBe(13);
+      expect(total).toBe(14);
     });
   });
 });

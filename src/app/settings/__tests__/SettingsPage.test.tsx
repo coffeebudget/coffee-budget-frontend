@@ -38,6 +38,15 @@ describe('SettingsPage', () => {
     expect(screen.getByText('Delete my account')).toBeInTheDocument();
   });
 
+  it('should render export data section', () => {
+    (useSession as jest.Mock).mockReturnValue({
+      data: { user: { email: 'test@example.com' } },
+    });
+    render(<SettingsPage />);
+    expect(screen.getByText('Export Data')).toBeInTheDocument();
+    expect(screen.getByText('Download my data')).toBeInTheDocument();
+  });
+
   it('should open delete dialog when button is clicked', () => {
     (useSession as jest.Mock).mockReturnValue({
       data: {

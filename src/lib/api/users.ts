@@ -7,6 +7,19 @@ function getHeaders(token: string) {
   };
 }
 
+export async function exportAccountData(token: string): Promise<Blob> {
+  const response = await fetch(`${API_URL}/users/account/export`, {
+    headers: getHeaders(token),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || 'Failed to export account data');
+  }
+
+  return response.blob();
+}
+
 export async function deleteAccount(token: string): Promise<void> {
   const response = await fetch(`${API_URL}/users/account`, {
     method: 'DELETE',

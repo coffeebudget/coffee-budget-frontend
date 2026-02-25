@@ -480,6 +480,24 @@ export default function Home() {
           <p className="mt-16 text-sm" style={{ color: "#5A4A3A" }}>
             Built with Next.js, NestJS &amp; PostgreSQL
           </p>
+
+          <div className="mt-6 flex items-center justify-center gap-4">
+            <Link
+              href="/privacy"
+              className="text-sm no-underline"
+              style={{ color: "#5A4A3A" }}
+            >
+              Privacy Policy
+            </Link>
+            <span style={{ color: "#3A2E24" }}>·</span>
+            <Link
+              href="/terms"
+              className="text-sm no-underline"
+              style={{ color: "#5A4A3A" }}
+            >
+              Terms of Service
+            </Link>
+          </div>
         </div>
       </section>
     </div>

@@ -15,7 +15,7 @@ interface ProvidersProps {
 
 export default function Providers({ children }: ProvidersProps) {
   const pathname = usePathname();
-  const isLandingPage = pathname === '/';
+  const isPublicPage = pathname === '/' || pathname === '/privacy' || pathname === '/terms';
 
   // Create QueryClient instance with configuration
   const [queryClient] = useState(() => new QueryClient({
@@ -30,7 +30,7 @@ export default function Providers({ children }: ProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <SessionProvider>
-        {isLandingPage ? (
+        {isPublicPage ? (
           <main>{children}</main>
         ) : (
           <SidebarProvider>

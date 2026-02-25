@@ -5,8 +5,8 @@ import { getToken } from 'next-auth/jwt';
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
-  // Skip middleware for API routes and the home page
-  if (pathname === '/' || pathname.startsWith('/api/') || pathname.includes('.')) {
+  // Skip middleware for API routes, home page, and legal pages
+  if (pathname === '/' || pathname === '/privacy' || pathname === '/terms' || pathname.startsWith('/api/') || pathname.includes('.')) {
     return NextResponse.next();
   }
 

@@ -17,6 +17,7 @@ import {
   RefreshCw,
   FolderTree,
   Tag,
+  Settings,
   ChevronRight,
   Coffee,
 } from 'lucide-react';
@@ -92,6 +93,7 @@ const navGroups: NavGroup[] = [
       { href: '/categories', label: 'Categories', icon: FolderTree },
       { href: '/tags', label: 'Tags', icon: Tag },
       { href: '/sync-history', label: 'Sync History', icon: RefreshCw },
+      { href: '/settings', label: 'Account', icon: Settings },
     ],
   },
 ];

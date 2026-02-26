@@ -75,7 +75,7 @@ export default function AnalyticsTab() {
           <div className="bg-white p-4 rounded-lg shadow">
             <div className="flex flex-col md:flex-row justify-between items-center mb-4">
               <h2 className="text-lg font-semibold">
-                Entrate &amp; Spese Mensili
+                Monthly Income &amp; Expenses
               </h2>
               <div className="mt-2 md:mt-0">
                 <select
@@ -83,9 +83,9 @@ export default function AnalyticsTab() {
                   onChange={handleSummaryMonthsChange}
                   className="p-2 border rounded"
                 >
-                  <option value="3">Ultimi 3 mesi</option>
-                  <option value="6">Ultimi 6 mesi</option>
-                  <option value="12">Ultimi 12 mesi</option>
+                  <option value="3">Last 3 months</option>
+                  <option value="6">Last 6 months</option>
+                  <option value="12">Last 12 months</option>
                 </select>
               </div>
             </div>
@@ -95,7 +95,7 @@ export default function AnalyticsTab() {
           {/* Expense Distribution */}
           <div className="bg-white p-4 rounded-lg shadow">
             <h2 className="text-lg font-semibold mb-4">
-              Distribuzione Spese per Categoria
+              Expense Distribution by Category
             </h2>
             <ExpenseDistributionChart data={expenseDistribution} />
           </div>

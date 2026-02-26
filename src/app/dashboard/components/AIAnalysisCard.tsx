@@ -43,12 +43,12 @@ export default function AIAnalysisCard({
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <CardTitle className="text-lg font-semibold bg-gradient-to-r from-purple-700 to-blue-700 bg-clip-text text-transparent">
-              Analisi Intelligente delle Spese
+              Smart Expense Analysis
             </CardTitle>
           </div>
           {hasUncategorized && (
             <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-300">
-              Nuovi dati
+              New data
             </Badge>
           )}
         </div>
@@ -56,29 +56,29 @@ export default function AIAnalysisCard({
 
       <CardContent className="space-y-4">
         <p className="text-gray-600 text-sm leading-relaxed">
-          Scopri i tuoi pattern di spesa, ricevi consigli personalizzati e identifica 
-          opportunità di risparmio con l'intelligenza artificiale.
+          Discover your spending patterns, get personalized advice and identify
+          savings opportunities with artificial intelligence.
         </p>
 
         <div className="flex items-center gap-4 text-xs text-gray-500">
           <div className="flex items-center gap-1">
             <BarChart3 className="w-3 h-3" />
-            <span>Pattern di spesa</span>
+            <span>Spending patterns</span>
           </div>
           <div className="flex items-center gap-1">
             <TrendingUp className="w-3 h-3" />
-            <span>Trend mensili</span>
+            <span>Monthly trends</span>
           </div>
           <div className="flex items-center gap-1">
             <Brain className="w-3 h-3" />
-            <span>Consigli AI</span>
+            <span>AI insights</span>
           </div>
         </div>
 
         {totalTransactions > 0 && (
           <div className="bg-white/70 rounded-lg p-3 border border-purple-100">
             <div className="text-sm text-gray-600">
-              Pronto per analizzare <span className="font-medium text-purple-700">{totalTransactions}</span> transazioni
+              Ready to analyze <span className="font-medium text-purple-700">{totalTransactions}</span> transactions
             </div>
           </div>
         )}
@@ -89,11 +89,11 @@ export default function AIAnalysisCard({
           size="lg"
         >
           <Brain className="w-4 h-4 mr-2" />
-          Analizza le mie spese
+          Analyze my expenses
         </Button>
 
         <p className="text-xs text-gray-500 text-center">
-          Powered by ChatGPT • Analisi sicura e privata
+          Powered by ChatGPT • Secure & private analysis
         </p>
       </CardContent>
     </Card>

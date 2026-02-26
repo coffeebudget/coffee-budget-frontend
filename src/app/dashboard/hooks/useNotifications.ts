@@ -146,11 +146,11 @@ function buildSmartNotifications(raw: RawAlertData): Notification[] {
           source: 'smart',
           severity: 'high',
           title: plan.name,
-          message: `Piano in ritardo: mancano \u20AC${plan.amountNeeded?.toFixed(2) || '0'} con ${plan.monthsUntilDue || '?'} mesi alla scadenza`,
+          message: `Plan behind schedule: \u20AC${plan.amountNeeded?.toFixed(2) || '0'} short with ${plan.monthsUntilDue || '?'} months until due`,
           icon: Wallet,
           iconColor: 'text-red-500',
           action: {
-            label: 'Gestisci piani spesa',
+            label: 'Manage expense plans',
             href: '/expense-plans',
           },
         });
@@ -160,11 +160,11 @@ function buildSmartNotifications(raw: RawAlertData): Notification[] {
           source: 'smart',
           severity: 'medium',
           title: plan.name,
-          message: `Piano quasi pronto ma necessita di \u20AC${plan.amountNeeded?.toFixed(2) || '0'} aggiuntivi`,
+          message: `Plan almost ready but needs \u20AC${plan.amountNeeded?.toFixed(2) || '0'} more`,
           icon: Wallet,
           iconColor: 'text-yellow-500',
           action: {
-            label: 'Gestisci piani spesa',
+            label: 'Manage expense plans',
             href: '/expense-plans',
           },
         });
@@ -183,12 +183,12 @@ function buildSmartNotifications(raw: RawAlertData): Notification[] {
         id: 'smart-shortfall-0',
         source: 'smart',
         severity: 'high',
-        title: 'Riepilogo',
-        message: `${behindCount} piani in ritardo - Importo totale necessario: \u20AC${expensePlansData.totalAmountNeeded.toFixed(2)}`,
+        title: 'Summary',
+        message: `${behindCount} plans behind schedule - Total amount needed: \u20AC${expensePlansData.totalAmountNeeded.toFixed(2)}`,
         icon: Wallet,
         iconColor: 'text-red-500',
         action: {
-          label: 'Gestisci piani spesa',
+          label: 'Manage expense plans',
           href: '/expense-plans',
         },
       });
@@ -208,12 +208,12 @@ function buildSmartNotifications(raw: RawAlertData): Notification[] {
         id: 'smart-negative_trend-0',
         source: 'smart',
         severity: 'medium',
-        title: 'Trend negativo',
-        message: `Il flusso di cassa \u00E8 peggiorato di \u20AC${(previousNet - currentNet).toFixed(2)} rispetto al mese scorso`,
+        title: 'Negative trend',
+        message: `Cash flow worsened by \u20AC${(previousNet - currentNet).toFixed(2)} compared to last month`,
         icon: TrendingDown,
         iconColor: 'text-red-500',
         action: {
-          label: 'Vedi transazioni',
+          label: 'View transactions',
           href: '/transactions',
         },
       });
@@ -224,12 +224,12 @@ function buildSmartNotifications(raw: RawAlertData): Notification[] {
         id: 'smart-low_balance-0',
         source: 'smart',
         severity: currentNet < -500 ? 'high' : 'medium',
-        title: 'Flusso di cassa negativo',
-        message: `Flusso di cassa negativo: \u20AC${Math.abs(currentNet).toFixed(2)}`,
+        title: 'Negative cash flow',
+        message: `Negative cash flow: \u20AC${Math.abs(currentNet).toFixed(2)}`,
         icon: TrendingDown,
         iconColor: 'text-red-500',
         action: {
-          label: 'Vedi transazioni',
+          label: 'View transactions',
           href: '/transactions',
         },
       });
@@ -244,12 +244,12 @@ function buildSmartNotifications(raw: RawAlertData): Notification[] {
         id: 'smart-unusual_spending-0',
         source: 'smart',
         severity: 'medium',
-        title: 'Spese in aumento',
-        message: `Spese aumentate del ${expenseIncrease.toFixed(0)}% rispetto al mese scorso`,
+        title: 'Rising expenses',
+        message: `Expenses increased by ${expenseIncrease.toFixed(0)}% compared to last month`,
         icon: CreditCard,
         iconColor: 'text-orange-500',
         action: {
-          label: 'Vedi transazioni',
+          label: 'View transactions',
           href: '/transactions',
         },
       });
@@ -262,12 +262,12 @@ function buildSmartNotifications(raw: RawAlertData): Notification[] {
       id: `smart-pending_duplicates-${duplicatesData.length}`,
       source: 'smart',
       severity: duplicatesData.length > 10 ? 'medium' : 'low',
-      title: 'Duplicati da rivedere',
-      message: `${duplicatesData.length} transazioni duplicate da rivedere`,
+      title: 'Duplicates to review',
+      message: `${duplicatesData.length} duplicate transactions to review`,
       icon: AlertTriangle,
       iconColor: 'text-purple-500',
       action: {
-        label: 'Gestisci duplicati',
+        label: 'Manage duplicates',
         href: '/pending-duplicates',
       },
     });
@@ -294,7 +294,7 @@ function buildBankNotifications(raw: RawAlertData): Notification[] {
     iconColor:
       alert.status === 'expired' ? 'text-red-500' : 'text-yellow-500',
     action: {
-      label: 'Riconnetti banca',
+      label: 'Reconnect bank',
       href: `/bank-accounts?reconnect=${alert.connectionId}`,
     },
   }));
@@ -314,15 +314,15 @@ function buildLinkNotifications(
     source: 'link' as const,
     severity: 'low' as const,
     title: `"${s.transactionDescription}" ${formatSuggestionAmount(s.transactionAmount)}`,
-    message: `${formatSuggestionDate(s.transactionDate)} \u2192 Collega a: ${s.expensePlanIcon ? s.expensePlanIcon + ' ' : ''}${s.expensePlanName}`,
+    message: `${formatSuggestionDate(s.transactionDate)} \u2192 Link to: ${s.expensePlanIcon ? s.expensePlanIcon + ' ' : ''}${s.expensePlanName}`,
     icon: Link2,
     iconColor: 'text-purple-500',
     action: {
-      label: 'Collega',
+      label: 'Link',
       onClick: () => onApprove(s),
     },
     secondaryAction: {
-      label: 'Non chiedere pi\u00F9',
+      label: 'Don\'t ask again',
       onClick: () => onReject(s, true),
     },
     timestamp: s.createdAt,

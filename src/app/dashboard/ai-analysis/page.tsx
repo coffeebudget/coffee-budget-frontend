@@ -97,7 +97,7 @@ export default function AIAnalysisPage() {
       });
     } catch (error) {
       console.error('Failed to load data:', error);
-      showErrorToast('Errore nel caricamento dei dati');
+      showErrorToast('Failed to load data');
     } finally {
       setLoading(false);
     }
@@ -194,10 +194,10 @@ export default function AIAnalysisPage() {
 
       const result = await response.json();
       setAnalysisResult(result);
-      showSuccessToast('Analisi completata!');
+      showSuccessToast('Analysis complete!');
     } catch (error) {
       console.error('Failed to run AI analysis:', error);
-      showErrorToast('Errore nell\'analisi AI');
+      showErrorToast('AI analysis failed');
     } finally {
       setAnalyzing(false);
     }
@@ -210,7 +210,7 @@ export default function AIAnalysisPage() {
 
     if (!depositSummary || plansWithStatus.length === 0) return null;
 
-    const systemPrompt = "Sei un consulente finanziario esperto. Analizza i piani di spesa (expense plans) e fornisci consigli pratici e personalizzati per ottimizzare la gestione finanziaria. Rispondi sempre in italiano con un tono professionale ma amichevole.";
+    const systemPrompt = "You are an expert financial advisor. Analyze expense plans and provide practical, personalized advice to optimize financial management. Always respond in English with a professional but friendly tone.";
 
     // Group plans by purpose
     const sinkingFunds = plansWithStatus.filter(p => p.purpose === 'sinking_fund');
@@ -225,85 +225,85 @@ export default function AIAnalysisPage() {
                         plan.fundingStatus === 'on_track' ? '🟢' :
                         plan.fundingStatus === 'almost_ready' ? '🟡' : '🔴';
       return `- ${plan.name} (${getExpensePlanPurposeLabel(plan.purpose)}):
-  * Target: €${plan.targetAmount} | Contributo mensile: €${plan.monthlyContribution}
-  * Stato: ${getFundingStatusLabel(plan.fundingStatus || 'on_track')} ${statusIcon}
-  * Progresso: ${plan.progressPercent}%
-  * Priorità: ${getExpensePlanPriorityLabel(plan.priority)}
-  ${plan.nextDueDate ? `* Prossima scadenza: ${new Date(plan.nextDueDate).toLocaleDateString('it-IT')}` : ''}
-  ${plan.amountNeeded ? `* Importo ancora necessario: €${plan.amountNeeded}` : ''}`;
+  * Target: €${plan.targetAmount} | Monthly contribution: €${plan.monthlyContribution}
+  * Status: ${getFundingStatusLabel(plan.fundingStatus || 'on_track')} ${statusIcon}
+  * Progress: ${plan.progressPercent}%
+  * Priority: ${getExpensePlanPriorityLabel(plan.priority)}
+  ${plan.nextDueDate ? `* Next due date: ${new Date(plan.nextDueDate).toLocaleDateString('en-GB')}` : ''}
+  ${plan.amountNeeded ? `* Amount still needed: €${plan.amountNeeded}` : ''}`;
     }).join('\n\n');
 
     const dataPrompt = `
-Analizza questi piani di spesa (expense plans) e fornisci consigli di ottimizzazione:
+Analyze these expense plans and provide optimization advice:
 
-PANORAMICA PIANI DI SPESA:
-- Totale piani attivi: ${plansWithStatus.length}
-- Sinking Funds (risparmi): ${sinkingFunds.length}
-- Spending Budgets (budget): ${spendingBudgets.length}
-- Contributo mensile totale: €${depositSummary.totalMonthlyDeposit}
+EXPENSE PLANS OVERVIEW:
+- Total active plans: ${plansWithStatus.length}
+- Sinking Funds: ${sinkingFunds.length}
+- Spending Budgets: ${spendingBudgets.length}
+- Total monthly contribution: €${depositSummary.totalMonthlyDeposit}
 
-STATO DEI FONDI:
-- Completamente finanziati: ${depositSummary.fullyFundedCount}
-- In linea con i tempi: ${depositSummary.onTrackCount}
-- In ritardo: ${depositSummary.behindScheduleCount}
+FUNDING STATUS:
+- Fully funded: ${depositSummary.fullyFundedCount}
+- On track: ${depositSummary.onTrackCount}
+- Behind: ${depositSummary.behindScheduleCount}
 
 ${coverageSummary ? `
-COPERTURA CONTI (prossimi 30 giorni):
-- Stato generale: ${coverageSummary.overallStatus === 'all_covered' ? '✅ Tutto coperto' : '⚠️ Possibile shortfall'}
-${coverageSummary.totalShortfall > 0 ? `- Shortfall totale: €${coverageSummary.totalShortfall}` : ''}
-${plansAtRisk.length > 0 ? `- Piani a rischio: ${plansAtRisk.map(p => p.name).join(', ')}` : ''}
+ACCOUNT COVERAGE (next 30 days):
+- Overall status: ${coverageSummary.overallStatus === 'all_covered' ? '✅ All covered' : '⚠️ Possible shortfall'}
+${coverageSummary.totalShortfall > 0 ? `- Total shortfall: €${coverageSummary.totalShortfall}` : ''}
+${plansAtRisk.length > 0 ? `- Plans at risk: ${plansAtRisk.map(p => p.name).join(', ')}` : ''}
 ` : ''}
 
 ${longTermStatus ? `
-STATO LUNGO TERMINE:
-- Sinking funds totali: ${longTermStatus.totalSinkingFunds}
-- Importo totale necessario: €${longTermStatus.totalAmountNeeded}
+LONG-TERM STATUS:
+- Total sinking funds: ${longTermStatus.totalSinkingFunds}
+- Total amount needed: €${longTermStatus.totalAmountNeeded}
 ${longTermStatus.plansNeedingAttention.length > 0 ? `
-PIANI CHE RICHIEDONO ATTENZIONE:
-${longTermStatus.plansNeedingAttention.map(p => `- ${p.name}: ${p.status === 'behind' ? '🔴 In ritardo' : '🟡 Quasi pronto'}, mancano €${p.amountNeeded}, ${p.monthsUntilDue} mesi alla scadenza`).join('\n')}
+PLANS NEEDING ATTENTION:
+${longTermStatus.plansNeedingAttention.map(p => `- ${p.name}: ${p.status === 'behind' ? '🔴 Behind' : '🟡 Almost ready'}, short €${p.amountNeeded}, ${p.monthsUntilDue} months until due`).join('\n')}
 ` : ''}
 ` : ''}
 
-DETTAGLIO PIANI:
+PLAN DETAILS:
 ${plansFormatted}
 
 ${plansBehind.length > 0 ? `
-PIANI IN RITARDO:
-${plansBehind.map(p => `- ${p.name}: ${p.progressPercent}% completato, mancano €${p.amountNeeded}`).join('\n')}
+PLANS BEHIND SCHEDULE:
+${plansBehind.map(p => `- ${p.name}: ${p.progressPercent}% complete, short €${p.amountNeeded}`).join('\n')}
 ` : ''}
 
-Per favore fornisci:
-1. Un'analisi generale dello stato finanziario basata sui piani di spesa
-2. Consigli specifici per i piani che richiedono attenzione (in ritardo o a rischio)
-3. Suggerimenti per ottimizzare i contributi mensili
-4. Raccomandazioni generali per migliorare la gestione finanziaria
+Please provide:
+1. A general analysis of the financial situation based on expense plans
+2. Specific advice for plans that need attention (behind or at risk)
+3. Suggestions to optimize monthly contributions
+4. General recommendations to improve financial management
 
-IMPORTANTE: Rispondi SOLO con un JSON valido nel seguente formato:
+IMPORTANT: Respond ONLY with valid JSON in the following format:
 {
-  "analysis": "Analisi generale della situazione finanziaria (2-3 frasi)",
+  "analysis": "General analysis of the financial situation (2-3 sentences)",
   "plansNeedingAttention": [
     {
-      "planName": "Nome piano",
-      "issue": "Descrizione del problema",
-      "suggestions": ["suggerimento1", "suggerimento2"]
+      "planName": "Plan name",
+      "issue": "Description of the issue",
+      "suggestions": ["suggestion1", "suggestion2"]
     }
   ],
   "optimizationTips": [
     {
-      "area": "Area di ottimizzazione",
-      "tip": "Consiglio specifico",
-      "potentialImpact": "Descrizione dell'impatto potenziale"
+      "area": "Optimization area",
+      "tip": "Specific advice",
+      "potentialImpact": "Description of potential impact"
     }
   ],
   "overallRecommendations": [
-    "Raccomandazione generale 1",
-    "Raccomandazione generale 2",
-    "Raccomandazione generale 3"
+    "General recommendation 1",
+    "General recommendation 2",
+    "General recommendation 3"
   ],
   "financialHealthScore": 75
 }
 
-Non usare code fences o testo aggiuntivo, solo JSON puro.
+Do not use code fences or additional text, only pure JSON.
 `;
 
     return { systemPrompt, dataPrompt };
@@ -327,14 +327,14 @@ Non usare code fences o testo aggiuntivo, solo JSON puro.
             className="flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            Indietro
+            Back
           </Button>
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-700 to-blue-700 bg-clip-text text-transparent">
-              Analisi Piani di Spesa
+              Expense Plan Analysis
             </h1>
             <p className="text-gray-600 mt-1">
-              Consigli personalizzati per ottimizzare i tuoi piani finanziari
+              Personalized advice to optimize your financial plans
             </p>
           </div>
         </div>
@@ -354,7 +354,7 @@ Non usare code fences o testo aggiuntivo, solo JSON puro.
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-          <span className="ml-3 text-lg">Caricamento dati...</span>
+          <span className="ml-3 text-lg">Loading data...</span>
         </div>
       ) : (
         <>
@@ -364,31 +364,31 @@ Non usare code fences o testo aggiuntivo, solo JSON puro.
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <PiggyBank className="w-5 h-5 text-blue-600" />
-                  Panoramica Piani di Spesa
+                  Expense Plans Overview
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <p className="text-sm text-gray-600">Contributo Mensile</p>
+                    <p className="text-sm text-gray-600">Monthly Contribution</p>
                     <p className="text-2xl font-bold text-blue-600">
                       {formatCurrency(depositSummary.totalMonthlyDeposit)}
                     </p>
                   </div>
                   <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <p className="text-sm text-gray-600">Finanziati / In linea</p>
+                    <p className="text-sm text-gray-600">Funded / On Track</p>
                     <p className="text-2xl font-bold text-green-600">
                       {depositSummary.fullyFundedCount + depositSummary.onTrackCount}
                     </p>
                   </div>
                   <div className="text-center p-4 bg-red-50 rounded-lg">
-                    <p className="text-sm text-gray-600">In Ritardo</p>
+                    <p className="text-sm text-gray-600">Behind</p>
                     <p className="text-2xl font-bold text-red-600">
                       {depositSummary.behindScheduleCount}
                     </p>
                   </div>
                   <div className="text-center p-4 bg-purple-50 rounded-lg">
-                    <p className="text-sm text-gray-600">Piani Totali</p>
+                    <p className="text-sm text-gray-600">Total Plans</p>
                     <p className="text-2xl font-bold text-purple-600">
                       {depositSummary.planCount}
                     </p>
@@ -404,7 +404,7 @@ Non usare code fences o testo aggiuntivo, solo JSON puro.
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <MessageSquare className="w-5 h-5 text-indigo-600" />
-                  Prompt AI - Anteprima
+                  AI Prompt - Preview
                 </CardTitle>
                 <Button
                   variant="outline"
@@ -415,12 +415,12 @@ Non usare code fences o testo aggiuntivo, solo JSON puro.
                   {showPrompt ? (
                     <>
                       <EyeOff className="w-4 h-4 mr-2" />
-                      Nascondi Prompt
+                      Hide Prompt
                     </>
                   ) : (
                     <>
                       <Eye className="w-4 h-4 mr-2" />
-                      Mostra Prompt
+                      Show Prompt
                     </>
                   )}
                 </Button>
@@ -433,7 +433,7 @@ Non usare code fences o testo aggiuntivo, solo JSON puro.
                   return promptData ? (
                     <div className="space-y-4">
                       <div className="p-4 bg-gray-50 rounded-lg">
-                        <h4 className="font-semibold mb-2 text-gray-800">System Prompt (Istruzione del Sistema):</h4>
+                        <h4 className="font-semibold mb-2 text-gray-800">System Prompt:</h4>
                         <div className="p-3 bg-white rounded border">
                           <p className="text-sm font-mono text-gray-700">
                             {promptData.systemPrompt}
@@ -442,7 +442,7 @@ Non usare code fences o testo aggiuntivo, solo JSON puro.
                       </div>
 
                       <div className="p-4 bg-blue-50 rounded-lg">
-                        <h4 className="font-semibold mb-2 text-blue-800">Data Prompt (Dati Inviati all&apos;AI):</h4>
+                        <h4 className="font-semibold mb-2 text-blue-800">Data Prompt (Data Sent to AI):</h4>
                         <div className="p-3 bg-white rounded border max-h-96 overflow-y-auto">
                           <pre className="text-sm font-mono text-gray-700 whitespace-pre-wrap">
                             {promptData.dataPrompt}
@@ -451,12 +451,12 @@ Non usare code fences o testo aggiuntivo, solo JSON puro.
                       </div>
 
                       <div className="p-4 bg-yellow-50 rounded-lg">
-                        <h4 className="font-semibold mb-2 text-yellow-800">Note sulla Privacy:</h4>
+                        <h4 className="font-semibold mb-2 text-yellow-800">Privacy Notes:</h4>
                         <ul className="text-sm text-yellow-700 space-y-1">
-                          <li>• I dati finanziari vengono inviati al servizio OpenAI per l&apos;analisi</li>
-                          <li>• Vengono condivise solo informazioni aggregate sui piani di spesa</li>
-                          <li>• Non vengono condivisi dettagli specifici delle transazioni</li>
-                          <li>• I dati non vengono memorizzati permanentemente dal servizio AI</li>
+                          <li>• Financial data is sent to OpenAI for analysis</li>
+                          <li>• Only aggregate expense plan information is shared</li>
+                          <li>• No specific transaction details are shared</li>
+                          <li>• Data is not permanently stored by the AI service</li>
                         </ul>
                       </div>
                     </div>
@@ -466,10 +466,10 @@ Non usare code fences o testo aggiuntivo, solo JSON puro.
                 <div className="text-center py-8">
                   <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-400" />
                   <p className="text-gray-600 mb-2">
-                    Visualizza il prompt che verrà inviato all&apos;AI per l&apos;analisi dei tuoi piani di spesa.
+                    View the prompt that will be sent to AI for your expense plan analysis.
                   </p>
                   <p className="text-sm text-gray-500">
-                    Questo ti permette di vedere esattamente quali dati vengono condivisi con il servizio AI.
+                    This lets you see exactly what data is shared with the AI service.
                   </p>
                 </div>
               )}
@@ -482,7 +482,7 @@ Non usare code fences o testo aggiuntivo, solo JSON puro.
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <Brain className="w-5 h-5 text-purple-600" />
-                  Analisi AI dei Piani di Spesa
+                  AI Expense Plan Analysis
                 </CardTitle>
                 <Button
                   onClick={runAIAnalysis}
@@ -492,12 +492,12 @@ Non usare code fences o testo aggiuntivo, solo JSON puro.
                   {analyzing ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      Analizzando...
+                      Analyzing...
                     </>
                   ) : (
                     <>
                       <Brain className="w-4 h-4 mr-2" />
-                      Analizza Piani
+                      Analyze Plans
                     </>
                   )}
                 </Button>
@@ -508,7 +508,7 @@ Non usare code fences o testo aggiuntivo, solo JSON puro.
                 <div className="space-y-6">
                   {/* Financial Health Score */}
                   <div className="text-center p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
-                    <h3 className="text-lg font-semibold mb-2">Punteggio Salute Finanziaria</h3>
+                    <h3 className="text-lg font-semibold mb-2">Financial Health Score</h3>
                     <div className={`text-4xl font-bold mb-2 ${
                       analysisResult.financialHealthScore >= 80 ? 'text-green-600' :
                       analysisResult.financialHealthScore >= 60 ? 'text-orange-600' : 'text-red-600'
@@ -523,7 +523,7 @@ Non usare code fences o testo aggiuntivo, solo JSON puro.
                     <div>
                       <h3 className="flex items-center gap-2 font-semibold mb-4">
                         <AlertTriangle className="w-5 h-5 text-red-600" />
-                        Piani che Richiedono Attenzione
+                        Plans Needing Attention
                       </h3>
                       <div className="space-y-3">
                         {analysisResult.plansNeedingAttention.map((plan, index) => (
@@ -550,7 +550,7 @@ Non usare code fences o testo aggiuntivo, solo JSON puro.
                     <div>
                       <h3 className="flex items-center gap-2 font-semibold mb-4">
                         <Lightbulb className="w-5 h-5 text-yellow-600" />
-                        Consigli di Ottimizzazione
+                        Optimization Tips
                       </h3>
                       <div className="space-y-3">
                         {analysisResult.optimizationTips.map((tip, index) => (
@@ -573,7 +573,7 @@ Non usare code fences o testo aggiuntivo, solo JSON puro.
                     <div>
                       <h3 className="flex items-center gap-2 font-semibold mb-4">
                         <Target className="w-5 h-5 text-green-600" />
-                        Raccomandazioni Generali
+                        General Recommendations
                       </h3>
                       <div className="space-y-3">
                         {analysisResult.overallRecommendations.map((rec, index) => (
@@ -588,9 +588,9 @@ Non usare code fences o testo aggiuntivo, solo JSON puro.
               ) : (
                 <div className="text-center py-12">
                   <Brain className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                  <h3 className="text-lg font-medium mb-2">Pronto per l&apos;Analisi</h3>
+                  <h3 className="text-lg font-medium mb-2">Ready for Analysis</h3>
                   <p className="text-gray-600 mb-4">
-                    Clicca &quot;Analizza Piani&quot; per ricevere consigli personalizzati sull&apos;ottimizzazione dei tuoi piani di spesa.
+                    Click &quot;Analyze Plans&quot; to receive personalized advice on optimizing your expense plans.
                   </p>
                 </div>
               )}
@@ -600,7 +600,7 @@ Non usare code fences o testo aggiuntivo, solo JSON puro.
           {/* Plans Summary by Type */}
           <Card>
             <CardHeader>
-              <CardTitle>Riepilogo per Tipo</CardTitle>
+              <CardTitle>Summary by Type</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -617,7 +617,7 @@ Non usare code fences o testo aggiuntivo, solo JSON puro.
                   </p>
                 </div>
                 <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <p className="text-sm text-green-600">Finanziati</p>
+                  <p className="text-sm text-green-600">Funded</p>
                   <p className="text-2xl font-bold text-green-700">
                     {plansWithStatus.filter(p => p.fundingStatus === 'funded').length}
                   </p>
@@ -630,7 +630,7 @@ Non usare code fences o testo aggiuntivo, solo JSON puro.
           {coverageSummary && coverageSummary.overallStatus !== 'no_data' && (
             <Card>
               <CardHeader>
-                <CardTitle>Stato Copertura (30 giorni)</CardTitle>
+                <CardTitle>Coverage Status (30 days)</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className={`p-4 rounded-lg ${
@@ -642,20 +642,20 @@ Non usare code fences o testo aggiuntivo, solo JSON puro.
                     {coverageSummary.overallStatus === 'all_covered' ? (
                       <>
                         <span className="text-green-600">✓</span>
-                        <span className="font-medium text-green-800">Tutti i piani coperti</span>
+                        <span className="font-medium text-green-800">All plans covered</span>
                       </>
                     ) : (
                       <>
                         <span className="text-red-600">⚠</span>
                         <span className="font-medium text-red-800">
-                          Shortfall di {formatCurrency(coverageSummary.totalShortfall)}
+                          Shortfall of {formatCurrency(coverageSummary.totalShortfall)}
                         </span>
                       </>
                     )}
                   </div>
                   {coverageSummary.accounts.some(a => a.plansAtRisk.length > 0) && (
                     <div className="mt-2 text-sm text-red-700">
-                      Piani a rischio: {coverageSummary.accounts.flatMap(a => a.plansAtRisk).map(p => p.name).join(', ')}
+                      Plans at risk: {coverageSummary.accounts.flatMap(a => a.plansAtRisk).map(p => p.name).join(', ')}
                     </div>
                   )}
                 </div>
@@ -669,7 +669,7 @@ Non usare code fences o testo aggiuntivo, solo JSON puro.
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5 text-orange-500" />
-                  Piani che Richiedono Attenzione
+                  Plans Needing Attention
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -680,16 +680,16 @@ Non usare code fences o testo aggiuntivo, solo JSON puro.
                         <div>
                           <span className="font-medium">{plan.icon || '📋'} {plan.name}</span>
                           <p className="text-sm text-gray-600 mt-1">
-                            {plan.status === 'behind' ? '🔴 In ritardo' : '🟡 Quasi pronto'}
-                            {' - '}{plan.monthsUntilDue} mesi alla scadenza
+                            {plan.status === 'behind' ? '🔴 Behind' : '🟡 Almost ready'}
+                            {' - '}{plan.monthsUntilDue} months until due
                           </p>
                         </div>
                         <div className="text-right">
                           <p className="font-medium text-orange-700">
-                            {formatCurrency(plan.amountNeeded)} necessari
+                            {formatCurrency(plan.amountNeeded)} needed
                           </p>
                           <p className="text-sm text-gray-500">
-                            +{formatCurrency(plan.shortfallPerMonth)}/mese
+                            +{formatCurrency(plan.shortfallPerMonth)}/mo
                           </p>
                         </div>
                       </div>

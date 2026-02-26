@@ -51,7 +51,7 @@ function getStatusBadge(status: TimelineEntry["status"]) {
 
 function formatDueDate(dateString: string): string {
   const date = new Date(dateString);
-  return date.toLocaleDateString("it-IT", {
+  return date.toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",
   });

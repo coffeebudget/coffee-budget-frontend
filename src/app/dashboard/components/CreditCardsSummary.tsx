@@ -14,7 +14,7 @@ export default function CreditCardsSummary() {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base">💳 Carte di Credito</CardTitle>
+        <CardTitle className="text-base">💳 Credit Cards</CardTitle>
       </CardHeader>
       <CardContent className="pt-0 space-y-3">
         {cards.map((card) => {
@@ -28,8 +28,8 @@ export default function CreditCardsSummary() {
               <div className="flex items-center justify-between text-sm">
                 <span className="font-medium">{card.name}</span>
                 <span className="text-muted-foreground">
-                  Usato {formatCurrency(used)} / {formatCurrency(card.creditLimit)} |
-                  Disp. {formatCurrency(card.availableCredit)}
+                  Used {formatCurrency(used)} / {formatCurrency(card.creditLimit)} |
+                  Avail. {formatCurrency(card.availableCredit)}
                 </span>
               </div>
               <div className="flex items-center gap-2">

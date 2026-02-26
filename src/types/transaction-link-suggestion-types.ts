@@ -98,8 +98,8 @@ export interface BulkRejectionResult {
 
 export function getSuggestedTypeLabel(type: SuggestedTransactionType): string {
   const labels: Record<SuggestedTransactionType, string> = {
-    withdrawal: 'Prelievo',
-    contribution: 'Versamento',
+    withdrawal: 'Withdrawal',
+    contribution: 'Contribution',
   };
   return labels[type] || type;
 }
@@ -116,7 +116,7 @@ export function formatSuggestionAmount(amount: number): string {
 
 export function formatSuggestionDate(dateString: string): string {
   const date = new Date(dateString);
-  return new Intl.DateTimeFormat('it-IT', {
+  return new Intl.DateTimeFormat('en-GB', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',

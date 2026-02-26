@@ -3,16 +3,17 @@
 import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Legend } from 'recharts';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
-  RefreshCw, 
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  RefreshCw,
   AlertTriangle,
   Calendar,
   Target,
   BarChart3
 } from 'lucide-react';
+import { formatCurrencyCompact } from '@/utils/format';
 
 interface ForecastData {
   month: string;
@@ -62,14 +63,7 @@ export default function CashFlowForecast({ className = '' }: CashFlowForecastPro
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('it-IT', {
-      style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
+  const formatCurrency = formatCurrencyCompact;
 
   const calculateSummaryStats = () => {
     if (forecastData.length === 0) return null;
@@ -97,7 +91,7 @@ export default function CashFlowForecast({ className = '' }: CashFlowForecastPro
       <div className={`bg-white rounded-xl shadow-lg border p-6 ${className}`}>
         <div className="flex items-center justify-center h-64">
           <RefreshCw className="w-6 h-6 animate-spin text-blue-600 mr-2" />
-          <span>Caricamento previsioni...</span>
+          <span>Loading forecast...</span>
         </div>
       </div>
     );
@@ -108,7 +102,7 @@ export default function CashFlowForecast({ className = '' }: CashFlowForecastPro
       <div className={`bg-red-50 border border-red-200 rounded-xl p-6 ${className}`}>
         <div className="flex items-center">
           <AlertTriangle className="w-6 h-6 text-red-500 mr-2" />
-          <span className="text-red-700">{error || 'Nessun dato disponibile per le previsioni'}</span>
+          <span className="text-red-700">{error || 'No data available for forecast'}</span>
         </div>
       </div>
     );
@@ -119,41 +113,41 @@ export default function CashFlowForecast({ className = '' }: CashFlowForecastPro
       <div className="flex items-center justify-between p-6 border-b border-gray-200">
         <div className="flex items-center">
           <BarChart3 className="w-6 h-6 text-blue-600 mr-2" />
-          <h3 className="text-lg font-semibold text-gray-900">Previsioni Flusso di Cassa</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Cash Flow Forecast</h3>
         </div>
         
         {/* Controls */}
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-2">
-            <label className="text-sm text-gray-600">Modalità:</label>
+            <label className="text-sm text-gray-600">Mode:</label>
             <select
               value={mode}
               onChange={(e) => setMode(e.target.value as 'historical' | 'expense-plans')}
               className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="historical">📊 Storico</option>
-              <option value="expense-plans">📋 Piani di Spesa</option>
+              <option value="historical">📊 Historical</option>
+              <option value="expense-plans">📋 Expense Plans</option>
             </select>
           </div>
           
           <div className="flex items-center space-x-2">
-            <label className="text-sm text-gray-600">Periodo:</label>
+            <label className="text-sm text-gray-600">Period:</label>
             <select
               value={months}
               onChange={(e) => setMonths(parseInt(e.target.value))}
               className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value={6}>6 mesi</option>
-              <option value={12}>12 mesi</option>
-              <option value={18}>18 mesi</option>
-              <option value={24}>24 mesi</option>
+              <option value={6}>6 months</option>
+              <option value={12}>12 months</option>
+              <option value={18}>18 months</option>
+              <option value={24}>24 months</option>
             </select>
           </div>
           
           <button
             onClick={loadForecastData}
             className="p-1 hover:bg-gray-100 rounded"
-            title="Aggiorna previsioni"
+            title="Refresh forecast"
           >
             <RefreshCw className="w-4 h-4 text-gray-500" />
           </button>
@@ -169,7 +163,7 @@ export default function CashFlowForecast({ className = '' }: CashFlowForecastPro
               <div className="text-2xl font-bold text-green-600">
                 {formatCurrency(summaryStats.totalIncome)}
               </div>
-              <div className="text-sm text-green-700">Entrate Previste</div>
+              <div className="text-sm text-green-700">Projected Income</div>
             </div>
             
             <div className="bg-red-50 rounded-lg p-4 text-center">
@@ -177,7 +171,7 @@ export default function CashFlowForecast({ className = '' }: CashFlowForecastPro
               <div className="text-2xl font-bold text-red-600">
                 {formatCurrency(summaryStats.totalExpenses)}
               </div>
-              <div className="text-sm text-red-700">Spese Previste</div>
+              <div className="text-sm text-red-700">Projected Expenses</div>
             </div>
             
             <div className={`rounded-lg p-4 text-center ${
@@ -194,7 +188,7 @@ export default function CashFlowForecast({ className = '' }: CashFlowForecastPro
               <div className={`text-sm ${
                 summaryStats.netFlow >= 0 ? 'text-blue-700' : 'text-yellow-700'
               }`}>
-                Flusso Netto
+                Net Flow
               </div>
             </div>
             
@@ -212,7 +206,7 @@ export default function CashFlowForecast({ className = '' }: CashFlowForecastPro
               <div className={`text-sm ${
                 summaryStats.balanceChange >= 0 ? 'text-purple-700' : 'text-orange-700'
               }`}>
-                Saldo Finale
+                Final Balance
               </div>
             </div>
           </div>
@@ -234,18 +228,18 @@ export default function CashFlowForecast({ className = '' }: CashFlowForecastPro
                 tick={{ fontSize: 12 }}
                 tickFormatter={(value) => `€${(value / 1000).toFixed(0)}k`}
               />
-              <Tooltip 
+              <Tooltip
                 formatter={(value: number, name: string) => [
                   formatCurrency(value),
-                  name === 'income' ? 'Entrate' : 
-                  name === 'expenses' ? 'Spese' : 'Saldo Proiettato'
+                  name === 'income' ? 'Income' :
+                  name === 'expenses' ? 'Expenses' : 'Projected Balance'
                 ]}
-                labelFormatter={(label) => `Mese: ${label}`}
+                labelFormatter={(label) => `Month: ${label}`}
               />
-              <Legend 
-                formatter={(value) => 
-                  value === 'income' ? 'Entrate' : 
-                  value === 'expenses' ? 'Spese' : 'Saldo Proiettato'
+              <Legend
+                formatter={(value) =>
+                  value === 'income' ? 'Income' :
+                  value === 'expenses' ? 'Expenses' : 'Projected Balance'
                 }
               />
               <Line 
@@ -283,14 +277,14 @@ export default function CashFlowForecast({ className = '' }: CashFlowForecastPro
             <span className="text-sm text-gray-700">
               {mode === 'historical' ? (
                 <span>
-                  <strong>Modalità Storico:</strong> Le previsioni sono basate sulla media delle tue transazioni passate,
-                  considerando la stagionalità (stesso mese degli anni precedenti).
+                  <strong>Historical Mode:</strong> Forecast based on your past transaction averages,
+                  accounting for seasonality (same month in previous years).
                 </span>
               ) : (
                 <span>
-                  <strong>Modalità Piani di Spesa:</strong> Le entrate provengono dai piani di entrata attivi (garantiti e previsti).
-                  Le spese utilizzano i piani di spesa per le categorie pianificate e la media storica per quelle non pianificate.
-                  Le spese non mensili vengono mostrate nel mese di scadenza effettivo.
+                  <strong>Expense Plans Mode:</strong> Income from active income plans (guaranteed and expected).
+                  Expenses use expense plans for planned categories and historical averages for unplanned ones.
+                  Non-monthly expenses are shown in their actual due month.
                 </span>
               )}
             </span>

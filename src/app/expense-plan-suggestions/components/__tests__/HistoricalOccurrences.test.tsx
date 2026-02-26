@@ -21,16 +21,16 @@ describe('HistoricalOccurrences', () => {
     it('should display date range', () => {
       render(<HistoricalOccurrences {...defaultProps} />);
 
-      // Should show formatted dates (Italian locale)
-      expect(screen.getByText(/gen 2025/i)).toBeInTheDocument(); // Jan 2025
-      expect(screen.getByText(/dic 2025/i)).toBeInTheDocument(); // Dec 2025
+      // Should show formatted dates (English locale)
+      expect(screen.getByText(/Jan 2025/i)).toBeInTheDocument();
+      expect(screen.getByText(/Dec 2025/i)).toBeInTheDocument();
     });
 
     it('should display next expected date', () => {
       render(<HistoricalOccurrences {...defaultProps} />);
 
       expect(screen.getByText(/Next expected/)).toBeInTheDocument();
-      expect(screen.getByText(/15 gen 2026/i)).toBeInTheDocument(); // 15 Jan 2026
+      expect(screen.getByText(/15 Jan 2026/i)).toBeInTheDocument();
     });
   });
 
@@ -75,7 +75,7 @@ describe('HistoricalOccurrences', () => {
       );
 
       expect(screen.getByText(/Amount range/)).toBeInTheDocument();
-      // Italian locale: "10,00 €" format
+      // EUR format: "10,00 €"
       expect(screen.getByText(/10[,.]00/)).toBeInTheDocument();
       expect(screen.getByText(/20[,.]00/)).toBeInTheDocument();
     });
@@ -126,8 +126,8 @@ describe('HistoricalOccurrencesCompact', () => {
     render(<HistoricalOccurrencesCompact {...defaultProps} />);
 
     // Should show 2-digit year format
-    expect(screen.getByText(/gen 25/i)).toBeInTheDocument(); // Jan 25
-    expect(screen.getByText(/dic 25/i)).toBeInTheDocument(); // Dec 25
+    expect(screen.getByText(/Jan 25/i)).toBeInTheDocument();
+    expect(screen.getByText(/Dec 25/i)).toBeInTheDocument();
   });
 
   it('should apply custom className', () => {

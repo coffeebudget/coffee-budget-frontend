@@ -25,7 +25,7 @@ export function HistoricalOccurrences({
 }: HistoricalOccurrencesProps) {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('it-IT', {
+    return date.toLocaleDateString('en-GB', {
       month: 'short',
       year: 'numeric',
     });
@@ -33,7 +33,7 @@ export function HistoricalOccurrences({
 
   const formatFullDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('it-IT', {
+    return date.toLocaleDateString('en-GB', {
       day: 'numeric',
       month: 'short',
       year: 'numeric',
@@ -106,7 +106,7 @@ export function HistoricalOccurrencesCompact({
 >) {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('it-IT', {
+    return date.toLocaleDateString('en-GB', {
       month: 'short',
       year: '2-digit',
     });

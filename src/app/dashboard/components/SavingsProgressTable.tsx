@@ -35,7 +35,7 @@ function getSavedAmount(plan: ExpensePlanWithStatus): number {
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return "—";
   const d = new Date(dateStr);
-  return d.toLocaleDateString("it-IT", { month: "short", year: "numeric" });
+  return d.toLocaleDateString("en-GB", { month: "short", year: "numeric" });
 }
 
 export default function SavingsProgressTable() {
@@ -110,7 +110,7 @@ export default function SavingsProgressTable() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">🎯 Risparmio Obiettivi</CardTitle>
+          <CardTitle className="text-base">🎯 Savings Goals</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -127,11 +127,11 @@ export default function SavingsProgressTable() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">🎯 Risparmio Obiettivi</CardTitle>
+          <CardTitle className="text-base">🎯 Savings Goals</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Nessun piano di risparmio con obiettivo attivo.
+            No active savings plans with targets.
           </p>
         </CardContent>
       </Card>
@@ -162,7 +162,7 @@ export default function SavingsProgressTable() {
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base">🎯 Risparmio Obiettivi</CardTitle>
+          <CardTitle className="text-base">🎯 Savings Goals</CardTitle>
           <span className="text-sm text-muted-foreground">
             {formatCurrency(totals.totalSaved)} /{" "}
             {formatCurrency(totals.totalTarget)} ({totals.overallProgress}%)
@@ -174,32 +174,32 @@ export default function SavingsProgressTable() {
         <Table>
           <TableHeader>
             <TableRow>
-              <SortableHeader field="name">Piano</SortableHeader>
+              <SortableHeader field="name">Plan</SortableHeader>
               <SortableHeader field="saved" className="text-right">
-                Risparmiato
+                Saved
               </SortableHeader>
               <SortableHeader
                 field="target"
                 className="text-right hidden sm:table-cell"
               >
-                Obiettivo
+                Target
               </SortableHeader>
               <SortableHeader field="progress" className="text-right">
-                Progresso
+                Progress
               </SortableHeader>
               <SortableHeader
                 field="monthly"
                 className="text-right hidden md:table-cell"
               >
-                Mensile
+                Monthly
               </SortableHeader>
               <SortableHeader
                 field="dueDate"
                 className="text-right hidden md:table-cell"
               >
-                Scadenza
+                Due Date
               </SortableHeader>
-              <TableHead className="text-center">Stato</TableHead>
+              <TableHead className="text-center">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

@@ -42,7 +42,7 @@ export default function BudgetSummaryBar() {
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wide">
-              Entrate
+              Income
             </p>
             <p className="text-lg font-semibold text-green-600">
               {formatCurrency(income)}
@@ -50,7 +50,7 @@ export default function BudgetSummaryBar() {
           </div>
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wide">
-              Obblighi
+              Obligations
             </p>
             <p className="text-lg font-semibold text-slate-700">
               {formatCurrency(obligations)}
@@ -58,7 +58,7 @@ export default function BudgetSummaryBar() {
           </div>
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wide">
-              Disponibile
+              Available
             </p>
             <p className={`text-lg font-semibold ${availableColor}`}>
               {formatCurrency(available)}
@@ -67,7 +67,7 @@ export default function BudgetSummaryBar() {
         </div>
         {available < 0 && (
           <p className="text-xs text-red-600 text-center mt-2">
-            ⚠ Deficit di budget: le spese pianificate superano le entrate di{" "}
+            ⚠ Budget deficit: planned expenses exceed income by{" "}
             {formatCurrency(Math.abs(available))}
           </p>
         )}

@@ -38,7 +38,7 @@ export default function DashboardHeader({
           <ChevronLeft className="w-5 h-5" />
         </button>
         <span className="text-sm font-medium min-w-[140px] text-center capitalize">
-          {formatMonth(selectedMonth, 'it-IT')}
+          {formatMonth(selectedMonth, 'en-GB')}
         </span>
         <button
           onClick={() => onMonthChange(changeMonth(selectedMonth, 1))}

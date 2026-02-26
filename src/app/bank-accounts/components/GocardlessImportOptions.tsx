@@ -250,9 +250,9 @@ export default function GocardlessImportOptions({ onImport, isImporting = false 
           <div className="space-y-6">
             {/* Date Range Selection */}
             <div className="space-y-3">
-              <Label className="text-base font-medium">Periodo di Import</Label>
+              <Label className="text-base font-medium">Import Period</Label>
               <p className="text-sm text-muted-foreground">
-                Seleziona il periodo per l&apos;import delle transazioni
+                Select the period for importing transactions
               </p>
               
               <div className="grid grid-cols-2 gap-2">
@@ -261,7 +261,7 @@ export default function GocardlessImportOptions({ onImport, isImporting = false 
                   size="sm"
                   onClick={() => setOptions(prev => ({ ...prev, dateFrom: undefined, dateTo: undefined }))}
                 >
-                  Tutto disponibile
+                  All available
                 </Button>
                 <Button
                   variant={options.dateFrom === new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] ? "default" : "outline"}
@@ -272,7 +272,7 @@ export default function GocardlessImportOptions({ onImport, isImporting = false 
                     setOptions(prev => ({ ...prev, dateFrom, dateTo }));
                   }}
                 >
-                  Ultimi 7 giorni
+                  Last 7 days
                 </Button>
                 <Button
                   variant={options.dateFrom === new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] ? "default" : "outline"}
@@ -283,7 +283,7 @@ export default function GocardlessImportOptions({ onImport, isImporting = false 
                     setOptions(prev => ({ ...prev, dateFrom, dateTo }));
                   }}
                 >
-                  Ultimi 14 giorni
+                  Last 14 days
                 </Button>
                 <Button
                   variant={options.dateFrom === new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] ? "default" : "outline"}
@@ -294,7 +294,7 @@ export default function GocardlessImportOptions({ onImport, isImporting = false 
                     setOptions(prev => ({ ...prev, dateFrom, dateTo }));
                   }}
                 >
-                  Ultimi 30 giorni
+                  Last 30 days
                 </Button>
                 <Button
                   variant={options.dateFrom === new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] ? "default" : "outline"}
@@ -305,7 +305,7 @@ export default function GocardlessImportOptions({ onImport, isImporting = false 
                     setOptions(prev => ({ ...prev, dateFrom, dateTo }));
                   }}
                 >
-                  Ultimi 90 giorni
+                  Last 90 days
                 </Button>
               </div>
               
@@ -313,7 +313,7 @@ export default function GocardlessImportOptions({ onImport, isImporting = false 
                 <div className="flex items-center space-x-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
                   <Info className="h-4 w-4 text-blue-600" />
                   <p className="text-sm text-blue-800">
-                    Import dal {options.dateFrom} al {options.dateTo}
+                    Import from {options.dateFrom} to {options.dateTo}
                   </p>
                 </div>
               )}
@@ -321,7 +321,7 @@ export default function GocardlessImportOptions({ onImport, isImporting = false 
 
             {/* Duplicate Handling Options */}
             <div className="space-y-4 border-t pt-4">
-              <Label className="text-base font-medium">Gestione Duplicati</Label>
+              <Label className="text-base font-medium">Duplicate Management</Label>
               
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">

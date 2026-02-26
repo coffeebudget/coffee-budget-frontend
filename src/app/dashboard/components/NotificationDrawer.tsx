@@ -41,16 +41,16 @@ export default function NotificationDrawer({
         {isLoading ? (
           <div className="flex flex-1 items-center justify-center">
             <RefreshCw className="h-5 w-5 animate-spin text-blue-600 mr-2" />
-            <span className="text-gray-600">Caricamento...</span>
+            <span className="text-gray-600">Loading...</span>
           </div>
         ) : notifications.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center text-center px-4">
             <CheckCircle className="h-12 w-12 text-green-500 mb-3" />
             <p className="text-lg font-medium text-green-700">
-              Tutto sotto controllo!
+              All clear!
             </p>
             <p className="text-sm text-green-600 mt-1">
-              Nessun alert attivo.
+              No active alerts.
             </p>
           </div>
         ) : (

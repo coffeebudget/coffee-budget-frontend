@@ -111,7 +111,7 @@ export default function ExpensePlansByAccount({
       if (key === "unassigned") {
         groups.push({
           accountId: null,
-          accountName: "Non assegnati",
+          accountName: "Unassigned",
           accountType: "unassigned",
           plans: accountPlans,
           totalMonthly: accountPlans.reduce(
@@ -123,7 +123,7 @@ export default function ExpensePlansByAccount({
         const account = accountMap.get(key as number);
         groups.push({
           accountId: key as number,
-          accountName: account?.name || `Conto #${key}`,
+          accountName: account?.name || `Account #${key}`,
           accountType: "bank_account",
           plans: accountPlans,
           totalMonthly: accountPlans.reduce(
@@ -240,14 +240,14 @@ export default function ExpensePlansByAccount({
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
-              Smistamento per Conto
+              Distribution by Account
             </h3>
             <p className="text-sm text-gray-600">
-              Totale da versare ogni mese per conto bancario
+              Total monthly deposits by bank account
             </p>
           </div>
           <div className="text-right">
-            <div className="text-sm text-gray-500">Totale Mensile</div>
+            <div className="text-sm text-gray-500">Monthly Total</div>
             <div className="text-2xl font-bold text-green-600">
               {formatCurrency(grandTotal)}
             </div>
@@ -260,10 +260,10 @@ export default function ExpensePlansByAccount({
             <div className="flex items-center gap-2 text-red-700">
               <AlertTriangle className="h-4 w-4" />
               <span className="font-medium">
-                Deficit totale: {formatCurrency(allocationSummaryResponse.totalShortfall)}
+                Total deficit: {formatCurrency(allocationSummaryResponse.totalShortfall)}
               </span>
               <span className="text-sm text-red-600">
-                su {allocationSummaryResponse.accountsWithShortfall} conto/i
+                across {allocationSummaryResponse.accountsWithShortfall} account(s)
               </span>
             </div>
           </div>
@@ -315,7 +315,7 @@ export default function ExpensePlansByAccount({
                         </div>
                         {group.balance !== undefined && (
                           <div className="text-sm text-gray-500">
-                            Saldo: {formatCurrency(group.balance)}
+                            Balance: {formatCurrency(group.balance)}
                             {allocation && (
                               <span className="mx-1">|</span>
                             )}
@@ -327,15 +327,15 @@ export default function ExpensePlansByAccount({
                                     : "text-green-600"
                                 }
                               >
-                                Necessario oggi: {formatCurrency(allocation.totalRequiredToday)}
+                                Required today: {formatCurrency(allocation.totalRequiredToday)}
                               </span>
                             )}
                           </div>
                         )}
                       </div>
                       <Badge variant="secondary" className="ml-2">
-                        {group.plans.length} piano
-                        {group.plans.length !== 1 ? "i" : ""}
+                        {group.plans.length} plan
+                        {group.plans.length !== 1 ? "s" : ""}
                       </Badge>
                     </div>
                     <div className="text-right">
@@ -352,7 +352,7 @@ export default function ExpensePlansByAccount({
                       <div className="text-xl font-bold text-gray-900">
                         {formatCurrency(group.totalMonthly)}
                       </div>
-                      <div className="text-xs text-gray-500">/mese</div>
+                      <div className="text-xs text-gray-500">/mo</div>
                     </div>
                   </div>
                 </CollapsibleTrigger>
@@ -378,10 +378,10 @@ export default function ExpensePlansByAccount({
                                 <ChevronRight className="h-4 w-4" />
                               )}
                               <Target className="h-4 w-4" />
-                              Dettaglio Allocazione
+                              Allocation Details
                             </h4>
                             <span className="text-sm text-gray-500">
-                              Clicca per {isBreakdownExpanded ? "nascondere" : "espandere"}
+                              Click to {isBreakdownExpanded ? "collapse" : "expand"}
                             </span>
                           </div>
                         </button>
@@ -390,7 +390,7 @@ export default function ExpensePlansByAccount({
                         <div className="mb-4">
                           <div className="flex justify-between text-sm mb-1">
                             <span className="text-gray-600">
-                              Saldo vs Necessario
+                              Balance vs Required
                             </span>
                             <span className="font-medium">
                               {formatCurrency(allocation.currentBalance)} /{" "}
@@ -415,7 +415,7 @@ export default function ExpensePlansByAccount({
                               <div className="rounded-lg border border-gray-200 p-3">
                                 <h5 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                                   <Calendar className="h-4 w-4 text-blue-600" />
-                                  Spese Fisse Mensili
+                                  Fixed Monthly Expenses
                                   <Badge variant="outline" className="ml-auto">
                                     {formatCurrency(allocation.fixedMonthlyTotal)}
                                   </Badge>
@@ -444,8 +444,8 @@ export default function ExpensePlansByAccount({
                                           {getStatusIcon(plan.status)}
                                           <span className="ml-1">
                                             {plan.status === "paid"
-                                              ? "Pagato"
-                                              : "Pronto"}
+                                              ? "Paid"
+                                              : "Ready"}
                                           </span>
                                         </Badge>
                                       </div>
@@ -460,7 +460,7 @@ export default function ExpensePlansByAccount({
                               <div className="rounded-lg border border-gray-200 p-3">
                                 <h5 className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
                                   <Target className="h-4 w-4 text-purple-600" />
-                                  Fondi di Accumulo (Previsto ad Oggi)
+                                  Sinking Funds (Expected to Date)
                                   <Badge variant="outline" className="ml-auto">
                                     {formatCurrency(allocation.sinkingFundTotal)}
                                   </Badge>
@@ -480,7 +480,7 @@ export default function ExpensePlansByAccount({
                                         </div>
                                         <div className="flex items-center gap-3">
                                           <span className="text-gray-500 text-xs">
-                                            {formatCurrency(plan.requiredToday)} previsto
+                                            {formatCurrency(plan.requiredToday)} expected
                                           </span>
                                           <Badge
                                             className={getSinkingFundAllocationStatusColor(
@@ -490,8 +490,8 @@ export default function ExpensePlansByAccount({
                                             {getStatusIcon(plan.status)}
                                             <span className="ml-1">
                                               {plan.status === "on_track"
-                                                ? "In linea"
-                                                : "Indietro"}
+                                                ? "On track"
+                                                : "Behind"}
                                             </span>
                                           </Badge>
                                         </div>
@@ -504,11 +504,11 @@ export default function ExpensePlansByAccount({
                                         />
                                         <div className="flex justify-between text-xs text-gray-400 mt-0.5">
                                           <span>
-                                            {plan.progressPercent.toFixed(0)}% del target
+                                            {plan.progressPercent.toFixed(0)}% of target
                                           </span>
                                           {plan.nextDueDate && (
                                             <span>
-                                              Scadenza: {new Date(plan.nextDueDate).toLocaleDateString("it-IT")}
+                                              Due: {new Date(plan.nextDueDate).toLocaleDateString("en-GB")}
                                             </span>
                                           )}
                                         </div>
@@ -525,9 +525,9 @@ export default function ExpensePlansByAccount({
                                 <div className="flex items-center gap-2 text-yellow-800">
                                   <AlertTriangle className="h-4 w-4" />
                                   <span className="text-sm">
-                                    <strong>Suggerimento:</strong> Versa{" "}
-                                    {formatCurrency(allocation.suggestedCatchUp)} per
-                                    metterti in pari
+                                    <strong>Suggestion:</strong> Deposit{" "}
+                                    {formatCurrency(allocation.suggestedCatchUp)} to
+                                    catch up
                                   </span>
                                 </div>
                               </div>
@@ -573,12 +573,11 @@ export default function ExpensePlansByAccount({
             <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
             <div>
               <h4 className="font-medium text-yellow-800">
-                Piani senza conto assegnato
+                Plans without assigned account
               </h4>
               <p className="text-sm text-yellow-700 mt-1">
-                Alcuni piani non hanno un conto di pagamento assegnato. Modifica
-                i piani per assegnare un conto e tracciare meglio le tue
-                finanze.
+                Some plans don't have a payment account assigned. Edit the
+                plans to assign an account and better track your finances.
               </p>
             </div>
           </div>

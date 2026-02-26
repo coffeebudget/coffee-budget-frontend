@@ -79,7 +79,7 @@ describe('SavingsProgressTable', () => {
     mockUseExpensePlansWithStatus.mockReturnValue({ data: undefined, isLoading: true });
 
     render(<SavingsProgressTable />);
-    expect(screen.getByText('🎯 Risparmio Obiettivi')).toBeInTheDocument();
+    expect(screen.getByText('🎯 Savings Goals')).toBeInTheDocument();
     const loadingElements = document.querySelectorAll('.animate-pulse');
     expect(loadingElements.length).toBeGreaterThan(0);
   });
@@ -88,7 +88,7 @@ describe('SavingsProgressTable', () => {
     mockUseExpensePlansWithStatus.mockReturnValue({ data: [], isLoading: false });
 
     render(<SavingsProgressTable />);
-    expect(screen.getByText(/Nessun piano di risparmio/)).toBeInTheDocument();
+    expect(screen.getByText(/No active savings plans/)).toBeInTheDocument();
   });
 
   it('should filter out fixed_monthly plans', () => {
@@ -142,7 +142,7 @@ describe('SavingsProgressTable', () => {
     render(<SavingsProgressTable />);
 
     // Click "Piano" header to sort by name
-    const nameHeader = screen.getByRole('button', { name: /Piano/i });
+    const nameHeader = screen.getByRole('button', { name: /Plan/i });
     fireEvent.click(nameHeader);
 
     // Get all row names in order

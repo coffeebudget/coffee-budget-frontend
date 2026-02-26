@@ -51,7 +51,7 @@ function AccountRow({ account }: { account: AccountAllocationSummary }) {
             Alloc. {formatCurrency(account.totalRequiredToday)}
           </span>
           <span className="text-right w-24 shrink-0 text-muted-foreground hidden sm:block">
-            Libero {formatCurrency(free)}
+            Free {formatCurrency(free)}
           </span>
           <Badge variant="outline" className={`${healthColor} shrink-0`}>
             {healthIcon}
@@ -66,7 +66,7 @@ function AccountRow({ account }: { account: AccountAllocationSummary }) {
               <span className="flex-1">{plan.name}</span>
               <span>{formatCurrency(plan.requiredToday)}</span>
               <span className="text-xs">
-                ({plan.status === "paid" ? "✓ pagato" : "in attesa"})
+                ({plan.status === "paid" ? "✓ paid" : "pending"})
               </span>
             </div>
           ))}
@@ -79,13 +79,13 @@ function AccountRow({ account }: { account: AccountAllocationSummary }) {
                 {formatCurrency(plan.targetAmount)}
               </span>
               <span className="text-xs">
-                ({plan.status === "on_track" ? "in linea" : "in ritardo"})
+                ({plan.status === "on_track" ? "on track" : "behind"})
               </span>
             </div>
           ))}
           {account.fixedMonthlyPlans.length === 0 &&
             account.sinkingFundPlans.length === 0 && (
-              <span className="italic">Nessun piano associato</span>
+              <span className="italic">No plans assigned</span>
             )}
         </div>
       </CollapsibleContent>
@@ -118,7 +118,7 @@ export default function AccountDistribution() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">🏦 Distribuzione Conti</CardTitle>
+          <CardTitle className="text-base">🏦 Account Distribution</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -135,11 +135,11 @@ export default function AccountDistribution() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">🏦 Distribuzione Conti</CardTitle>
+          <CardTitle className="text-base">🏦 Account Distribution</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Nessun conto con piani associati.
+            No accounts with assigned plans.
           </p>
         </CardContent>
       </Card>
@@ -149,16 +149,16 @@ export default function AccountDistribution() {
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base">🏦 Distribuzione Conti</CardTitle>
+        <CardTitle className="text-base">🏦 Account Distribution</CardTitle>
         {globalTotals && (
           <div className="space-y-2">
             <div className="flex justify-between text-sm text-muted-foreground">
               <span>
-                Totale: {formatCurrency(globalTotals.totalBalance)} | Allocato:{" "}
-                {formatCurrency(globalTotals.totalAllocated)} | Libero:{" "}
+                Total: {formatCurrency(globalTotals.totalBalance)} | Allocated:{" "}
+                {formatCurrency(globalTotals.totalAllocated)} | Free:{" "}
                 {formatCurrency(globalTotals.totalFree)}
               </span>
-              <span>{globalTotals.allocPercent}% allocato</span>
+              <span>{globalTotals.allocPercent}% allocated</span>
             </div>
             <Progress value={globalTotals.allocPercent} className="h-2" />
           </div>

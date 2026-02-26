@@ -184,7 +184,7 @@ export default function LinkTransactionDialog({
                         </p>
                         <div className="flex flex-wrap gap-1 text-xs">
                           <span className="text-gray-500">
-                            {new Date(suggestion.date).toLocaleDateString("it-IT")}
+                            {new Date(suggestion.date).toLocaleDateString("en-GB")}
                           </span>
                           {suggestion.merchantName && (
                             <>

@@ -16,7 +16,7 @@ export default function CoverageMonitorCompact() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">🛡️ Copertura 30 Giorni</CardTitle>
+          <CardTitle className="text-base">🛡️ 30-Day Coverage</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
@@ -33,11 +33,11 @@ export default function CoverageMonitorCompact() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">🛡️ Copertura 30 Giorni</CardTitle>
+          <CardTitle className="text-base">🛡️ 30-Day Coverage</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Nessun conto con piani da coprire.
+            No accounts with plans to cover.
           </p>
         </CardContent>
       </Card>
@@ -46,10 +46,10 @@ export default function CoverageMonitorCompact() {
 
   const statusLabel =
     coverage.overallStatus === "all_covered"
-      ? "Tutto coperto"
+      ? "All covered"
       : coverage.overallStatus === "has_shortfall"
-        ? "Scoperto"
-        : "Nessun dato";
+        ? "Shortfall"
+        : "No data";
 
   const statusColor = getCoverageStatusColor(coverage.overallStatus);
 
@@ -57,7 +57,7 @@ export default function CoverageMonitorCompact() {
     <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base">🛡️ Copertura 30 Giorni</CardTitle>
+          <CardTitle className="text-base">🛡️ 30-Day Coverage</CardTitle>
           <Badge variant="outline" className={statusColor}>
             {statusLabel}
           </Badge>
@@ -79,7 +79,7 @@ export default function CoverageMonitorCompact() {
             </span>
             <span className="hidden sm:inline text-muted-foreground">→</span>
             <span className="hidden sm:inline text-muted-foreground">
-              Spese {formatCurrency(account.upcomingPlansTotal)}
+              Expenses {formatCurrency(account.upcomingPlansTotal)}
             </span>
             <span className="hidden sm:inline text-muted-foreground">→</span>
             <span className={account.hasShortfall ? "font-semibold" : ""}>
@@ -96,7 +96,7 @@ export default function CoverageMonitorCompact() {
           <div className="flex items-center gap-2 text-xs text-yellow-600 mt-2 pt-2 border-t">
             <AlertTriangle className="h-3 w-3" />
             <span>
-              {coverage.unassignedPlans.count} piani senza conto assegnato (
+              {coverage.unassignedPlans.count} plans without assigned account (
               {formatCurrency(coverage.unassignedPlans.totalAmount)})
             </span>
           </div>

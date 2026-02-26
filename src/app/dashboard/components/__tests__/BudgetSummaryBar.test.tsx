@@ -53,9 +53,9 @@ describe('BudgetSummaryBar', () => {
 
     render(<BudgetSummaryBar />);
 
-    expect(screen.getByText('Entrate')).toBeInTheDocument();
-    expect(screen.getByText('Obblighi')).toBeInTheDocument();
-    expect(screen.getByText('Disponibile')).toBeInTheDocument();
+    expect(screen.getByText('Income')).toBeInTheDocument();
+    expect(screen.getByText('Obligations')).toBeInTheDocument();
+    expect(screen.getByText('Available')).toBeInTheDocument();
     // Available should be 5000 - 3000 = 2000
     expect(screen.getByText(fc(2000))).toBeInTheDocument();
   });
@@ -72,7 +72,7 @@ describe('BudgetSummaryBar', () => {
 
     render(<BudgetSummaryBar />);
 
-    expect(screen.getByText(/Deficit di budget/)).toBeInTheDocument();
+    expect(screen.getByText(/Budget deficit/)).toBeInTheDocument();
   });
 
   it('should show green color for positive available amount', () => {

@@ -56,7 +56,7 @@ describe('CreditCardsSummary', () => {
 
     render(<CreditCardsSummary />);
 
-    expect(screen.getByText('💳 Carte di Credito')).toBeInTheDocument();
+    expect(screen.getByText('💳 Credit Cards')).toBeInTheDocument();
     expect(screen.getByText('Impronta')).toBeInTheDocument();
     // Used: 1200 - 800 = 400
     expect(screen.getByText(fc(400), { exact: false })).toBeInTheDocument();

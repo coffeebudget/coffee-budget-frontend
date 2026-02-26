@@ -82,7 +82,7 @@ describe('AccountDistribution', () => {
     mockUseAccountAllocationSummary.mockReturnValue({ data: undefined, isLoading: true });
 
     render(<AccountDistribution />);
-    expect(screen.getByText('🏦 Distribuzione Conti')).toBeInTheDocument();
+    expect(screen.getByText('🏦 Account Distribution')).toBeInTheDocument();
     expect(document.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
   });
 
@@ -93,7 +93,7 @@ describe('AccountDistribution', () => {
     });
 
     render(<AccountDistribution />);
-    expect(screen.getByText(/Nessun conto con piani/)).toBeInTheDocument();
+    expect(screen.getByText(/No accounts with assigned plans/)).toBeInTheDocument();
   });
 
   it('should display global totals', () => {
@@ -146,7 +146,7 @@ describe('AccountDistribution', () => {
 
     fireEvent.click(screen.getByText('BNL'));
 
-    expect(screen.getByText(/pagato/)).toBeInTheDocument();
-    expect(screen.getByText(/in linea/)).toBeInTheDocument();
+    expect(screen.getByText(/paid/)).toBeInTheDocument();
+    expect(screen.getByText(/on track/)).toBeInTheDocument();
   });
 });

@@ -69,7 +69,7 @@ export default function KeywordImpactPreview({
   };
 
   const formatDate = (dateString: string) => {
-    return new Intl.DateTimeFormat('it-IT', { 
+    return new Intl.DateTimeFormat('en-GB', {
       year: 'numeric', 
       month: 'short', 
       day: 'numeric' 

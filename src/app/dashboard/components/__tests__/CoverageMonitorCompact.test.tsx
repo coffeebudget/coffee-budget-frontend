@@ -65,7 +65,7 @@ describe('CoverageMonitorCompact', () => {
     mockUseCoverageSummary.mockReturnValue({ data: undefined, isLoading: true });
 
     render(<CoverageMonitorCompact />);
-    expect(screen.getByText('🛡️ Copertura 30 Giorni')).toBeInTheDocument();
+    expect(screen.getByText('🛡️ 30-Day Coverage')).toBeInTheDocument();
   });
 
   it('should show empty state', () => {
@@ -75,10 +75,10 @@ describe('CoverageMonitorCompact', () => {
     });
 
     render(<CoverageMonitorCompact />);
-    expect(screen.getByText(/Nessun conto con piani da coprire/)).toBeInTheDocument();
+    expect(screen.getByText(/No accounts with plans to cover/)).toBeInTheDocument();
   });
 
-  it('should display "Tutto coperto" when all covered', () => {
+  it('should display "All covered" when all covered', () => {
     mockUseCoverageSummary.mockReturnValue({
       data: mockCoverageAllCovered,
       isLoading: false,
@@ -86,12 +86,12 @@ describe('CoverageMonitorCompact', () => {
 
     render(<CoverageMonitorCompact />);
 
-    expect(screen.getByText('Tutto coperto')).toBeInTheDocument();
+    expect(screen.getByText('All covered')).toBeInTheDocument();
     expect(screen.getByText('BNL')).toBeInTheDocument();
     expect(screen.getByText('✅')).toBeInTheDocument();
   });
 
-  it('should display "Scoperto" when there is a shortfall', () => {
+  it('should display "Shortfall" when there is a shortfall', () => {
     mockUseCoverageSummary.mockReturnValue({
       data: mockCoverageWithShortfall,
       isLoading: false,
@@ -99,7 +99,7 @@ describe('CoverageMonitorCompact', () => {
 
     render(<CoverageMonitorCompact />);
 
-    expect(screen.getByText('Scoperto')).toBeInTheDocument();
+    expect(screen.getByText('Shortfall')).toBeInTheDocument();
     expect(screen.getByText('❌')).toBeInTheDocument();
   });
 
@@ -120,6 +120,6 @@ describe('CoverageMonitorCompact', () => {
 
     render(<CoverageMonitorCompact />);
 
-    expect(screen.getByText(/3 piani senza conto assegnato/)).toBeInTheDocument();
+    expect(screen.getByText(/3 plans without assigned account/)).toBeInTheDocument();
   });
 });

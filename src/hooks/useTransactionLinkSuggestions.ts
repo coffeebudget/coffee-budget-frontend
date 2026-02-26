@@ -120,14 +120,14 @@ export function useBulkApproveLinkSuggestions() {
       queryClient.invalidateQueries({ queryKey: ['expense-plan-transactions'] });
       if (result.failedCount > 0) {
         toast.success(
-          `${result.approvedCount} collegati, ${result.failedCount} falliti`
+          `${result.approvedCount} linked, ${result.failedCount} failed`
         );
       } else {
-        toast.success(`${result.approvedCount} transazioni collegate`);
+        toast.success(`${result.approvedCount} transactions linked`);
       }
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Impossibile collegare le transazioni');
+      toast.error(error.message || 'Unable to link transactions');
     },
   });
 }
@@ -144,10 +144,10 @@ export function useBulkRejectLinkSuggestions() {
       bulkRejectSuggestions(session!.user!.accessToken as string, ids, reason),
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['transaction-link-suggestions'] });
-      toast.success(`${result.rejectedCount} suggerimenti ignorati`);
+      toast.success(`${result.rejectedCount} suggestions dismissed`);
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Impossibile ignorare i suggerimenti');
+      toast.error(error.message || 'Unable to dismiss suggestions');
     },
   });
 }

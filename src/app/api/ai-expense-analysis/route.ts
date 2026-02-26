@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
         messages: [
           {
             role: 'system',
-            content: 'Sei un consulente finanziario esperto. Analizza i piani di spesa (expense plans) e fornisci consigli pratici e personalizzati per ottimizzare la gestione finanziaria. Rispondi sempre in italiano con un tono professionale ma amichevole.',
+            content: 'You are an expert financial advisor. Analyze expense plans and provide practical, personalized advice to optimize financial management. Always respond in English with a professional but friendly tone.',
           },
           {
             role: 'user',
@@ -91,111 +91,111 @@ function buildExpensePlanAnalysisPrompt(data: any): string {
                       plan.fundingStatus === 'almost_ready' ? '🟡' : '🔴';
 
     const purposeLabel = plan.purpose === 'sinking_fund' ? 'Sinking Fund' : 'Spending Budget';
-    const priorityLabel = plan.priority === 'essential' ? 'Essenziale' :
-                         plan.priority === 'important' ? 'Importante' : 'Discrezionale';
+    const priorityLabel = plan.priority === 'essential' ? 'Essential' :
+                         plan.priority === 'important' ? 'Important' : 'Discretionary';
 
     return `- ${plan.name} (${purposeLabel}):
-  * Target: €${plan.targetAmount} | Contributo mensile: €${plan.monthlyContribution}
-  * Stato: ${statusIcon} (${plan.fundingStatus || 'n/d'})
-  * Progresso: ${plan.progressPercent}%
-  * Priorità: ${priorityLabel}
-  ${plan.nextDueDate ? `* Prossima scadenza: ${plan.nextDueDate}` : ''}
-  ${plan.amountNeeded ? `* Importo ancora necessario: €${plan.amountNeeded}` : ''}
-  ${plan.monthsUntilDue ? `* Mesi alla scadenza: ${plan.monthsUntilDue}` : ''}`;
+  * Target: €${plan.targetAmount} | Monthly contribution: €${plan.monthlyContribution}
+  * Status: ${statusIcon} (${plan.fundingStatus || 'n/a'})
+  * Progress: ${plan.progressPercent}%
+  * Priority: ${priorityLabel}
+  ${plan.nextDueDate ? `* Next due date: ${plan.nextDueDate}` : ''}
+  ${plan.amountNeeded ? `* Amount still needed: €${plan.amountNeeded}` : ''}
+  ${plan.monthsUntilDue ? `* Months until due: ${plan.monthsUntilDue}` : ''}`;
   }).join('\n\n');
 
   // Format plans at risk
   const plansAtRiskFormatted = coverageStatus?.plansAtRisk?.length > 0
     ? coverageStatus.plansAtRisk.map((p: any) =>
-        `- ${p.name}: €${p.amount}, ${p.daysUntilDue} giorni alla scadenza`
+        `- ${p.name}: €${p.amount}, ${p.daysUntilDue} days until due`
       ).join('\n')
-    : 'Nessun piano a rischio';
+    : 'No plans at risk';
 
   // Format plans needing attention
   const plansNeedingAttentionFormatted = longTermStatus?.plansNeedingAttention?.length > 0
     ? longTermStatus.plansNeedingAttention.map((p: any) =>
-        `- ${p.name}: ${p.status === 'behind' ? '🔴 In ritardo' : '🟡 Quasi pronto'}, mancano €${p.amountNeeded}, ${p.monthsUntilDue} mesi, shortfall €${p.shortfallPerMonth}/mese`
+        `- ${p.name}: ${p.status === 'behind' ? '🔴 Behind' : '🟡 Almost ready'}, short €${p.amountNeeded}, ${p.monthsUntilDue} months, shortfall €${p.shortfallPerMonth}/mo`
       ).join('\n')
-    : 'Nessun piano richiede attenzione immediata';
+    : 'No plans need immediate attention';
 
   return `
-Analizza questi piani di spesa (expense plans) e fornisci consigli di ottimizzazione:
+Analyze these expense plans and provide optimization advice:
 
-PANORAMICA PIANI DI SPESA:
-- Totale piani attivi: ${overview.totalPlans}
-- Sinking Funds (risparmi periodici): ${overview.sinkingFundsCount}
-- Spending Budgets (budget di spesa): ${overview.spendingBudgetsCount}
-- Contributo mensile totale: €${overview.totalMonthlyContribution}
-- Target totale: €${overview.totalTargetAmount}
+EXPENSE PLANS OVERVIEW:
+- Total active plans: ${overview.totalPlans}
+- Sinking Funds: ${overview.sinkingFundsCount}
+- Spending Budgets: ${overview.spendingBudgetsCount}
+- Total monthly contribution: €${overview.totalMonthlyContribution}
+- Total target: €${overview.totalTargetAmount}
 
-STATO DEI FONDI:
-- Completamente finanziati: ${overview.fundedCount}
-- Quasi pronti: ${overview.almostReadyCount}
-- In linea con i tempi: ${overview.onTrackCount}
-- In ritardo: ${overview.behindCount}
+FUNDING STATUS:
+- Fully funded: ${overview.fundedCount}
+- Almost ready: ${overview.almostReadyCount}
+- On track: ${overview.onTrackCount}
+- Behind: ${overview.behindCount}
 
 ${depositSummary ? `
-RIEPILOGO DEPOSITI MENSILI:
-- Deposito mensile totale: €${depositSummary.totalMonthlyDeposit}
-- Piani completamente finanziati: ${depositSummary.fullyFundedCount}
-- Piani in linea: ${depositSummary.onTrackCount}
-- Piani in ritardo: ${depositSummary.behindScheduleCount}
+MONTHLY DEPOSIT SUMMARY:
+- Total monthly deposit: €${depositSummary.totalMonthlyDeposit}
+- Fully funded plans: ${depositSummary.fullyFundedCount}
+- On track plans: ${depositSummary.onTrackCount}
+- Behind schedule plans: ${depositSummary.behindScheduleCount}
 ` : ''}
 
 ${coverageStatus ? `
-STATO COPERTURA (prossimi 30 giorni):
-- Stato generale: ${coverageStatus.overallStatus === 'all_covered' ? '✅ Tutto coperto' : '⚠️ Possibile shortfall'}
-${coverageStatus.totalShortfall > 0 ? `- Shortfall totale: €${coverageStatus.totalShortfall}` : ''}
-- Conti con shortfall: ${coverageStatus.accountsWithShortfall}
+COVERAGE STATUS (next 30 days):
+- Overall status: ${coverageStatus.overallStatus === 'all_covered' ? '✅ All covered' : '⚠️ Possible shortfall'}
+${coverageStatus.totalShortfall > 0 ? `- Total shortfall: €${coverageStatus.totalShortfall}` : ''}
+- Accounts with shortfall: ${coverageStatus.accountsWithShortfall}
 
-PIANI A RISCHIO:
+PLANS AT RISK:
 ${plansAtRiskFormatted}
 ` : ''}
 
 ${longTermStatus ? `
-STATO LUNGO TERMINE:
-- Sinking funds totali: ${longTermStatus.totalSinkingFunds}
-- Importo totale necessario: €${longTermStatus.totalAmountNeeded}
+LONG-TERM STATUS:
+- Total sinking funds: ${longTermStatus.totalSinkingFunds}
+- Total amount needed: €${longTermStatus.totalAmountNeeded}
 
-PIANI CHE RICHIEDONO ATTENZIONE:
+PLANS NEEDING ATTENTION:
 ${plansNeedingAttentionFormatted}
 ` : ''}
 
-DETTAGLIO PIANI:
+PLAN DETAILS:
 ${plansFormatted}
 
-Per favore fornisci:
-1. Un'analisi generale dello stato finanziario basata sui piani di spesa
-2. Consigli specifici per i piani che richiedono attenzione (in ritardo o a rischio)
-3. Suggerimenti per ottimizzare i contributi mensili
-4. Raccomandazioni generali per migliorare la gestione finanziaria
+Please provide:
+1. A general analysis of the financial situation based on expense plans
+2. Specific advice for plans that need attention (behind or at risk)
+3. Suggestions to optimize monthly contributions
+4. General recommendations to improve financial management
 
-IMPORTANTE: Rispondi SOLO con un JSON valido nel seguente formato:
+IMPORTANT: Respond ONLY with valid JSON in the following format:
 {
-  "analysis": "Analisi generale della situazione finanziaria (2-3 frasi)",
+  "analysis": "General analysis of the financial situation (2-3 sentences)",
   "plansNeedingAttention": [
     {
-      "planName": "Nome piano",
-      "issue": "Descrizione del problema",
-      "suggestions": ["suggerimento1", "suggerimento2"]
+      "planName": "Plan name",
+      "issue": "Description of the issue",
+      "suggestions": ["suggestion1", "suggestion2"]
     }
   ],
   "optimizationTips": [
     {
-      "area": "Area di ottimizzazione",
-      "tip": "Consiglio specifico",
-      "potentialImpact": "Descrizione dell'impatto potenziale"
+      "area": "Optimization area",
+      "tip": "Specific advice",
+      "potentialImpact": "Description of potential impact"
     }
   ],
   "overallRecommendations": [
-    "Raccomandazione generale 1",
-    "Raccomandazione generale 2",
-    "Raccomandazione generale 3"
+    "General recommendation 1",
+    "General recommendation 2",
+    "General recommendation 3"
   ],
   "financialHealthScore": 75
 }
 
-Non usare code fences o testo aggiuntivo, solo JSON puro.
+Do not use code fences or additional text, only pure JSON.
 `;
 }
 
@@ -234,7 +234,7 @@ function parseExpensePlanAnalysisResponse(response: string, data: any): {
     const healthScore = parsed.financialHealthScore ?? calculateHealthScore(data);
 
     return {
-      analysis: parsed.analysis || 'Analisi completata.',
+      analysis: parsed.analysis || 'Analysis complete.',
       plansNeedingAttention: Array.isArray(parsed.plansNeedingAttention)
         ? parsed.plansNeedingAttention
         : [],
@@ -304,36 +304,36 @@ function getFallbackAnalysis(data: any): {
   const plansNeedingAttention = longTermStatus?.plansNeedingAttention?.map((p: any) => ({
     planName: p.name,
     issue: p.status === 'behind'
-      ? `Piano in ritardo di €${p.amountNeeded}, ${p.monthsUntilDue} mesi alla scadenza`
-      : `Piano quasi pronto ma necessita di €${p.amountNeeded} aggiuntivi`,
+      ? `Plan behind by €${p.amountNeeded}, ${p.monthsUntilDue} months until due`
+      : `Plan almost ready but needs €${p.amountNeeded} more`,
     suggestions: [
-      `Aumenta il contributo mensile di €${p.shortfallPerMonth} per rimetterti in linea`,
-      'Considera di rivedere la data obiettivo se possibile',
-      'Valuta di ridurre altri piani discrezionali per liberare fondi',
+      `Increase monthly contribution by €${p.shortfallPerMonth} to get back on track`,
+      'Consider revising the target date if possible',
+      'Consider reducing other discretionary plans to free up funds',
     ],
   })) || [];
 
   return {
     analysis: healthScore >= 70
-      ? 'I tuoi piani di spesa sono generalmente in buone condizioni. Continua a monitorare i progressi e considera piccole ottimizzazioni.'
-      : 'Alcuni piani di spesa richiedono attenzione. Rivedi i contributi mensili e considera di riorganizzare le priorità.',
+      ? 'Your expense plans are generally in good shape. Keep monitoring progress and consider small optimizations.'
+      : 'Some expense plans need attention. Review monthly contributions and consider reprioritizing.',
     plansNeedingAttention,
     optimizationTips: [
       {
-        area: 'Contributi mensili',
-        tip: 'Rivedi periodicamente i contributi e adattali alle tue entrate effettive',
-        potentialImpact: 'Migliore allineamento tra risparmi e obiettivi',
+        area: 'Monthly contributions',
+        tip: 'Periodically review contributions and adjust them to your actual income',
+        potentialImpact: 'Better alignment between savings and goals',
       },
       {
-        area: 'Prioritizzazione',
-        tip: 'Concentrati prima sui piani essenziali, poi su quelli discrezionali',
-        potentialImpact: 'Maggiore sicurezza finanziaria sulle spese critiche',
+        area: 'Prioritization',
+        tip: 'Focus on essential plans first, then discretionary ones',
+        potentialImpact: 'Greater financial security on critical expenses',
       },
     ],
     overallRecommendations: [
-      'Monitora regolarmente lo stato dei tuoi piani',
-      'Imposta contributi automatici quando possibile',
-      'Rivedi i piani stagionali in anticipo rispetto alle scadenze',
+      'Regularly monitor the status of your plans',
+      'Set up automatic contributions when possible',
+      'Review seasonal plans ahead of their due dates',
     ],
     financialHealthScore: healthScore,
   };

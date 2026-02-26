@@ -55,6 +55,63 @@ a {
     --sidebar-accent-foreground: 30 33% 94%;
     --sidebar-border: 23 34% 18%;
     --sidebar-ring: 26 48% 53%;
+
+    /* ── Coffee palette ─────────────────────────────── */
+    --coffee-900: #1C1210;
+    --coffee-800: #2C1810;
+    --coffee-700: #3A2E24;
+    --coffee-600: #4A3D34;
+    --coffee-500: #5A4A3A;
+    --coffee-400: #6B5D52;
+    --coffee-300: #8B7D6B;
+    --coffee-200: #A89078;
+    --coffee-150: #C9B9A8;
+    --coffee-100: #F5F0EB;
+    --coffee-50: #FAF7F4;
+    --coffee-25: #FFFDF9;
+
+    /* ── Primary variants ───────────────────────────── */
+    --primary-dark: #A86B3D;
+    --primary-light: #D18F5E;
+    --primary-mid: #B87B4D;
+
+    /* ── Primary alpha ──────────────────────────────── */
+    --primary-alpha-4: rgba(193, 127, 78, 0.04);
+    --primary-alpha-6: rgba(193, 127, 78, 0.06);
+    --primary-alpha-8: rgba(193, 127, 78, 0.08);
+    --primary-alpha-10: rgba(193, 127, 78, 0.10);
+    --primary-alpha-12: rgba(193, 127, 78, 0.12);
+    --primary-alpha-15: rgba(193, 127, 78, 0.15);
+    --primary-alpha-20: rgba(193, 127, 78, 0.20);
+    --primary-alpha-25: rgba(193, 127, 78, 0.25);
+    --primary-alpha-30: rgba(193, 127, 78, 0.30);
+    --primary-alpha-35: rgba(193, 127, 78, 0.35);
+    --primary-alpha-60: rgba(193, 127, 78, 0.60);
+
+    /* ── Dark brown alpha (borders/shadows) ─────────── */
+    --coffee-900-alpha-6: rgba(44, 24, 16, 0.06);
+    --coffee-900-alpha-8: rgba(28, 18, 16, 0.08);
+
+    /* ── Functional colors ──────────────────────────── */
+    --success: #10B981;
+    --success-dark: #059669;
+    --success-foreground: #ffffff;
+    --warning: #F59E0B;
+    --warning-dark: #92400E;
+    --warning-light: #FEF3C7;
+    --info: #3B82F6;
+    --error: #EF4444;
+    --error-dark: #DC2626;
+
+    /* ── Toast colors ───────────────────────────────── */
+    --toast-bg: #ffffff;
+    --toast-color: #1f2937;
+    --toast-border: #d1d5db;
+
+    /* ── Extra chart colors ─────────────────────────── */
+    --chart-6: 0 70% 65%;
+    --chart-7: 262 60% 55%;
+    --chart-8: 230 65% 60%;
   }
   .dark {
     --background: 0 0% 3.9%;
@@ -89,6 +146,63 @@ a {
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* ── Coffee palette ─────────────────────────────── */
+    --coffee-900: #1C1210;
+    --coffee-800: #2C1810;
+    --coffee-700: #3A2E24;
+    --coffee-600: #4A3D34;
+    --coffee-500: #5A4A3A;
+    --coffee-400: #6B5D52;
+    --coffee-300: #8B7D6B;
+    --coffee-200: #A89078;
+    --coffee-150: #C9B9A8;
+    --coffee-100: #F5F0EB;
+    --coffee-50: #FAF7F4;
+    --coffee-25: #FFFDF9;
+
+    /* ── Primary variants ───────────────────────────── */
+    --primary-dark: #A86B3D;
+    --primary-light: #D18F5E;
+    --primary-mid: #B87B4D;
+
+    /* ── Primary alpha ──────────────────────────────── */
+    --primary-alpha-4: rgba(193, 127, 78, 0.04);
+    --primary-alpha-6: rgba(193, 127, 78, 0.06);
+    --primary-alpha-8: rgba(193, 127, 78, 0.08);
+    --primary-alpha-10: rgba(193, 127, 78, 0.10);
+    --primary-alpha-12: rgba(193, 127, 78, 0.12);
+    --primary-alpha-15: rgba(193, 127, 78, 0.15);
+    --primary-alpha-20: rgba(193, 127, 78, 0.20);
+    --primary-alpha-25: rgba(193, 127, 78, 0.25);
+    --primary-alpha-30: rgba(193, 127, 78, 0.30);
+    --primary-alpha-35: rgba(193, 127, 78, 0.35);
+    --primary-alpha-60: rgba(193, 127, 78, 0.60);
+
+    /* ── Dark brown alpha (borders/shadows) ─────────── */
+    --coffee-900-alpha-6: rgba(44, 24, 16, 0.06);
+    --coffee-900-alpha-8: rgba(28, 18, 16, 0.08);
+
+    /* ── Functional colors ──────────────────────────── */
+    --success: #10B981;
+    --success-dark: #059669;
+    --success-foreground: #ffffff;
+    --warning: #F59E0B;
+    --warning-dark: #92400E;
+    --warning-light: #FEF3C7;
+    --info: #3B82F6;
+    --error: #EF4444;
+    --error-dark: #DC2626;
+
+    /* ── Toast colors ───────────────────────────────── */
+    --toast-bg: #ffffff;
+    --toast-color: #1f2937;
+    --toast-border: #d1d5db;
+
+    /* ── Extra chart colors ─────────────────────────── */
+    --chart-6: 0 70% 65%;
+    --chart-7: 262 60% 55%;
+    --chart-8: 230 65% 60%;
   }
 }
 

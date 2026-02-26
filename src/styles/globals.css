@@ -5,10 +5,14 @@
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
   /* Ensure body is always clickable - fallback for modal cleanup issues */
   pointer-events: auto !important;
+}
+
+h1, h2 {
+  font-family: var(--font-serif), serif;
 }
 
 a {

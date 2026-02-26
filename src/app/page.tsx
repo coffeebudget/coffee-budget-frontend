@@ -2,7 +2,6 @@
 
 import { useSession, signIn } from "next-auth/react";
 import Link from "next/link";
-import { DM_Serif_Display, DM_Sans } from "next/font/google";
 import {
   Wallet,
   Tag,
@@ -14,20 +13,6 @@ import {
   LogIn,
   ChevronDown,
 } from "lucide-react";
-
-const serif = DM_Serif_Display({
-  subsets: ["latin"],
-  weight: "400",
-  display: "swap",
-  variable: "--font-serif",
-});
-
-const sans = DM_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-  variable: "--font-sans",
-});
 
 const FEATURES = [
   {
@@ -85,10 +70,7 @@ export default function Home() {
   const isLoggedIn = !!session?.user;
 
   return (
-    <div
-      className={`${sans.variable} ${serif.variable}`}
-      style={{ fontFamily: "var(--font-sans), sans-serif" }}
-    >
+    <div>
       <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(24px); }
@@ -205,10 +187,7 @@ export default function Home() {
           {/* Headline */}
           <h1
             className="anim-2 text-5xl sm:text-6xl md:text-7xl lg:text-8xl leading-[0.95] tracking-tight"
-            style={{
-              fontFamily: "var(--font-serif), serif",
-              color: "var(--coffee-100)",
-            }}
+            style={{ color: "var(--coffee-100)" }}
           >
             Coffee
             <br />
@@ -223,11 +202,8 @@ export default function Home() {
 
           {/* Tagline */}
           <p
-            className="anim-3 text-xl sm:text-2xl md:text-[1.65rem] max-w-lg leading-relaxed"
-            style={{
-              fontFamily: "var(--font-serif), serif",
-              color: "var(--coffee-150)",
-            }}
+            className="anim-3 font-serif text-xl sm:text-2xl md:text-[1.65rem] max-w-lg leading-relaxed"
+            style={{ color: "var(--coffee-150)" }}
           >
             Your finances, brewed to perfection.
           </p>
@@ -320,10 +296,7 @@ export default function Home() {
           </p>
           <h2
             className="text-3xl sm:text-4xl md:text-5xl mb-6"
-            style={{
-              fontFamily: "var(--font-serif), serif",
-              color: "var(--coffee-800)",
-            }}
+            style={{ color: "var(--coffee-800)" }}
           >
             What&rsquo;s brewing inside
           </h2>
@@ -389,10 +362,7 @@ export default function Home() {
           </p>
           <h2
             className="text-3xl sm:text-4xl md:text-5xl mb-16"
-            style={{
-              fontFamily: "var(--font-serif), serif",
-              color: "var(--coffee-800)",
-            }}
+            style={{ color: "var(--coffee-800)" }}
           >
             Three sips to clarity
           </h2>
@@ -401,11 +371,8 @@ export default function Home() {
             {STEPS.map((step) => (
               <div key={step.num} className="step-card text-center pb-6">
                 <span
-                  className="text-5xl block mb-4"
-                  style={{
-                    fontFamily: "var(--font-serif), serif",
-                    color: "var(--primary-alpha-25)",
-                  }}
+                  className="text-5xl font-serif block mb-4"
+                  style={{ color: "var(--primary-alpha-25)" }}
                 >
                   {step.num}
                 </span>
@@ -443,10 +410,7 @@ export default function Home() {
         <div className="relative z-10 max-w-3xl mx-auto text-center">
           <h2
             className="text-3xl sm:text-4xl md:text-5xl mb-6"
-            style={{
-              fontFamily: "var(--font-serif), serif",
-              color: "var(--coffee-100)",
-            }}
+            style={{ color: "var(--coffee-100)" }}
           >
             Start brewing your budget
           </h2>

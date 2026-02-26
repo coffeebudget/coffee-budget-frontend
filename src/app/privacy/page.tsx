@@ -1,34 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { DM_Serif_Display, DM_Sans } from "next/font/google";
 import { ArrowLeft, Shield } from "lucide-react";
-
-const serif = DM_Serif_Display({
-  subsets: ["latin"],
-  weight: "400",
-  display: "swap",
-  variable: "--font-serif",
-});
-
-const sans = DM_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-  variable: "--font-sans",
-});
 
 const LAST_UPDATED = "February 25, 2026";
 
 export default function PrivacyPolicy() {
   return (
-    <div
-      className={`${sans.variable} ${serif.variable}`}
-      style={{ fontFamily: "var(--font-sans), sans-serif" }}
-    >
+    <div>
       <style>{`
         .legal-content h2 {
-          font-family: var(--font-serif), serif;
           color: var(--coffee-800);
           font-size: 1.5rem;
           margin-top: 2.5rem;
@@ -115,10 +96,7 @@ export default function PrivacyPolicy() {
             </div>
             <h1
               className="text-3xl sm:text-4xl"
-              style={{
-                fontFamily: "var(--font-serif), serif",
-                color: "var(--coffee-100)",
-              }}
+              style={{ color: "var(--coffee-100)" }}
             >
               Privacy Policy
             </h1>

@@ -8,6 +8,10 @@ const config: Config = {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
+  	fontFamily: {
+  		sans: ['var(--font-sans)', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+  		serif: ['var(--font-serif)', 'serif'],
+  	},
   	screens: {
   		sm: '640px',
   		md: '768px',

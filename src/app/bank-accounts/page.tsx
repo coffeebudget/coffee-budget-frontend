@@ -179,9 +179,9 @@ export default function BankAccountsPage() {
             style: {
               maxWidth: '700px',
               padding: '24px',
-              background: '#10b981',
-              color: '#ffffff',
-              border: '2px solid #059669',
+              background: 'var(--success)',
+              color: 'var(--success-foreground)',
+              border: '2px solid var(--success-dark)',
               borderRadius: '12px',
               fontSize: '16px',
               fontWeight: '600',
@@ -190,8 +190,8 @@ export default function BankAccountsPage() {
             },
             icon: '✅',
             iconTheme: {
-              primary: '#ffffff',
-              secondary: '#10b981',
+              primary: 'var(--success-foreground)',
+              secondary: 'var(--success)',
             },
           }
         );
@@ -223,9 +223,9 @@ export default function BankAccountsPage() {
               {
                 duration: 10000,
                 style: {
-                  background: '#fef3c7',
-                  border: '1px solid #f59e0b',
-                  color: '#92400e',
+                  background: 'var(--warning-light)',
+                  border: '1px solid var(--warning)',
+                  color: 'var(--warning-dark)',
                 },
               }
             );

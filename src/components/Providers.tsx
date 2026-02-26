@@ -57,9 +57,9 @@ export default function Providers({ children }: ProvidersProps) {
           toastOptions={{
             duration: 4000,
             style: {
-              background: '#ffffff',
-              color: '#1f2937',
-              border: '1px solid #d1d5db',
+              background: 'var(--toast-bg)',
+              color: 'var(--toast-color)',
+              border: '1px solid var(--toast-border)',
               borderRadius: '8px',
               boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
               fontSize: '14px',
@@ -73,17 +73,17 @@ export default function Providers({ children }: ProvidersProps) {
             success: {
               duration: 3000,
               style: {
-                background: '#10b981',
-                color: '#ffffff',
-                border: '1px solid #059669',
+                background: 'var(--success)',
+                color: 'var(--success-foreground)',
+                border: '1px solid var(--success-dark)',
               },
             },
             error: {
               duration: 5000,
               style: {
-                background: '#ef4444',
-                color: '#ffffff',
-                border: '1px solid #dc2626',
+                background: 'var(--error)',
+                color: 'var(--success-foreground)',
+                border: '1px solid var(--error-dark)',
               },
             },
           }}

@@ -29,27 +29,27 @@ export default function PrivacyPolicy() {
       <style>{`
         .legal-content h2 {
           font-family: var(--font-serif), serif;
-          color: #2C1810;
+          color: var(--coffee-800);
           font-size: 1.5rem;
           margin-top: 2.5rem;
           margin-bottom: 1rem;
           padding-bottom: 0.5rem;
-          border-bottom: 1px solid rgba(193, 127, 78, 0.2);
+          border-bottom: 1px solid var(--primary-alpha-20);
         }
         .legal-content h3 {
-          color: #2C1810;
+          color: var(--coffee-800);
           font-size: 1.1rem;
           font-weight: 600;
           margin-top: 1.75rem;
           margin-bottom: 0.75rem;
         }
         .legal-content p {
-          color: #4A3D34;
+          color: var(--coffee-600);
           line-height: 1.75;
           margin-bottom: 1rem;
         }
         .legal-content ul {
-          color: #4A3D34;
+          color: var(--coffee-600);
           line-height: 1.75;
           margin-bottom: 1rem;
           padding-left: 1.5rem;
@@ -59,20 +59,20 @@ export default function PrivacyPolicy() {
           margin-bottom: 0.5rem;
         }
         .legal-content a {
-          color: #C17F4E;
+          color: hsl(var(--primary));
           text-decoration: underline;
           text-underline-offset: 2px;
         }
         .legal-content a:hover {
-          color: #A86B3D;
+          color: var(--primary-dark);
         }
         .legal-content strong {
-          color: #2C1810;
+          color: var(--coffee-800);
           font-weight: 600;
         }
         .info-box {
-          background: rgba(193, 127, 78, 0.06);
-          border: 1px solid rgba(193, 127, 78, 0.15);
+          background: var(--primary-alpha-6);
+          border: 1px solid var(--primary-alpha-15);
           border-radius: 0.75rem;
           padding: 1.25rem 1.5rem;
           margin-bottom: 1.5rem;
@@ -84,20 +84,20 @@ export default function PrivacyPolicy() {
           transition: color 0.2s ease;
         }
         .back-link:hover {
-          color: #C17F4E !important;
+          color: hsl(var(--primary)) !important;
         }
       `}</style>
 
       {/* ── Header ─────────────────────────────────────── */}
       <section
         className="relative px-6 sm:px-10 pt-8 pb-20"
-        style={{ backgroundColor: "#1C1210" }}
+        style={{ backgroundColor: "var(--coffee-900)" }}
       >
         <div className="max-w-3xl mx-auto">
           <Link
             href="/"
             className="back-link inline-flex items-center gap-2 text-sm font-medium no-underline mb-12"
-            style={{ color: "#8B7D6B" }}
+            style={{ color: "var(--coffee-300)" }}
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Coffee Budget
@@ -107,24 +107,24 @@ export default function PrivacyPolicy() {
             <div
               className="w-12 h-12 rounded-xl flex items-center justify-center"
               style={{
-                backgroundColor: "rgba(193, 127, 78, 0.12)",
-                border: "1px solid rgba(193, 127, 78, 0.2)",
+                backgroundColor: "var(--primary-alpha-12)",
+                border: "1px solid var(--primary-alpha-20)",
               }}
             >
-              <Shield className="w-5 h-5" style={{ color: "#C17F4E" }} />
+              <Shield className="w-5 h-5" style={{ color: "hsl(var(--primary))" }} />
             </div>
             <h1
               className="text-3xl sm:text-4xl"
               style={{
                 fontFamily: "var(--font-serif), serif",
-                color: "#F5F0EB",
+                color: "var(--coffee-100)",
               }}
             >
               Privacy Policy
             </h1>
           </div>
 
-          <p className="text-sm" style={{ color: "#8B7D6B" }}>
+          <p className="text-sm" style={{ color: "var(--coffee-300)" }}>
             Last updated: {LAST_UPDATED}
           </p>
         </div>
@@ -133,7 +133,7 @@ export default function PrivacyPolicy() {
       {/* ── Content ────────────────────────────────────── */}
       <section
         className="px-6 sm:px-10 py-16"
-        style={{ backgroundColor: "#F5F0EB" }}
+        style={{ backgroundColor: "var(--coffee-100)" }}
       >
         <div className="max-w-3xl mx-auto legal-content">
           <p style={{ fontSize: "1.05rem" }}>
@@ -551,13 +551,13 @@ export default function PrivacyPolicy() {
       {/* ── Footer ─────────────────────────────────────── */}
       <footer
         className="px-6 sm:px-10 py-10"
-        style={{ backgroundColor: "#1C1210" }}
+        style={{ backgroundColor: "var(--coffee-900)" }}
       >
         <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <Link
             href="/"
             className="text-sm font-medium no-underline"
-            style={{ color: "#8B7D6B" }}
+            style={{ color: "var(--coffee-300)" }}
           >
             Coffee Budget
           </Link>
@@ -565,14 +565,14 @@ export default function PrivacyPolicy() {
             <Link
               href="/privacy"
               className="text-sm no-underline"
-              style={{ color: "#C17F4E" }}
+              style={{ color: "hsl(var(--primary))" }}
             >
               Privacy Policy
             </Link>
             <Link
               href="/terms"
               className="text-sm no-underline"
-              style={{ color: "#8B7D6B" }}
+              style={{ color: "var(--coffee-300)" }}
             >
               Terms of Service
             </Link>

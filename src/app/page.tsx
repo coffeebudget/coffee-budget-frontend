@@ -116,26 +116,26 @@ export default function Home() {
         }
         .feature-card:hover {
           transform: translateY(-4px);
-          box-shadow: 0 12px 40px rgba(28, 18, 16, 0.08);
+          box-shadow: 0 12px 40px var(--coffee-900-alpha-8);
         }
 
         .copper-btn {
-          background: linear-gradient(135deg, #C17F4E, #A86B3D);
+          background: linear-gradient(135deg, var(--primary), var(--primary-dark));
           transition: all 0.3s ease;
         }
         .copper-btn:hover {
-          background: linear-gradient(135deg, #D18F5E, #B87B4D);
-          box-shadow: 0 8px 30px rgba(193, 127, 78, 0.35);
+          background: linear-gradient(135deg, var(--primary-light), var(--primary-mid));
+          box-shadow: 0 8px 30px var(--primary-alpha-35);
           transform: translateY(-1px);
         }
 
         .ghost-btn {
           transition: all 0.3s ease;
-          border: 1px solid rgba(193, 127, 78, 0.3);
+          border: 1px solid var(--primary-alpha-30);
         }
         .ghost-btn:hover {
-          border-color: rgba(193, 127, 78, 0.6);
-          background: rgba(193, 127, 78, 0.08);
+          border-color: var(--primary-alpha-60);
+          background: var(--primary-alpha-8);
         }
 
         .step-card {
@@ -149,7 +149,7 @@ export default function Home() {
           transform: translateX(-50%);
           width: 0;
           height: 2px;
-          background: #C17F4E;
+          background: var(--primary);
           transition: width 0.4s ease;
         }
         .step-card:hover::after {
@@ -160,29 +160,29 @@ export default function Home() {
           transition: all 0.3s ease;
         }
         .pill-tag:hover {
-          background: rgba(193, 127, 78, 0.15);
-          border-color: rgba(193, 127, 78, 0.3);
+          background: var(--primary-alpha-15);
+          border-color: var(--primary-alpha-30);
         }
       `}</style>
 
       {/* ── Hero ─────────────────────────────────────────── */}
       <section
         className="relative min-h-screen flex items-center overflow-hidden"
-        style={{ backgroundColor: "#1C1210" }}
+        style={{ backgroundColor: "var(--coffee-900)" }}
       >
         {/* Subtle radial glow */}
         <div
           className="absolute top-1/4 -right-32 w-[600px] h-[600px] rounded-full pointer-events-none"
           style={{
             background:
-              "radial-gradient(circle, rgba(193,127,78,0.07) 0%, transparent 70%)",
+              "radial-gradient(circle, var(--primary-alpha-8) 0%, transparent 70%)",
           }}
         />
         <div
           className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full pointer-events-none"
           style={{
             background:
-              "radial-gradient(circle, rgba(193,127,78,0.04) 0%, transparent 70%)",
+              "radial-gradient(circle, var(--primary-alpha-4) 0%, transparent 70%)",
           }}
         />
 
@@ -192,8 +192,8 @@ export default function Home() {
             <div
               className="w-14 h-14 rounded-xl flex items-center justify-center"
               style={{
-                backgroundColor: "rgba(193, 127, 78, 0.12)",
-                border: "1px solid rgba(193, 127, 78, 0.2)",
+                backgroundColor: "var(--primary-alpha-12)",
+                border: "1px solid var(--primary-alpha-20)",
               }}
             >
               <span className="text-2xl" role="img" aria-label="coffee">
@@ -207,7 +207,7 @@ export default function Home() {
             className="anim-2 text-5xl sm:text-6xl md:text-7xl lg:text-8xl leading-[0.95] tracking-tight"
             style={{
               fontFamily: "var(--font-serif), serif",
-              color: "#F5F0EB",
+              color: "var(--coffee-100)",
             }}
           >
             Coffee
@@ -218,7 +218,7 @@ export default function Home() {
           {/* Copper accent line */}
           <div
             className="anim-3 w-16 h-[2px] my-8"
-            style={{ backgroundColor: "#C17F4E" }}
+            style={{ backgroundColor: "hsl(var(--primary))" }}
           />
 
           {/* Tagline */}
@@ -226,7 +226,7 @@ export default function Home() {
             className="anim-3 text-xl sm:text-2xl md:text-[1.65rem] max-w-lg leading-relaxed"
             style={{
               fontFamily: "var(--font-serif), serif",
-              color: "#C9B9A8",
+              color: "var(--coffee-150)",
             }}
           >
             Your finances, brewed to perfection.
@@ -234,7 +234,7 @@ export default function Home() {
 
           <p
             className="anim-4 text-base sm:text-lg mt-5 max-w-md leading-relaxed"
-            style={{ color: "#8B7D6B" }}
+            style={{ color: "var(--coffee-300)" }}
           >
             Envelope budgeting, automatic bank sync, and AI&#8209;powered
             insights — in a tool that feels as good as your morning
@@ -263,7 +263,7 @@ export default function Home() {
                 <a
                   href="#features"
                   className="ghost-btn inline-flex items-center gap-2 px-8 py-3.5 rounded-lg font-medium text-base no-underline"
-                  style={{ color: "#C9B9A8" }}
+                  style={{ color: "var(--coffee-150)" }}
                 >
                   See what&rsquo;s inside
                   <ChevronDown className="w-4 h-4" />
@@ -284,9 +284,9 @@ export default function Home() {
                 key={label}
                 className="pill-tag px-4 py-1.5 rounded-full text-sm font-medium"
                 style={{
-                  backgroundColor: "rgba(193, 127, 78, 0.08)",
-                  color: "#A89078",
-                  border: "1px solid rgba(193, 127, 78, 0.15)",
+                  backgroundColor: "var(--primary-alpha-8)",
+                  color: "var(--coffee-200)",
+                  border: "1px solid var(--primary-alpha-15)",
                 }}
               >
                 {label}
@@ -301,7 +301,7 @@ export default function Home() {
           className="anim-fade scroll-bounce absolute bottom-10 left-1/2 -translate-x-1/2"
           aria-label="Scroll to features"
         >
-          <ChevronDown className="w-6 h-6" style={{ color: "#5A4A3A" }} />
+          <ChevronDown className="w-6 h-6" style={{ color: "var(--coffee-500)" }} />
         </a>
       </section>
 
@@ -309,12 +309,12 @@ export default function Home() {
       <section
         id="features"
         className="py-24 sm:py-32 px-6 sm:px-10"
-        style={{ backgroundColor: "#F5F0EB" }}
+        style={{ backgroundColor: "var(--coffee-100)" }}
       >
         <div className="max-w-5xl mx-auto">
           <p
             className="text-sm font-semibold tracking-[0.2em] uppercase mb-4"
-            style={{ color: "#C17F4E" }}
+            style={{ color: "hsl(var(--primary))" }}
           >
             Features
           </p>
@@ -322,14 +322,14 @@ export default function Home() {
             className="text-3xl sm:text-4xl md:text-5xl mb-6"
             style={{
               fontFamily: "var(--font-serif), serif",
-              color: "#2C1810",
+              color: "var(--coffee-800)",
             }}
           >
             What&rsquo;s brewing inside
           </h2>
           <p
             className="text-lg mb-16 max-w-xl leading-relaxed"
-            style={{ color: "#6B5D52" }}
+            style={{ color: "var(--coffee-400)" }}
           >
             Everything you need to understand, organize, and control your
             money — without the complexity of traditional finance apps.
@@ -343,28 +343,28 @@ export default function Home() {
                   key={feature.title}
                   className="feature-card rounded-xl p-7"
                   style={{
-                    backgroundColor: "#FFFDF9",
-                    border: "1px solid rgba(44, 24, 16, 0.06)",
+                    backgroundColor: "var(--coffee-25)",
+                    border: "1px solid var(--coffee-900-alpha-6)",
                   }}
                 >
                   <div
                     className="w-11 h-11 rounded-lg flex items-center justify-center mb-5"
-                    style={{ backgroundColor: "rgba(193, 127, 78, 0.1)" }}
+                    style={{ backgroundColor: "var(--primary-alpha-10)" }}
                   >
                     <Icon
                       className="w-5 h-5"
-                      style={{ color: "#C17F4E" }}
+                      style={{ color: "hsl(var(--primary))" }}
                     />
                   </div>
                   <h3
                     className="text-lg font-semibold mb-2"
-                    style={{ color: "#2C1810" }}
+                    style={{ color: "var(--coffee-800)" }}
                   >
                     {feature.title}
                   </h3>
                   <p
                     className="text-[0.94rem] leading-relaxed"
-                    style={{ color: "#6B5D52" }}
+                    style={{ color: "var(--coffee-400)" }}
                   >
                     {feature.desc}
                   </p>
@@ -378,12 +378,12 @@ export default function Home() {
       {/* ── How it works ─────────────────────────────────── */}
       <section
         className="py-24 sm:py-32 px-6 sm:px-10"
-        style={{ backgroundColor: "#FAF7F4" }}
+        style={{ backgroundColor: "var(--coffee-50)" }}
       >
         <div className="max-w-5xl mx-auto">
           <p
             className="text-sm font-semibold tracking-[0.2em] uppercase mb-4"
-            style={{ color: "#C17F4E" }}
+            style={{ color: "hsl(var(--primary))" }}
           >
             How it works
           </p>
@@ -391,7 +391,7 @@ export default function Home() {
             className="text-3xl sm:text-4xl md:text-5xl mb-16"
             style={{
               fontFamily: "var(--font-serif), serif",
-              color: "#2C1810",
+              color: "var(--coffee-800)",
             }}
           >
             Three sips to clarity
@@ -404,20 +404,20 @@ export default function Home() {
                   className="text-5xl block mb-4"
                   style={{
                     fontFamily: "var(--font-serif), serif",
-                    color: "rgba(193, 127, 78, 0.25)",
+                    color: "var(--primary-alpha-25)",
                   }}
                 >
                   {step.num}
                 </span>
                 <h3
                   className="text-xl font-semibold mb-3"
-                  style={{ color: "#2C1810" }}
+                  style={{ color: "var(--coffee-800)" }}
                 >
                   {step.title}
                 </h3>
                 <p
                   className="text-[0.94rem] leading-relaxed"
-                  style={{ color: "#6B5D52" }}
+                  style={{ color: "var(--coffee-400)" }}
                 >
                   {step.desc}
                 </p>
@@ -430,13 +430,13 @@ export default function Home() {
       {/* ── CTA ──────────────────────────────────────────── */}
       <section
         className="relative py-24 sm:py-32 px-6 sm:px-10 overflow-hidden"
-        style={{ backgroundColor: "#1C1210" }}
+        style={{ backgroundColor: "var(--coffee-900)" }}
       >
         <div
           className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[250px] pointer-events-none"
           style={{
             background:
-              "radial-gradient(ellipse, rgba(193,127,78,0.08) 0%, transparent 70%)",
+              "radial-gradient(ellipse, var(--primary-alpha-8) 0%, transparent 70%)",
           }}
         />
 
@@ -445,14 +445,14 @@ export default function Home() {
             className="text-3xl sm:text-4xl md:text-5xl mb-6"
             style={{
               fontFamily: "var(--font-serif), serif",
-              color: "#F5F0EB",
+              color: "var(--coffee-100)",
             }}
           >
             Start brewing your budget
           </h2>
           <p
             className="text-lg mb-10 max-w-md mx-auto leading-relaxed"
-            style={{ color: "#8B7D6B" }}
+            style={{ color: "var(--coffee-300)" }}
           >
             Take control of your finances today.
             <br />
@@ -477,7 +477,7 @@ export default function Home() {
             </button>
           )}
 
-          <p className="mt-16 text-sm" style={{ color: "#5A4A3A" }}>
+          <p className="mt-16 text-sm" style={{ color: "var(--coffee-500)" }}>
             Built with Next.js, NestJS &amp; PostgreSQL
           </p>
 
@@ -485,15 +485,15 @@ export default function Home() {
             <Link
               href="/privacy"
               className="text-sm no-underline"
-              style={{ color: "#5A4A3A" }}
+              style={{ color: "var(--coffee-500)" }}
             >
               Privacy Policy
             </Link>
-            <span style={{ color: "#3A2E24" }}>·</span>
+            <span style={{ color: "var(--coffee-700)" }}>·</span>
             <Link
               href="/terms"
               className="text-sm no-underline"
-              style={{ color: "#5A4A3A" }}
+              style={{ color: "var(--coffee-500)" }}
             >
               Terms of Service
             </Link>

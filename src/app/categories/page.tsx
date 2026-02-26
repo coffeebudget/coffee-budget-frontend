@@ -10,7 +10,7 @@ import { Loader2, FolderIcon, PlusCircle, ListIcon, X, RefreshCw } from "lucide-
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { showSuccessToast, showErrorToast } from "@/utils/toast-utils";
+import toast from "react-hot-toast";
 
 export default function CategoriesPage() {
   const { data: session } = useSession();
@@ -91,10 +91,10 @@ export default function CategoriesPage() {
       
       // Remove the category from state
       setCategories(prevCategories => prevCategories.filter(category => category.id !== id));
-      showSuccessToast(`${categoryName} has been deleted successfully`);
+      toast.success(`${categoryName} has been deleted successfully`);
     } catch (error) {
       console.error("Error deleting category:", error);
-      showErrorToast("Failed to delete category");
+      toast.error("Failed to delete category");
     } finally {
       setIsDeleting(false);
     }
@@ -118,10 +118,10 @@ export default function CategoriesPage() {
     try {
       const resetCategories = await resetCategoriesToDefaults(token);
       setCategories(resetCategories);
-      showSuccessToast("Categories have been reset to defaults");
+      toast.success("Categories have been reset to defaults");
     } catch (error) {
       console.error("Error resetting categories:", error);
-      showErrorToast("Failed to reset categories to defaults");
+      toast.error("Failed to reset categories to defaults");
     } finally {
       setIsResetting(false);
     }

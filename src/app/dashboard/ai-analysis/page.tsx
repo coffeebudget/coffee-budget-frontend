@@ -18,7 +18,7 @@ import {
   MessageSquare
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { showErrorToast, showSuccessToast } from "@/utils/toast-utils";
+import toast from "react-hot-toast";
 import { formatCurrency } from "@/utils/format";
 import {
   fetchExpensePlansWithStatus,
@@ -97,7 +97,7 @@ export default function AIAnalysisPage() {
       });
     } catch (error) {
       console.error('Failed to load data:', error);
-      showErrorToast('Failed to load data');
+      toast.error('Failed to load data');
     } finally {
       setLoading(false);
     }
@@ -194,10 +194,10 @@ export default function AIAnalysisPage() {
 
       const result = await response.json();
       setAnalysisResult(result);
-      showSuccessToast('Analysis complete!');
+      toast.success('Analysis complete!');
     } catch (error) {
       console.error('Failed to run AI analysis:', error);
-      showErrorToast('AI analysis failed');
+      toast.error('AI analysis failed');
     } finally {
       setAnalyzing(false);
     }

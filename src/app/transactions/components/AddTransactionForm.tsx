@@ -18,7 +18,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { showSuccessToast, showErrorToast } from "@/utils/toast-utils";
+import toast from "react-hot-toast";
 
 interface AddTransactionFormProps {
   onAddTransaction: (transaction: Transaction) => Promise<void>;
@@ -207,7 +207,7 @@ export default function AddTransactionForm({ onAddTransaction, initialData = nul
       setShowKeywordImpactPreview(true);
     } catch (err) {
       console.error("Error loading keyword impact:", err);
-      showErrorToast("Failed to load keyword impact");
+      toast.error("Failed to load keyword impact");
     } finally {
       setLoadingKeywordImpact(false);
     }
@@ -241,7 +241,7 @@ export default function AddTransactionForm({ onAddTransaction, initialData = nul
       console.log("Saving transaction after applying keyword:", transactionData);
       await onAddTransaction(transactionData);
       
-      showSuccessToast(`Transaction saved and keyword "${selectedKeyword}" applied successfully`);
+      toast.success(`Transaction saved and keyword "${selectedKeyword}" applied successfully`);
       setShowKeywordImpactPreview(false);
       setSelectedKeyword("");
       
@@ -256,7 +256,7 @@ export default function AddTransactionForm({ onAddTransaction, initialData = nul
       }
     } catch (err) {
       console.error(err);
-      showErrorToast("Failed to apply keyword or save transaction");
+      toast.error("Failed to apply keyword or save transaction");
     } finally {
       setLoading(false);
     }
@@ -305,7 +305,7 @@ export default function AddTransactionForm({ onAddTransaction, initialData = nul
     } catch (err) {
       console.error(err);
       setError("Failed to save transaction");
-      showErrorToast("Failed to save transaction");
+      toast.error("Failed to save transaction");
     } finally {
       if (!showKeywordImpactPreview) { // Only set loading to false if we're not showing the preview
         setLoading(false);

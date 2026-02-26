@@ -18,7 +18,7 @@ import KeywordSuggestions from "./KeywordSuggestions";
 import KeywordImpactPreview from "./KeywordImpactPreview";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { showSuccessToast, showErrorToast } from "@/utils/toast-utils";
+import toast from "react-hot-toast";
 
 interface KeywordImpact {
   totalImpactedCount: number;
@@ -100,7 +100,7 @@ export default function CategoryForm({
     if (!name.trim()) {
       setError("Category name is required");
       setLoading(false);
-      showErrorToast("Category name is required");
+      toast.error("Category name is required");
       return;
     }
 
@@ -124,15 +124,15 @@ export default function CategoryForm({
         setNewKeyword("");
         setExcludeFromExpenseAnalytics(false);
         setAnalyticsExclusionReason("");
-        showSuccessToast(`Category "${name}" has been created successfully`);
+        toast.success(`Category "${name}" has been created successfully`);
       } else {
-        showSuccessToast(`Category "${name}" has been updated successfully`);
+        toast.success(`Category "${name}" has been updated successfully`);
       }
     } catch (err) {
       console.error("Error in handleSubmit:", err);
       const errorMessage = err instanceof Error ? err.message : "An error occurred while saving the category";
       setError(errorMessage);
-      showErrorToast(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

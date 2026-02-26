@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { showSuccessToast, showErrorToast } from "@/utils/toast-utils";
+import toast from "react-hot-toast";
 
 // Create simple Alert components
 interface AlertProps {
@@ -290,7 +290,7 @@ export default function ImportTransactionsForm({
             errors: response.errors || [],
           });
           
-          showSuccessToast(response.message || `${response.count} transactions enriched with PayPal data`);
+          toast.success(response.message || `${response.count} transactions enriched with PayPal data`);
           // No need to call onImportComplete as we didn't import new transactions, just enriched existing ones
           if (response.count > 0) {
             // If transactions were enriched, we should refresh the transactions list
@@ -310,7 +310,7 @@ export default function ImportTransactionsForm({
             });
             console.log("Passing transactions to parent:", response);
             onImportComplete(response);
-            showSuccessToast(`Successfully imported ${response.length} transaction${response.length !== 1 ? 's' : ''}`);
+            toast.success(`Successfully imported ${response.length} transaction${response.length !== 1 ? 's' : ''}`);
           } else {
             setImportResult({
               importedCount: response.importedCount || 0,
@@ -321,11 +321,11 @@ export default function ImportTransactionsForm({
             if (response.transactions && Array.isArray(response.transactions)) {
               console.log("Passing transactions to parent:", response.transactions);
               onImportComplete(response.transactions);
-              showSuccessToast(`Successfully imported ${response.transactions.length} transaction${response.transactions.length !== 1 ? 's' : ''}`);
+              toast.success(`Successfully imported ${response.transactions.length} transaction${response.transactions.length !== 1 ? 's' : ''}`);
             } else {
               console.warn("No transactions array in response:", response);
               onImportComplete([]);
-              showSuccessToast('Import completed successfully');
+              toast.success('Import completed successfully');
             }
           }
         }
@@ -352,7 +352,7 @@ export default function ImportTransactionsForm({
       console.error("Import error:", err);
       const errorMessage = err instanceof Error ? err.message : "Failed to import transactions";
       setError(errorMessage);
-      showErrorToast(errorMessage);
+      toast.error(errorMessage);
       onImportComplete([]);
     } finally {
       setIsLoading(false);

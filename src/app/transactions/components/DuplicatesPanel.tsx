@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Checkbox } from "@/components/ui/checkbox";
-import { showSuccessToast, showErrorToast } from "@/utils/toast-utils";
+import toast from "react-hot-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -139,13 +139,13 @@ export default function DuplicatesPanel() {
     try {
       const result = await triggerDuplicateDetection(token);
       
-      showSuccessToast(`Found ${result.potentialDuplicatesFound} potential duplicates, created ${result.pendingDuplicatesCreated} new pending duplicates in ${result.executionTime}`);
+      toast.success(`Found ${result.potentialDuplicatesFound} potential duplicates, created ${result.pendingDuplicatesCreated} new pending duplicates in ${result.executionTime}`);
       
       // Reload the pending duplicates list
       await loadData();
     } catch (err) {
       console.error("Duplicate detection failed:", err);
-      showErrorToast(err instanceof Error ? err.message : "An unexpected error occurred");
+      toast.error(err instanceof Error ? err.message : "An unexpected error occurred");
     } finally {
       setDetectingDuplicates(false);
     }
@@ -158,13 +158,13 @@ export default function DuplicatesPanel() {
     try {
       const result = await cleanupActualDuplicates(token);
       
-      showSuccessToast(`Cleanup completed! Removed ${result.duplicatesRemoved} duplicate transactions, kept ${result.transactionsKept} unique transactions. Processing time: ${result.executionTime}`);
+      toast.success(`Cleanup completed! Removed ${result.duplicatesRemoved} duplicate transactions, kept ${result.transactionsKept} unique transactions. Processing time: ${result.executionTime}`);
       
       // Reload the pending duplicates list
       await loadData();
     } catch (err) {
       console.error("Cleanup failed:", err);
-      showErrorToast(err instanceof Error ? err.message : "Cleanup failed");
+      toast.error(err instanceof Error ? err.message : "Cleanup failed");
     } finally {
       setCleaningUpDuplicates(false);
     }
@@ -200,16 +200,16 @@ export default function DuplicatesPanel() {
       const result = await bulkResolvePendingDuplicates(token, Array.from(selectedDuplicates), choice);
       
       if (result.errors > 0) {
-        showErrorToast(`${result.resolved} resolved successfully, ${result.errors} failed`);
+        toast.error(`${result.resolved} resolved successfully, ${result.errors} failed`);
       } else {
-        showSuccessToast(`${result.resolved} duplicates resolved successfully`);
+        toast.success(`${result.resolved} duplicates resolved successfully`);
       }
       
       setSelectedDuplicates(new Set());
       await loadData();
     } catch (err) {
       console.error("Bulk resolve failed:", err);
-      showErrorToast(err instanceof Error ? err.message : "Bulk operation failed");
+      toast.error(err instanceof Error ? err.message : "Bulk operation failed");
     } finally {
       setBulkProcessing(false);
     }
@@ -223,16 +223,16 @@ export default function DuplicatesPanel() {
       const result = await bulkDeletePendingDuplicates(token, Array.from(selectedDuplicates));
       
       if (result.errors > 0) {
-        showErrorToast(`${result.deleted} deleted successfully, ${result.errors} failed`);
+        toast.error(`${result.deleted} deleted successfully, ${result.errors} failed`);
       } else {
-        showSuccessToast(`${result.deleted} duplicates deleted successfully`);
+        toast.success(`${result.deleted} duplicates deleted successfully`);
       }
       
       setSelectedDuplicates(new Set());
       await loadData();
     } catch (err) {
       console.error("Bulk delete failed:", err);
-      showErrorToast(err instanceof Error ? err.message : "Bulk delete failed");
+      toast.error(err instanceof Error ? err.message : "Bulk delete failed");
     } finally {
       setBulkProcessing(false);
     }

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, X, Trash2, AlertCircle } from "lucide-react";
 import { Category } from "@/utils/types";
 import { fetchCommonKeywords, removeKeywordFromCategory } from "@/utils/api";
-import { showSuccessToast, showErrorToast } from "@/utils/toast-utils";
+import toast from "react-hot-toast";
 
 interface SmartTrainingDashboardProps {
   categories: Category[];
@@ -65,7 +65,7 @@ export default function SmartTrainingDashboard({
       setKeywordStats(prevStats => prevStats.filter(stat => 
         !(stat.keyword === keyword && stat.categoryId === categoryId)
       ));
-      showSuccessToast(`Removed "${keyword}" from category`);
+      toast.success(`Removed "${keyword}" from category`);
       
       // Refresh categories if needed
       if (onUpdateCategories) {
@@ -73,7 +73,7 @@ export default function SmartTrainingDashboard({
       }
     } catch (err) {
       console.error(err);
-      showErrorToast(`Failed to remove "${keyword}"`);
+      toast.error(`Failed to remove "${keyword}"`);
     } finally {
       setRemovingKeyword(null);
     }
@@ -141,11 +141,11 @@ export default function SmartTrainingDashboard({
         onUpdateCategories();
       }
       
-      showSuccessToast(`Removed ${removedCount} duplicate keywords`);
+      toast.success(`Removed ${removedCount} duplicate keywords`);
     } catch (err) {
       console.error(err);
       setError("Failed to remove duplicate keywords");
-      showErrorToast("Failed to remove duplicate keywords");
+      toast.error("Failed to remove duplicate keywords");
     } finally {
       setRemovingDuplicates(false);
     }

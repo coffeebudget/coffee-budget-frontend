@@ -117,10 +117,13 @@ jest.mock('@/utils/api', () => ({
   applyKeywordToCategory: jest.fn().mockResolvedValue({ success: true }),
 }));
 
-// Mock toast functions
-jest.mock('@/utils/toast-utils', () => ({
-  showSuccessToast: jest.fn(),
-  showErrorToast: jest.fn(),
+// Mock toast
+jest.mock('react-hot-toast', () => ({
+  __esModule: true,
+  default: {
+    success: jest.fn(),
+    error: jest.fn(),
+  },
 }));
 
 import React from 'react';

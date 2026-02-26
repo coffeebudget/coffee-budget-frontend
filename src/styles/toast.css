@@ -1,4 +1,4 @@
-/* Toast styles */
+/* Toast styles - react-hot-toast */
 :root {
   --toastify-z-index: 9999;
 }
@@ -17,8 +17,6 @@
 }
 
 /* Override any toast container styles */
-.Toastify__toast-container,
-[data-radix-toast-viewport],
 [role="status"] {
   z-index: 9999 !important;
   position: fixed !important;
@@ -27,16 +25,9 @@
 }
 
 /* Ensure toast content is visible and clickable */
-.Toastify__toast,
-[data-radix-toast-root],
 [role="status"] > div {
   opacity: 1 !important;
   z-index: 9999 !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
   pointer-events: auto !important;
 }
-
-/* Add a more prominent border */
-[data-radix-toast-root] {
-  border: 1px solid rgba(0, 0, 0, 0.1) !important;
-} 

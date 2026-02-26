@@ -25,7 +25,7 @@ import DuplicatesPanel from "@/app/transactions/components/DuplicatesPanel";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { showSuccessToast, showErrorToast } from "@/utils/toast-utils";
+import toast from "react-hot-toast";
 import ImportSummary from "@/app/transactions/components/ImportSummary";
 
 export default function TransactionsPage() {
@@ -125,12 +125,12 @@ export default function TransactionsPage() {
         // Update existing transaction
         const updatedTransaction = await updateTransaction(currentTransaction.id!, transaction);
         setTransactions(prev => prev.map(t => t.id === updatedTransaction.id ? updatedTransaction : t));
-        showSuccessToast("Transaction updated successfully");
+        toast.success("Transaction updated successfully");
       } else {
         // Create new transaction
         const newTransaction = await createTransaction(transaction as any);
         setTransactions(prev => [...prev, newTransaction]);
-        showSuccessToast("Transaction created successfully");
+        toast.success("Transaction created successfully");
       }
       setCurrentTransaction(null);
       setActiveTab("transactions"); // Switch back to transactions tab after adding/editing
@@ -138,7 +138,7 @@ export default function TransactionsPage() {
       console.error(err);
       const errorMessage = err instanceof Error ? err.message : "Failed to save transaction";
       setError(errorMessage);
-      showErrorToast(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
@@ -146,12 +146,12 @@ export default function TransactionsPage() {
     try {
       await deleteTransaction(id);
       setTransactions(prev => prev.filter(t => t.id !== id));
-      showSuccessToast("Transaction deleted successfully");
+      toast.success("Transaction deleted successfully");
     } catch (err) {
       console.error(err);
       const errorMessage = err instanceof Error ? err.message : "Failed to delete transaction";
       setError(errorMessage);
-      showErrorToast(errorMessage);
+      toast.error(errorMessage);
       throw err;
     }
   };
@@ -197,12 +197,12 @@ export default function TransactionsPage() {
             : transaction
         )
       );
-      showSuccessToast(`${transactionIds.length} transactions categorized successfully`);
+      toast.success(`${transactionIds.length} transactions categorized successfully`);
     } catch (err) {
       console.error(err);
       const errorMessage = err instanceof Error ? err.message : "Failed to categorize transactions";
       setError(errorMessage);
-      showErrorToast(errorMessage);
+      toast.error(errorMessage);
       throw err;
     }
   };
@@ -230,12 +230,12 @@ export default function TransactionsPage() {
           return transaction;
         })
       );
-      showSuccessToast(`Tags added to ${transactionIds.length} transactions successfully`);
+      toast.success(`Tags added to ${transactionIds.length} transactions successfully`);
     } catch (err) {
       console.error(err);
       const errorMessage = err instanceof Error ? err.message : "Failed to tag transactions";
       setError(errorMessage);
-      showErrorToast(errorMessage);
+      toast.error(errorMessage);
       throw err;
     }
   };
@@ -247,12 +247,12 @@ export default function TransactionsPage() {
       setTransactions(prevTransactions => 
         prevTransactions.filter(transaction => !transactionIds.includes(transaction.id as number))
       );
-      showSuccessToast(`${transactionIds.length} transactions deleted successfully`);
+      toast.success(`${transactionIds.length} transactions deleted successfully`);
     } catch (err) {
       console.error(err);
       const errorMessage = err instanceof Error ? err.message : "Failed to delete transactions";
       setError(errorMessage);
-      showErrorToast(errorMessage);
+      toast.error(errorMessage);
       throw err;
     }
   };
@@ -267,7 +267,7 @@ export default function TransactionsPage() {
       // Refresh the transactions to show the new suggestions
       await loadData();
       
-      showSuccessToast(
+      toast.success(
         `🎉 Bulk Keyword Categorization Complete!\n\n` +
         `📊 ${result.totalProcessed} transactions processed\n` +
         `✅ ${result.keywordMatched} matched by keywords\n` +
@@ -278,7 +278,7 @@ export default function TransactionsPage() {
       console.error(err);
       const errorMessage = err instanceof Error ? err.message : "Failed to run bulk keyword categorization";
       setError(errorMessage);
-      showErrorToast(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setBulkKeywordProcessing(false);
     }

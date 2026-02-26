@@ -12,7 +12,16 @@ type ExpenseDistributionChartProps = {
 };
 
 // Custom colors for the bar chart
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FF6B6B', '#6B66FF'];
+const COLORS = [
+  'hsl(var(--chart-1))',
+  'hsl(var(--chart-2))',
+  'hsl(var(--chart-3))',
+  'hsl(var(--chart-4))',
+  'hsl(var(--chart-5))',
+  'hsl(var(--chart-6))',
+  'hsl(var(--chart-7))',
+  'hsl(var(--chart-8))',
+];
 
 export default function ExpenseDistributionChart({ data }: ExpenseDistributionChartProps) {
   if (!data || data.length === 0) {

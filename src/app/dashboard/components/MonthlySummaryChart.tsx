@@ -46,9 +46,9 @@ export default function MonthlySummaryChart({ data }: MonthlySummaryChartProps) 
           <YAxis />
           <Tooltip formatter={safeFormatter} />
           <Legend />
-          <Bar dataKey="income" fill="#4CAF50" name="Income" />
-          <Bar dataKey="expenses" fill="#F44336" name="Expenses" />
-          <Bar dataKey="savings" fill="#2196F3" name="Savings" />
+          <Bar dataKey="income" fill="var(--success)" name="Income" />
+          <Bar dataKey="expenses" fill="var(--error)" name="Expenses" />
+          <Bar dataKey="savings" fill="var(--info)" name="Savings" />
         </BarChart>
       </ResponsiveContainer>
     </div>

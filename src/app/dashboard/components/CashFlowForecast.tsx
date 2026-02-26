@@ -242,29 +242,29 @@ export default function CashFlowForecast({ className = '' }: CashFlowForecastPro
                   value === 'expenses' ? 'Expenses' : 'Projected Balance'
                 }
               />
-              <Line 
-                type="monotone" 
-                dataKey="income" 
-                stroke="#10B981" 
+              <Line
+                type="monotone"
+                dataKey="income"
+                stroke="var(--success)"
                 strokeWidth={3}
                 name="income"
-                dot={{ fill: '#10B981' }}
+                dot={{ fill: 'var(--success)' }}
               />
-              <Line 
-                type="monotone" 
-                dataKey="expenses" 
-                stroke="#EF4444" 
+              <Line
+                type="monotone"
+                dataKey="expenses"
+                stroke="var(--error)"
                 strokeWidth={3}
                 name="expenses"
-                dot={{ fill: '#EF4444' }}
+                dot={{ fill: 'var(--error)' }}
               />
-              <Line 
-                type="monotone" 
-                dataKey="projectedBalance" 
-                stroke="#3B82F6" 
+              <Line
+                type="monotone"
+                dataKey="projectedBalance"
+                stroke="var(--info)"
                 strokeWidth={4}
                 name="projectedBalance"
-                dot={{ fill: '#3B82F6', strokeWidth: 2, r: 4 }}
+                dot={{ fill: 'var(--info)', strokeWidth: 2, r: 4 }}
               />
             </LineChart>
           </ResponsiveContainer>

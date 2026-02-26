@@ -194,7 +194,7 @@ export default function AIAnalysisPage() {
 
       const result = await response.json();
       setAnalysisResult(result);
-      toast.success('Analysis complete!');
+      toast.success('Analysis complete');
     } catch (error) {
       console.error('Failed to run AI analysis:', error);
       toast.error('AI analysis failed');

@@ -143,7 +143,7 @@ export function useApproveSuggestion() {
       queryClient.invalidateQueries({ queryKey: ['expense-plan-suggestions'] });
       queryClient.invalidateQueries({ queryKey: ['expense-plans'] });
       if (result.expensePlanId) {
-        toast.success('Expense plan created successfully!');
+        toast.success('Expense plan created successfully');
       } else {
         toast.success('Suggestion approved');
       }

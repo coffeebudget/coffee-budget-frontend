@@ -167,7 +167,7 @@ export default function PaymentReconciliationPage() {
         throw new Error("Failed to reconcile activity");
       }
 
-      toast.success("Activity reconciled successfully!");
+      toast.success("Activity reconciled successfully");
 
       // Refresh data
       if (selectedAccountId) {
@@ -213,7 +213,7 @@ export default function PaymentReconciliationPage() {
         throw new Error("Failed to unmatch activity");
       }
 
-      toast.success("Activity unmatched successfully!");
+      toast.success("Activity unmatched successfully");
 
       // Refresh data
       if (selectedAccountId) {

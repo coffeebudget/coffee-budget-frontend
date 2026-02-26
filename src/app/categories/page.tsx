@@ -91,7 +91,7 @@ export default function CategoriesPage() {
       
       // Remove the category from state
       setCategories(prevCategories => prevCategories.filter(category => category.id !== id));
-      toast.success(`${categoryName} has been deleted successfully`);
+      toast.success(`${categoryName} deleted successfully`);
     } catch (error) {
       console.error("Error deleting category:", error);
       toast.error("Failed to delete category");
@@ -118,7 +118,7 @@ export default function CategoriesPage() {
     try {
       const resetCategories = await resetCategoriesToDefaults(token);
       setCategories(resetCategories);
-      toast.success("Categories have been reset to defaults");
+      toast.success("Categories reset to defaults");
     } catch (error) {
       console.error("Error resetting categories:", error);
       toast.error("Failed to reset categories to defaults");

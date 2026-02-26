@@ -124,9 +124,9 @@ export default function CategoryForm({
         setNewKeyword("");
         setExcludeFromExpenseAnalytics(false);
         setAnalyticsExclusionReason("");
-        toast.success(`Category "${name}" has been created successfully`);
+        toast.success(`Category "${name}" created successfully`);
       } else {
-        toast.success(`Category "${name}" has been updated successfully`);
+        toast.success(`Category "${name}" updated successfully`);
       }
     } catch (err) {
       console.error("Error in handleSubmit:", err);

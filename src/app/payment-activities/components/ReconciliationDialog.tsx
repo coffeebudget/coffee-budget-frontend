@@ -132,7 +132,7 @@ export default function ReconciliationDialog({
         reconciliationConfidence: undefined, // Manual reconciliation doesn't have auto-confidence
       });
 
-      toast.success('Payment activity reconciled successfully!');
+      toast.success('Payment activity reconciled successfully');
       onReconciled();
       onOpenChange(false);
     } catch (err) {

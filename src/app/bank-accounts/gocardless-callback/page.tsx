@@ -158,7 +158,7 @@ function GocardlessCallbackContent() {
       if (isPopup) {
         window.close();
       } else {
-        toast.success('Bank accounts connected successfully!');
+        toast.success('Bank accounts connected successfully');
       }
       
     } catch (error) {

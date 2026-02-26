@@ -348,7 +348,7 @@ export default function GocardlessIntegrationDialog({
         }
       }
 
-      toast.success('GoCardless accounts successfully connected and balances synchronized!');
+      toast.success('GoCardless accounts connected and balances synchronized');
       onAccountsUpdated();
       onOpenChange(false);
     } catch (err) {

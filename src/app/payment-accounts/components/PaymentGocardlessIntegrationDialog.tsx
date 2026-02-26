@@ -245,7 +245,7 @@ export default function PaymentGocardlessIntegrationDialog({
         throw new Error(errorData.message || 'Failed to complete connection');
       }
 
-      toast.success('Payment account connected to GoCardless successfully!');
+      toast.success('Payment account connected to GoCardless successfully');
       onAccountsUpdated();
       closePopup();
       onOpenChange(false);

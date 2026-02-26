@@ -1,5 +1,9 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import { formatCurrency } from '@/utils/format';
+
+// Normalize non-breaking spaces for testing-library matching
+const fc = (amount: number) => formatCurrency(amount).replace(/\u00A0/g, ' ');
 
 // Mock next-auth
 jest.mock('next-auth/react', () => ({
@@ -52,8 +56,8 @@ describe('BudgetSummaryBar', () => {
     expect(screen.getByText('Entrate')).toBeInTheDocument();
     expect(screen.getByText('Obblighi')).toBeInTheDocument();
     expect(screen.getByText('Disponibile')).toBeInTheDocument();
-    // Available should be €2,000.00
-    expect(screen.getByText('€2,000.00')).toBeInTheDocument();
+    // Available should be 5000 - 3000 = 2000
+    expect(screen.getByText(fc(2000))).toBeInTheDocument();
   });
 
   it('should show deficit alert when available is negative', () => {
@@ -83,7 +87,7 @@ describe('BudgetSummaryBar', () => {
 
     render(<BudgetSummaryBar />);
 
-    const availableEl = screen.getByText('€2,000.00');
+    const availableEl = screen.getByText(fc(2000));
     expect(availableEl.className).toContain('text-green-600');
   });
 
@@ -99,8 +103,8 @@ describe('BudgetSummaryBar', () => {
 
     render(<BudgetSummaryBar />);
 
-    // -€1,000.00
-    const negativeEl = screen.getByText('-€1,000.00');
+    // Available: 2000 - 3000 = -1000
+    const negativeEl = screen.getByText(fc(-1000));
     expect(negativeEl.className).toContain('text-red-600');
   });
 
@@ -116,7 +120,7 @@ describe('BudgetSummaryBar', () => {
 
     render(<BudgetSummaryBar />);
 
-    const lowEl = screen.getByText('€200.00');
+    const lowEl = screen.getByText(fc(200));
     expect(lowEl.className).toContain('text-yellow-600');
   });
 });

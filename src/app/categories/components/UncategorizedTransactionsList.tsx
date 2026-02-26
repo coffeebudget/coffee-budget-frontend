@@ -113,7 +113,7 @@ export default function UncategorizedTransactionsList({
                   </div>
                 </div>
                 <Badge variant={transaction.type === 'expense' ? 'destructive' : 'default'}>
-                  ${parseFloat(transaction.amount.toString()).toFixed(2)}
+                  €{parseFloat(transaction.amount.toString()).toFixed(2)}
                 </Badge>
               </div>
             </div>

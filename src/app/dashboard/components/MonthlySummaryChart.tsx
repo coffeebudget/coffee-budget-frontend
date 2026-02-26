@@ -24,9 +24,9 @@ export default function MonthlySummaryChart({ data }: MonthlySummaryChartProps) 
 
   // Safe formatter for tooltip values
   const safeFormatter = (value: any) => {
-    if (value === undefined || value === null) return ['$0.00', ''];
+    if (value === undefined || value === null) return ['€0,00', ''];
     const numValue = typeof value === 'string' ? parseFloat(value) : value;
-    return !isNaN(numValue) ? [`$${numValue.toFixed(2)}`, ''] : ['$0.00', ''];
+    return !isNaN(numValue) ? [`€${numValue.toFixed(2)}`, ''] : ['€0,00', ''];
   };
 
   return (

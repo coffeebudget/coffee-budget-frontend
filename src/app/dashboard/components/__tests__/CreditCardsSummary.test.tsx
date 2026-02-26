@@ -1,5 +1,9 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import { formatCurrency } from '@/utils/format';
+
+// Normalize non-breaking spaces for testing-library matching
+const fc = (amount: number) => formatCurrency(amount).replace(/\u00A0/g, ' ');
 
 jest.mock('next-auth/react', () => ({
   useSession: () => ({
@@ -55,9 +59,9 @@ describe('CreditCardsSummary', () => {
     expect(screen.getByText('💳 Carte di Credito')).toBeInTheDocument();
     expect(screen.getByText('Impronta')).toBeInTheDocument();
     // Used: 1200 - 800 = 400
-    expect(screen.getByText(/€400.00/)).toBeInTheDocument();
-    expect(screen.getByText(/€1,200.00/)).toBeInTheDocument();
-    expect(screen.getByText(/€800.00/)).toBeInTheDocument();
+    expect(screen.getByText(fc(400), { exact: false })).toBeInTheDocument();
+    expect(screen.getByText(fc(1200), { exact: false })).toBeInTheDocument();
+    expect(screen.getByText(fc(800), { exact: false })).toBeInTheDocument();
     expect(screen.getByText('33%')).toBeInTheDocument();
   });
 

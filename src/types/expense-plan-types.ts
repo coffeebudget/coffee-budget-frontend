@@ -807,14 +807,7 @@ export function getDefaultPurposeForPlanType(planType: ExpensePlanType): Expense
   return 'sinking_fund';
 }
 
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
-}
+export { formatCurrency } from '@/utils/format';
 
 /**
  * Get the effective target amount for the next due date.

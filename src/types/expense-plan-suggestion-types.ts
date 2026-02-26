@@ -266,12 +266,7 @@ export function getStatusColor(status: SuggestionStatus): string {
   return colors[status] || 'bg-gray-100 text-gray-800';
 }
 
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('it-IT', {
-    style: 'currency',
-    currency: 'EUR',
-  }).format(amount);
-}
+export { formatCurrency } from '@/utils/format';
 
 export function getSuggestedPurposeLabel(purpose: ExpensePlanPurpose | null): string {
   if (!purpose) return 'Unknown';

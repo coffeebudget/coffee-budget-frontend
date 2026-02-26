@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { showErrorToast, showSuccessToast } from "@/utils/toast-utils";
+import { formatCurrency } from "@/utils/format";
 import {
   fetchExpensePlansWithStatus,
   fetchMonthlyDepositSummary,
@@ -202,9 +203,7 @@ export default function AIAnalysisPage() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(amount);
-  };
+  // formatCurrency imported at top of file
 
   const generatePromptPreview = () => {
     const { plansWithStatus, depositSummary, coverageSummary, longTermStatus } = planData;

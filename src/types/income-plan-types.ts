@@ -438,14 +438,7 @@ export function getStatusColor(status: IncomePlanStatus): string {
 // UTILITY FUNCTIONS
 // ═══════════════════════════════════════════════════════════════════════════
 
-export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('it-IT', {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
+export { formatCurrency } from '@/utils/format';
 
 export function getMonthlyAmounts(plan: IncomePlan): MonthlyAmounts {
   return {

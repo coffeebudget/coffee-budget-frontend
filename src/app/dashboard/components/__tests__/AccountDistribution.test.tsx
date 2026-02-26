@@ -1,5 +1,9 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { formatCurrency } from '@/utils/format';
+
+// Normalize non-breaking spaces for testing-library matching
+const fc = (amount: number) => formatCurrency(amount).replace(/\u00A0/g, ' ');
 
 jest.mock('next-auth/react', () => ({
   useSession: () => ({
@@ -101,7 +105,7 @@ describe('AccountDistribution', () => {
     render(<AccountDistribution />);
 
     // Total balance: 4462 + 10000 = 14462
-    expect(screen.getByText(/€14,462.00/)).toBeInTheDocument();
+    expect(screen.getByText(fc(14462), { exact: false })).toBeInTheDocument();
   });
 
   it('should display account rows', () => {

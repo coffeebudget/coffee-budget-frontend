@@ -227,7 +227,7 @@ export default function ExpensePlansPage() {
             className="gap-1.5"
           >
             <LayoutGrid className="h-4 w-4" />
-            Lista
+            List
           </Button>
           <Button
             variant={viewMode === "purpose" ? "secondary" : "ghost"}
@@ -236,7 +236,7 @@ export default function ExpensePlansPage() {
             className="gap-1.5"
           >
             <Layers className="h-4 w-4" />
-            Per Tipo
+            By Type
           </Button>
           <Button
             variant={viewMode === "account" ? "secondary" : "ghost"}
@@ -245,7 +245,7 @@ export default function ExpensePlansPage() {
             className="gap-1.5"
           >
             <Building2 className="h-4 w-4" />
-            Per Conto
+            By Account
           </Button>
         </div>
       </div>

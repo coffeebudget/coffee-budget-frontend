@@ -46,6 +46,7 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "react-hot-toast";
+import { formatAmount as formatAmountUtil, formatDate as formatDateUtil } from "@/utils/format";
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -148,19 +149,8 @@ export default function TransactionList({
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('it-IT', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    }).format(date);
-  };
-
-  const formatAmount = (amount: number | string) => {
-    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
-    return isNaN(numAmount) ? '0.00' : numAmount.toFixed(2);
-  };
+  const formatDate = formatDateUtil;
+  const formatAmount = formatAmountUtil;
 
   const getTagsForTransaction = (tagIds: number[] = []) => {
     return tags.filter(tag => tagIds.includes(tag.id));
@@ -469,7 +459,7 @@ export default function TransactionList({
                       </TableCell>
                       <TableCell>
                         <Badge variant={transaction.type === 'expense' ? 'destructive' : 'default'}>
-                          ${formatAmount(transaction.amount)}
+                          €{formatAmount(transaction.amount)}
                         </Badge>
                       </TableCell>
                       <TableCell>

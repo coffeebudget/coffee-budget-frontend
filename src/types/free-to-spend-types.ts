@@ -173,17 +173,7 @@ export interface FreeToSpendResponse {
 // HELPER FUNCTIONS
 // ═══════════════════════════════════════════════════════════════════════════
 
-/**
- * Format currency amount for display
- */
-export function formatCurrency(amount: number, locale = 'it-IT'): string {
-  return new Intl.NumberFormat(locale, {
-    style: 'currency',
-    currency: 'EUR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
+export { formatCurrency } from '@/utils/format';
 
 /**
  * Get percentage of income remaining

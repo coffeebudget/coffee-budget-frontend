@@ -25,15 +25,15 @@ export default function ExpenseDistributionChart({ data }: ExpenseDistributionCh
 
   // Safe formatter for tooltip values
   const safeFormatter = (value: any, name: string) => {
-    if (value === undefined || value === null) return ['$0.00', ''];
+    if (value === undefined || value === null) return ['€0,00', ''];
     const numValue = typeof value === 'string' ? parseFloat(value) : value;
-    
+
     if (name === 'amount') {
-      return !isNaN(numValue) ? [`$${numValue.toFixed(2)}`, 'Amount'] : ['$0.00', 'Amount'];
+      return !isNaN(numValue) ? [`€${numValue.toFixed(2)}`, 'Amount'] : ['€0,00', 'Amount'];
     } else if (name === 'percentage') {
       return !isNaN(numValue) ? [`${numValue.toFixed(1)}%`, 'Percentage'] : ['0.0%', 'Percentage'];
     }
-    
+
     return [value, name];
   };
 
@@ -79,7 +79,7 @@ export default function ExpenseDistributionChart({ data }: ExpenseDistributionCh
         <ul className="list-disc pl-5">
           {sortedData.map((item, index) => (
             <li key={index} className="text-xs">
-              {item.categoryName}: ${item.amount.toFixed(2)} ({item.percentage.toFixed(1)}%)
+              {item.categoryName}: €{item.amount.toFixed(2)} ({item.percentage.toFixed(1)}%)
             </li>
           ))}
         </ul>

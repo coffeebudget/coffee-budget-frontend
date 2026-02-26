@@ -3,6 +3,7 @@ import { renderWithProviders } from '../../../../test-utils';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import TransactionList from '../TransactionList';
 import { mockTransactions, mockCategories, mockTags, mockBankAccounts, mockCreditCards } from '../../../../test-utils/fixtures';
+import { formatAmount } from '@/utils/format';
 
 // Mock react-hot-toast
 jest.mock('react-hot-toast', () => ({
@@ -112,7 +113,7 @@ describe('TransactionList', () => {
       const firstTransaction = mockTransactions[0];
       
       expect(screen.getByText(firstTransaction.description)).toBeInTheDocument();
-      expect(screen.getByText(`$${firstTransaction.amount.toFixed(2)}`)).toBeInTheDocument();
+      expect(screen.getByText(`€${formatAmount(firstTransaction.amount)}`)).toBeInTheDocument();
       expect(screen.getAllByText(firstTransaction.status)[0]).toBeInTheDocument();
     });
 
@@ -127,8 +128,8 @@ describe('TransactionList', () => {
     it('should format amounts correctly', () => {
       renderWithProviders(<TransactionList {...defaultProps} />);
       
-      // Check that amounts are formatted with 2 decimal places
-      const amountCells = screen.getAllByText(/\d+\.\d{2}/);
+      // Check that amounts are formatted with 2 decimal places (comma separator for EUR)
+      const amountCells = screen.getAllByText(/€\d+[,.]?\d{2}/);
       expect(amountCells.length).toBeGreaterThan(0);
     });
   });

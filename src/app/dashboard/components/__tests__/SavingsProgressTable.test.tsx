@@ -1,5 +1,9 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { formatCurrency } from '@/utils/format';
+
+// Normalize non-breaking spaces for testing-library matching
+const fc = (amount: number) => formatCurrency(amount).replace(/\u00A0/g, ' ');
 
 jest.mock('next-auth/react', () => ({
   useSession: () => ({
@@ -106,8 +110,8 @@ describe('SavingsProgressTable', () => {
     // Total saved: (40% of 3000) + (60% of 10000) = 1200 + 6000 = 7200
     // Total target: 3000 + 10000 = 13000
     // Overall: 55%
-    expect(screen.getByText(/€7,200.00/)).toBeInTheDocument();
-    expect(screen.getByText(/€13,000.00/)).toBeInTheDocument();
+    expect(screen.getByText(fc(7200), { exact: false })).toBeInTheDocument();
+    expect(screen.getByText(fc(13000), { exact: false })).toBeInTheDocument();
     expect(screen.getByText(/55%/)).toBeInTheDocument();
   });
 
@@ -117,9 +121,9 @@ describe('SavingsProgressTable', () => {
     render(<SavingsProgressTable />);
 
     // Vacanze: saved = 40% of 3000 = 1200
-    expect(screen.getByText('€1,200.00')).toBeInTheDocument();
+    expect(screen.getByText(fc(1200), { exact: false })).toBeInTheDocument();
     // Emergency Fund: saved = 60% of 10000 = 6000
-    expect(screen.getByText('€6,000.00')).toBeInTheDocument();
+    expect(screen.getByText(fc(6000), { exact: false })).toBeInTheDocument();
   });
 
   it('should show funding status badges', () => {

@@ -148,7 +148,7 @@ export default function ImportSummary({
                             <td className="px-4 py-2 text-sm">{transaction.description}</td>
                             <td className="px-4 py-2 text-sm font-medium" 
                                 style={{ color: transaction.type === 'expense' ? '#ef4444' : '#10b981' }}>
-                              ${parseFloat(transaction.amount.toString()).toFixed(2)}
+                              €{parseFloat(transaction.amount.toString()).toFixed(2)}
                             </td>
                             <td className="px-4 py-2 text-sm">
                               <div className="relative group">

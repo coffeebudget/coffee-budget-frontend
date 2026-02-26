@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { formatCurrency as formatCurrencyUtil, formatDate as formatDateUtil } from "@/utils/format";
 import { usePaymentAccounts } from "@/hooks/usePaymentAccounts";
 import { usePaymentActivities } from "@/hooks/usePaymentActivities";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -227,15 +228,10 @@ export default function PaymentReconciliationPage() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "EUR",
-    }).format(Math.abs(amount));
-  };
+  const formatCurrency = (amount: number) => formatCurrencyUtil(Math.abs(amount));
 
   const formatDate = (date: string | Date) => {
-    return new Date(date).toLocaleDateString("en-US", {
+    return new Date(date).toLocaleDateString("en-GB", {
       year: "numeric",
       month: "short",
       day: "numeric",

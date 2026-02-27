@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { Download, Loader2 } from 'lucide-react';
+import { Download, Loader2, Settings } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { exportAccountData } from '@/lib/api/users';
+import PageLayout from '@/components/layout/PageLayout';
 import DeleteAccountDialog from './components/DeleteAccountDialog';
 
 export default function SettingsPage() {
@@ -47,9 +48,12 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Account Settings</h1>
-
+    <PageLayout
+      title="Account Settings"
+      description="Manage your account, export data, or delete your account."
+      icon={Settings}
+    >
+      <div className="space-y-6">
       <Card>
         <CardHeader>
           <h2 className="text-lg font-semibold">Account Information</h2>
@@ -119,6 +123,7 @@ export default function SettingsPage() {
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
       />
-    </div>
+      </div>
+    </PageLayout>
   );
 }

@@ -18,6 +18,7 @@ import {
   MessageSquare
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import PageLayout from "@/components/layout/PageLayout";
 import toast from "react-hot-toast";
 import { formatCurrency } from "@/utils/format";
 import {
@@ -316,30 +317,16 @@ Do not use code fences or additional text, only pure JSON.
   const { plansWithStatus, depositSummary, coverageSummary, longTermStatus } = planData;
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.back()}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
+    <PageLayout
+      title="Expense Plan Analysis"
+      description="Personalized advice to optimize your financial plans."
+      icon={Brain}
+      actions={
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={() => router.back()}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-700 to-blue-700 bg-clip-text text-transparent">
-              Expense Plan Analysis
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Personalized advice to optimize your financial plans
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
           <Button
             variant="outline"
             size="sm"
@@ -349,8 +336,9 @@ Do not use code fences or additional text, only pure JSON.
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
           </Button>
         </div>
-      </div>
-
+      }
+    >
+      <div className="space-y-6">
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
@@ -701,6 +689,7 @@ Do not use code fences or additional text, only pure JSON.
           )}
         </>
       )}
-    </div>
+      </div>
+    </PageLayout>
   );
 }

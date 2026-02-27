@@ -38,6 +38,7 @@ import ExpensePlanCard from "./components/ExpensePlanCard";
 import ExpensePlanFormDialog from "./components/ExpensePlanFormDialog";
 import AdjustmentSuggestionModal from "./components/AdjustmentSuggestionModal";
 import ExpensePlansByAccount from "./components/ExpensePlansByAccount";
+import PageLayout from "@/components/layout/PageLayout";
 
 export default function ExpensePlansPage() {
   const router = useRouter();
@@ -124,134 +125,126 @@ export default function ExpensePlansPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="p-4">
-      {/* Page Header */}
-      <div className="max-w-7xl mx-auto mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <PiggyBank className="h-8 w-8 text-green-600" />
-          <h1 className="text-3xl font-bold text-gray-900">Expense Plans</h1>
-        </div>
-        <p className="text-gray-600">
-          Virtual envelopes for tracking and saving towards future expenses
-        </p>
-      </div>
+    <>
+      <PageLayout
+        title="Expense Plans"
+        description="Virtual envelopes for tracking and saving towards future expenses."
+        icon={PiggyBank}
+      >
+        {/* Summary Cards */}
+        <div className="mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Monthly Deposit Card */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-gray-500">
+                  Monthly Deposits Needed
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {summaryLoading ? (
+                  <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                ) : (
+                  <div className="text-2xl font-bold text-green-600">
+                    {formatCurrency(summary?.totalMonthlyDeposit || 0)}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-      {/* Summary Cards */}
-      <div className="max-w-7xl mx-auto mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Monthly Deposit Card */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">
-                Monthly Deposits Needed
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {summaryLoading ? (
-                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-              ) : (
-                <div className="text-2xl font-bold text-green-600">
-                  {formatCurrency(summary?.totalMonthlyDeposit || 0)}
+            {/* Active Plans Card */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-gray-500">
+                  Active Plans
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-blue-600">
+                  {summary?.planCount || 0}
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Active Plans Card */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">
-                Active Plans
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">
-                {summary?.planCount || 0}
-              </div>
-            </CardContent>
-          </Card>
+            {/* Fully Funded Card */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-gray-500 flex items-center gap-1">
+                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                  Fully Funded
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">
+                  {summary?.fullyFundedCount || 0}
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Fully Funded Card */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500 flex items-center gap-1">
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
-                Fully Funded
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">
-                {summary?.fullyFundedCount || 0}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Behind Schedule Card */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500 flex items-center gap-1">
-                <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                Behind Schedule
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">
-                {summary?.behindScheduleCount || 0}
-              </div>
-            </CardContent>
-          </Card>
+            {/* Behind Schedule Card */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-gray-500 flex items-center gap-1">
+                  <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                  Behind Schedule
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-yellow-600">
+                  {summary?.behindScheduleCount || 0}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </div>
 
-      {/* Action Buttons */}
-      <div className="max-w-7xl mx-auto mb-6 flex flex-wrap gap-2">
-        <Button onClick={handleCreatePlan} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Create Plan
-        </Button>
-        <Button
-          variant="outline"
-          onClick={() => router.push("/expense-plans/wizard")}
-          className="gap-2 border-green-300 text-green-700 hover:bg-green-50"
-        >
-          <Wand2 className="h-4 w-4" />
-          Create with Wizard
-        </Button>
-        <div className="flex-1" />
-        <div className="flex gap-1 border rounded-lg p-1 bg-gray-50">
-          <Button
-            variant={viewMode === "flat" ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => setViewMode("flat")}
-            className="gap-1.5"
-          >
-            <LayoutGrid className="h-4 w-4" />
-            List
+        {/* Action Buttons */}
+        <div className="mb-6 flex flex-wrap gap-2">
+          <Button onClick={handleCreatePlan} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Create Plan
           </Button>
           <Button
-            variant={viewMode === "purpose" ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => setViewMode("purpose")}
-            className="gap-1.5"
+            variant="outline"
+            onClick={() => router.push("/expense-plans/wizard")}
+            className="gap-2 border-green-300 text-green-700 hover:bg-green-50"
           >
-            <Layers className="h-4 w-4" />
-            By Type
+            <Wand2 className="h-4 w-4" />
+            Create with Wizard
           </Button>
-          <Button
-            variant={viewMode === "account" ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => setViewMode("account")}
-            className="gap-1.5"
-          >
-            <Building2 className="h-4 w-4" />
-            By Account
-          </Button>
+          <div className="flex-1" />
+          <div className="flex gap-1 border rounded-lg p-1 bg-gray-50">
+            <Button
+              variant={viewMode === "flat" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("flat")}
+              className="gap-1.5"
+            >
+              <LayoutGrid className="h-4 w-4" />
+              List
+            </Button>
+            <Button
+              variant={viewMode === "purpose" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("purpose")}
+              className="gap-1.5"
+            >
+              <Layers className="h-4 w-4" />
+              By Type
+            </Button>
+            <Button
+              variant={viewMode === "account" ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("account")}
+              className="gap-1.5"
+            >
+              <Building2 className="h-4 w-4" />
+              By Account
+            </Button>
+          </div>
         </div>
-      </div>
 
-      {/* Tabs & Content */}
-      <div className="max-w-7xl mx-auto">
+        {/* Tabs & Content */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ExpensePlanStatus | "all")}>
           <TabsList className="mb-4">
             <TabsTrigger value="all">All</TabsTrigger>
@@ -261,116 +254,115 @@ export default function ExpensePlansPage() {
           </TabsList>
 
           <TabsContent value={activeTab} forceMount>
-              {isLoading ? (
-                <div className="flex justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-                </div>
-              ) : error ? (
-                <Card className="p-6 text-center text-red-500">
-                  Failed to load expense plans. Please try again.
-                </Card>
-              ) : filteredPlans.length === 0 ? (
-                <Card className="p-6 text-center text-gray-500">
-                  <PiggyBank className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p className="mb-4">No expense plans found.</p>
-                  <Button onClick={handleCreatePlan} variant="outline">
-                    Create your first plan
-                  </Button>
-                </Card>
-              ) : viewMode === "account" ? (
-                <ExpensePlansByAccount
-                  plans={filteredPlans}
-                  onEdit={handleEditPlan}
-                  onDelete={handleDeletePlan}
-                  onReviewAdjustment={handleReviewAdjustment}
-                  accountCoverageMap={accountCoverageMap}
-                />
-              ) : viewMode === "purpose" ? (
-                <div className="space-y-8">
-                  {/* Sinking Funds Section */}
-                  {sinkingFunds.length > 0 && (
-                    <div>
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl">{getExpensePlanPurposeIcon("sinking_fund")}</span>
-                          <h2 className="text-xl font-semibold text-gray-900">Sinking Funds</h2>
-                          <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                            {sinkingFunds.length} plan{sinkingFunds.length !== 1 ? "s" : ""}
-                          </Badge>
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          Total: <span className="font-medium text-blue-600">{formatCurrency(sinkingFundsTotal)}/mo</span>
-                        </div>
+            {isLoading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+              </div>
+            ) : error ? (
+              <Card className="p-6 text-center text-red-500">
+                Failed to load expense plans. Please try again.
+              </Card>
+            ) : filteredPlans.length === 0 ? (
+              <Card className="p-6 text-center text-gray-500">
+                <PiggyBank className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p className="mb-4">No expense plans found.</p>
+                <Button onClick={handleCreatePlan} variant="outline">
+                  Create your first plan
+                </Button>
+              </Card>
+            ) : viewMode === "account" ? (
+              <ExpensePlansByAccount
+                plans={filteredPlans}
+                onEdit={handleEditPlan}
+                onDelete={handleDeletePlan}
+                onReviewAdjustment={handleReviewAdjustment}
+                accountCoverageMap={accountCoverageMap}
+              />
+            ) : viewMode === "purpose" ? (
+              <div className="space-y-8">
+                {/* Sinking Funds Section */}
+                {sinkingFunds.length > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">{getExpensePlanPurposeIcon("sinking_fund")}</span>
+                        <h2 className="text-xl font-semibold text-gray-900">Sinking Funds</h2>
+                        <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                          {sinkingFunds.length} plan{sinkingFunds.length !== 1 ? "s" : ""}
+                        </Badge>
                       </div>
-                      <p className="text-sm text-gray-500 mb-4">
-                        Accumulating money for predictable future expenses
-                      </p>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {sinkingFunds.map((plan) => (
-                          <ExpensePlanCard
-                            key={plan.id}
-                            plan={plan}
-                            onEdit={handleEditPlan}
-                            onDelete={handleDeletePlan}
-                            onReviewAdjustment={handleReviewAdjustment}
-                            accountCoverage={plan.paymentAccountId ? accountCoverageMap.get(plan.paymentAccountId) : null}
-                          />
-                        ))}
+                      <div className="text-sm text-gray-500">
+                        Total: <span className="font-medium text-blue-600">{formatCurrency(sinkingFundsTotal)}/mo</span>
                       </div>
                     </div>
-                  )}
+                    <p className="text-sm text-gray-500 mb-4">
+                      Accumulating money for predictable future expenses
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {sinkingFunds.map((plan) => (
+                        <ExpensePlanCard
+                          key={plan.id}
+                          plan={plan}
+                          onEdit={handleEditPlan}
+                          onDelete={handleDeletePlan}
+                          onReviewAdjustment={handleReviewAdjustment}
+                          accountCoverage={plan.paymentAccountId ? accountCoverageMap.get(plan.paymentAccountId) : null}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-                  {/* Spending Budgets Section */}
-                  {spendingBudgets.length > 0 && (
-                    <div>
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl">{getExpensePlanPurposeIcon("spending_budget")}</span>
-                          <h2 className="text-xl font-semibold text-gray-900">Spending Budgets</h2>
-                          <Badge variant="secondary" className="bg-purple-100 text-purple-800">
-                            {spendingBudgets.length} plan{spendingBudgets.length !== 1 ? "s" : ""}
-                          </Badge>
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          Total: <span className="font-medium text-purple-600">{formatCurrency(spendingBudgetsTotal)}/mo</span>
-                        </div>
+                {/* Spending Budgets Section */}
+                {spendingBudgets.length > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">{getExpensePlanPurposeIcon("spending_budget")}</span>
+                        <h2 className="text-xl font-semibold text-gray-900">Spending Budgets</h2>
+                        <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+                          {spendingBudgets.length} plan{spendingBudgets.length !== 1 ? "s" : ""}
+                        </Badge>
                       </div>
-                      <p className="text-sm text-gray-500 mb-4">
-                        Tracking and limiting spending per category
-                      </p>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {spendingBudgets.map((plan) => (
-                          <ExpensePlanCard
-                            key={plan.id}
-                            plan={plan}
-                            onEdit={handleEditPlan}
-                            onDelete={handleDeletePlan}
-                            onReviewAdjustment={handleReviewAdjustment}
-                            accountCoverage={plan.paymentAccountId ? accountCoverageMap.get(plan.paymentAccountId) : null}
-                          />
-                        ))}
+                      <div className="text-sm text-gray-500">
+                        Total: <span className="font-medium text-purple-600">{formatCurrency(spendingBudgetsTotal)}/mo</span>
                       </div>
                     </div>
-                  )}
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredPlans.map((plan) => (
-                    <ExpensePlanCard
-                      key={plan.id}
-                      plan={plan}
-                      onEdit={handleEditPlan}
-                      onDelete={handleDeletePlan}
-                      onReviewAdjustment={handleReviewAdjustment}
-                      accountCoverage={plan.paymentAccountId ? accountCoverageMap.get(plan.paymentAccountId) : null}
-                    />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
+                    <p className="text-sm text-gray-500 mb-4">
+                      Tracking and limiting spending per category
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {spendingBudgets.map((plan) => (
+                        <ExpensePlanCard
+                          key={plan.id}
+                          plan={plan}
+                          onEdit={handleEditPlan}
+                          onDelete={handleDeletePlan}
+                          onReviewAdjustment={handleReviewAdjustment}
+                          accountCoverage={plan.paymentAccountId ? accountCoverageMap.get(plan.paymentAccountId) : null}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredPlans.map((plan) => (
+                  <ExpensePlanCard
+                    key={plan.id}
+                    plan={plan}
+                    onEdit={handleEditPlan}
+                    onDelete={handleDeletePlan}
+                    onReviewAdjustment={handleReviewAdjustment}
+                    accountCoverage={plan.paymentAccountId ? accountCoverageMap.get(plan.paymentAccountId) : null}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
-      </div>
-      </div>
+      </PageLayout>
 
       {/* Form Dialog */}
       <ExpensePlanFormDialog
@@ -387,6 +379,6 @@ export default function ExpensePlansPage() {
         plan={adjustmentPlan}
         onComplete={handleAdjustmentComplete}
       />
-    </div>
+    </>
   );
 }

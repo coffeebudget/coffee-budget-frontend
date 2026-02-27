@@ -33,6 +33,7 @@ import {
 import IncomePlanCard from "./components/IncomePlanCard";
 import IncomePlanFormDialog from "./components/IncomePlanFormDialog";
 import TransferSuggestionsSection from "./components/TransferSuggestionsSection";
+import PageLayout from "@/components/layout/PageLayout";
 
 export default function IncomePlansPage() {
   const { data: session } = useSession();
@@ -91,21 +92,14 @@ export default function IncomePlansPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <div className="p-4">
-        {/* Page Header */}
-        <div className="max-w-7xl mx-auto mb-6">
-          <div className="flex items-center gap-2 mb-2">
-            <Wallet className="h-8 w-8 text-green-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Income Plans</h1>
-          </div>
-          <p className="text-gray-600">
-            Track your expected income sources and plan your budget accordingly
-          </p>
-        </div>
-
+    <>
+      <PageLayout
+        title="Income Plans"
+        description="Track your expected income sources and plan your budget accordingly."
+        icon={Wallet}
+      >
         {/* Summary Cards */}
-        <div className="max-w-7xl mx-auto mb-6">
+        <div className="mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* This Month Income Card */}
             <Card>
@@ -191,7 +185,7 @@ export default function IncomePlansPage() {
 
         {/* Annual Overview */}
         {!annualLoading && annualSummary && (
-          <div className="max-w-7xl mx-auto mb-6">
+          <div className="mb-6">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-gray-700">
@@ -274,7 +268,7 @@ export default function IncomePlansPage() {
         <TransferSuggestionsSection />
 
         {/* Action Buttons */}
-        <div className="max-w-7xl mx-auto mb-6">
+        <div className="mb-6">
           <Button onClick={handleCreatePlan} className="gap-2">
             <Plus className="h-4 w-4" />
             Create Income Plan
@@ -282,138 +276,136 @@ export default function IncomePlansPage() {
         </div>
 
         {/* Tabs & Content */}
-        <div className="max-w-7xl mx-auto">
-          <Tabs
-            value={activeTab}
-            onValueChange={(v) => setActiveTab(v as IncomePlanStatus | "all")}
-          >
-            <TabsList className="mb-4">
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="active">Active</TabsTrigger>
-              <TabsTrigger value="paused">Paused</TabsTrigger>
-              <TabsTrigger value="archived">Archived</TabsTrigger>
-            </TabsList>
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as IncomePlanStatus | "all")}
+        >
+          <TabsList className="mb-4">
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="active">Active</TabsTrigger>
+            <TabsTrigger value="paused">Paused</TabsTrigger>
+            <TabsTrigger value="archived">Archived</TabsTrigger>
+          </TabsList>
 
-            <TabsContent value={activeTab} forceMount>
-              {isLoading ? (
-                <div className="flex justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-                </div>
-              ) : error ? (
-                <Card className="p-6 text-center text-red-500">
-                  Failed to load income plans. Please try again.
-                </Card>
-              ) : filteredPlans.length === 0 ? (
-                <Card className="p-6 text-center text-gray-500">
-                  <Wallet className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p className="mb-4">No income plans found.</p>
-                  <Button onClick={handleCreatePlan} variant="outline">
-                    Create your first income plan
-                  </Button>
-                </Card>
-              ) : (
-                <div className="space-y-8">
-                  {/* Guaranteed Income Section */}
-                  {guaranteedPlans.length > 0 && (
-                    <div>
-                      <div className="flex items-center gap-2 mb-4">
-                        <CheckCircle2 className="h-5 w-5 text-green-500" />
-                        <h2 className="text-xl font-semibold text-gray-900">
-                          Guaranteed Income
-                        </h2>
-                        <Badge
-                          variant="secondary"
-                          className="bg-green-100 text-green-800"
-                        >
-                          {guaranteedPlans.length} plan
-                          {guaranteedPlans.length !== 1 ? "s" : ""}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-gray-500 mb-4">
-                        Always included in budget calculations
-                      </p>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {guaranteedPlans.map((plan) => (
-                          <IncomePlanCard
-                            key={plan.id}
-                            plan={plan}
-                            onEdit={handleEditPlan}
-                            onDelete={handleDeletePlan}
-                          />
-                        ))}
-                      </div>
+          <TabsContent value={activeTab} forceMount>
+            {isLoading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+              </div>
+            ) : error ? (
+              <Card className="p-6 text-center text-red-500">
+                Failed to load income plans. Please try again.
+              </Card>
+            ) : filteredPlans.length === 0 ? (
+              <Card className="p-6 text-center text-gray-500">
+                <Wallet className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p className="mb-4">No income plans found.</p>
+                <Button onClick={handleCreatePlan} variant="outline">
+                  Create your first income plan
+                </Button>
+              </Card>
+            ) : (
+              <div className="space-y-8">
+                {/* Guaranteed Income Section */}
+                {guaranteedPlans.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-4">
+                      <CheckCircle2 className="h-5 w-5 text-green-500" />
+                      <h2 className="text-xl font-semibold text-gray-900">
+                        Guaranteed Income
+                      </h2>
+                      <Badge
+                        variant="secondary"
+                        className="bg-green-100 text-green-800"
+                      >
+                        {guaranteedPlans.length} plan
+                        {guaranteedPlans.length !== 1 ? "s" : ""}
+                      </Badge>
                     </div>
-                  )}
+                    <p className="text-sm text-gray-500 mb-4">
+                      Always included in budget calculations
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {guaranteedPlans.map((plan) => (
+                        <IncomePlanCard
+                          key={plan.id}
+                          plan={plan}
+                          onEdit={handleEditPlan}
+                          onDelete={handleDeletePlan}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-                  {/* Expected Income Section */}
-                  {expectedPlans.length > 0 && (
-                    <div>
-                      <div className="flex items-center gap-2 mb-4">
-                        <AlertCircle className="h-5 w-5 text-yellow-500" />
-                        <h2 className="text-xl font-semibold text-gray-900">
-                          Expected Income
-                        </h2>
-                        <Badge
-                          variant="secondary"
-                          className="bg-yellow-100 text-yellow-800"
-                        >
-                          {expectedPlans.length} plan
-                          {expectedPlans.length !== 1 ? "s" : ""}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-gray-500 mb-4">
-                        Included with a warning indicator
-                      </p>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {expectedPlans.map((plan) => (
-                          <IncomePlanCard
-                            key={plan.id}
-                            plan={plan}
-                            onEdit={handleEditPlan}
-                            onDelete={handleDeletePlan}
-                          />
-                        ))}
-                      </div>
+                {/* Expected Income Section */}
+                {expectedPlans.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-4">
+                      <AlertCircle className="h-5 w-5 text-yellow-500" />
+                      <h2 className="text-xl font-semibold text-gray-900">
+                        Expected Income
+                      </h2>
+                      <Badge
+                        variant="secondary"
+                        className="bg-yellow-100 text-yellow-800"
+                      >
+                        {expectedPlans.length} plan
+                        {expectedPlans.length !== 1 ? "s" : ""}
+                      </Badge>
                     </div>
-                  )}
+                    <p className="text-sm text-gray-500 mb-4">
+                      Included with a warning indicator
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {expectedPlans.map((plan) => (
+                        <IncomePlanCard
+                          key={plan.id}
+                          plan={plan}
+                          onEdit={handleEditPlan}
+                          onDelete={handleDeletePlan}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-                  {/* Uncertain Income Section */}
-                  {uncertainPlans.length > 0 && (
-                    <div>
-                      <div className="flex items-center gap-2 mb-4">
-                        <HelpCircle className="h-5 w-5 text-gray-400" />
-                        <h2 className="text-xl font-semibold text-gray-900">
-                          Uncertain Income
-                        </h2>
-                        <Badge
-                          variant="secondary"
-                          className="bg-gray-100 text-gray-800"
-                        >
-                          {uncertainPlans.length} plan
-                          {uncertainPlans.length !== 1 ? "s" : ""}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-gray-500 mb-4">
-                        Excluded from budget (bonus if received)
-                      </p>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {uncertainPlans.map((plan) => (
-                          <IncomePlanCard
-                            key={plan.id}
-                            plan={plan}
-                            onEdit={handleEditPlan}
-                            onDelete={handleDeletePlan}
-                          />
-                        ))}
-                      </div>
+                {/* Uncertain Income Section */}
+                {uncertainPlans.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-4">
+                      <HelpCircle className="h-5 w-5 text-gray-400" />
+                      <h2 className="text-xl font-semibold text-gray-900">
+                        Uncertain Income
+                      </h2>
+                      <Badge
+                        variant="secondary"
+                        className="bg-gray-100 text-gray-800"
+                      >
+                        {uncertainPlans.length} plan
+                        {uncertainPlans.length !== 1 ? "s" : ""}
+                      </Badge>
                     </div>
-                  )}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </div>
-      </div>
+                    <p className="text-sm text-gray-500 mb-4">
+                      Excluded from budget (bonus if received)
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {uncertainPlans.map((plan) => (
+                        <IncomePlanCard
+                          key={plan.id}
+                          plan={plan}
+                          onEdit={handleEditPlan}
+                          onDelete={handleDeletePlan}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </PageLayout>
 
       {/* Form Dialog */}
       <IncomePlanFormDialog
@@ -422,6 +414,6 @@ export default function IncomePlansPage() {
         plan={editingPlan}
         onComplete={handleFormComplete}
       />
-    </div>
+    </>
   );
 }

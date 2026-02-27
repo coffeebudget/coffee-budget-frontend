@@ -19,6 +19,7 @@ import {
   useBulkRejectSuggestions,
   useDeleteSuggestion,
 } from '@/hooks/useExpensePlanSuggestions';
+import PageLayout from '@/components/layout/PageLayout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -199,17 +200,11 @@ export default function ExpensePlanSuggestionsPage() {
     deleteMutation.isPending;
 
   return (
-    <div className="container mx-auto p-4 max-w-6xl">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-            Expense Plan Suggestions
-          </h1>
-          <p className="text-gray-600 mt-1">
-            AI-detected recurring expenses that can become expense plans
-          </p>
-        </div>
+    <PageLayout
+      title="Expense Plan Suggestions"
+      description="AI-detected recurring expenses that can become expense plans."
+      icon={Sparkles}
+      actions={
         <div className="flex gap-2">
           <Button
             variant="outline"
@@ -231,8 +226,8 @@ export default function ExpensePlanSuggestionsPage() {
             Analyze Transactions
           </Button>
         </div>
-      </div>
-
+      }
+    >
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         <SummaryCard
@@ -438,7 +433,7 @@ export default function ExpensePlanSuggestionsPage() {
         }}
         isLoading={approveMutation.isPending || rejectMutation.isPending}
       />
-    </div>
+    </PageLayout>
   );
 }
 

@@ -21,6 +21,7 @@ import TransactionFilters from "@/components/common/TransactionFilters";
 import { Transaction, Category, Tag, BankAccount, CreditCard } from "@/utils/types";
 import ImportTransactionsForm from "@/app/transactions/components/ImportTransactionsForm";
 import { Loader2, ReceiptIcon, PlusCircle, Upload, X, Brain, Copy } from "lucide-react";
+import PageLayout from "@/components/layout/PageLayout";
 import DuplicatesPanel from "@/app/transactions/components/DuplicatesPanel";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -293,152 +294,142 @@ export default function TransactionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      {/* Page Header */}
-      <div className="max-w-7xl mx-auto mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <ReceiptIcon className="h-8 w-8 text-blue-500" />
-          <h1 className="text-3xl font-bold text-gray-800">Transactions</h1>
+    <PageLayout
+      title="Transactions"
+      description="Manage your financial transactions, categorize them, and keep track of your spending."
+      icon={ReceiptIcon}
+    >
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="flex justify-between items-center mb-4">
+          <TabsList>
+            <TabsTrigger value="transactions" className="flex items-center gap-1">
+              <ReceiptIcon className="h-4 w-4" />
+              Transactions
+            </TabsTrigger>
+            <TabsTrigger value="add" className="flex items-center gap-1">
+              <PlusCircle className="h-4 w-4" />
+              {currentTransaction ? "Edit Transaction" : "Add Transaction"}
+            </TabsTrigger>
+            <TabsTrigger value="import" className="flex items-center gap-1">
+              <Upload className="h-4 w-4" />
+              Import
+            </TabsTrigger>
+            <TabsTrigger value="duplicates" className="flex items-center gap-1">
+              <Copy className="h-4 w-4" />
+              Duplicates
+            </TabsTrigger>
+          </TabsList>
+
+          {currentTransaction && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCancelEdit}
+              className="flex items-center gap-1"
+            >
+              <X className="h-4 w-4" />
+              Cancel Edit
+            </Button>
+          )}
         </div>
-        <p className="text-gray-600 max-w-3xl">
-          Manage your financial transactions, categorize them, and keep track of your spending.
-        </p>
-      </div>
-      
-      {/* Main Content with Tabs */}
-      <div className="max-w-7xl mx-auto">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="flex justify-between items-center mb-4">
-            <TabsList>
-              <TabsTrigger value="transactions" className="flex items-center gap-1">
-                <ReceiptIcon className="h-4 w-4" />
-                Transactions
-              </TabsTrigger>
-              <TabsTrigger value="add" className="flex items-center gap-1">
-                <PlusCircle className="h-4 w-4" />
-                {currentTransaction ? "Edit Transaction" : "Add Transaction"}
-              </TabsTrigger>
-              <TabsTrigger value="import" className="flex items-center gap-1">
-                <Upload className="h-4 w-4" />
-                Import
-              </TabsTrigger>
-              <TabsTrigger value="duplicates" className="flex items-center gap-1">
-                <Copy className="h-4 w-4" />
-                Duplicates
-              </TabsTrigger>
-            </TabsList>
-            
-            {currentTransaction && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleCancelEdit}
-                className="flex items-center gap-1"
-              >
-                <X className="h-4 w-4" />
-                Cancel Edit
-              </Button>
-            )}
+
+        <TabsContent value="transactions" className="mt-0">
+          {/* Import Summary (conditionally rendered) */}
+          {showImportSummary && (
+            <div className="mb-6">
+              <ImportSummary
+                importedCount={importedCount}
+                categories={categories}
+                onClose={() => setShowImportSummary(false)}
+              />
+            </div>
+          )}
+
+          {/* Transaction Filters */}
+          <TransactionFilters
+            filters={filters}
+            categories={categories}
+            tags={tags}
+            bankAccounts={bankAccounts}
+            creditCards={creditCards}
+            onFilterChange={handleFilterChange}
+            onApplyFilters={applyFilters}
+            showOrderOptions={true}
+          />
+
+          {/* Bulk Keyword Categorization */}
+          <div className="mb-4">
+            <Button
+              onClick={handleBulkKeywordCategorize}
+              disabled={bulkKeywordProcessing}
+              className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700"
+            >
+              {bulkKeywordProcessing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Brain className="h-4 w-4" />
+              )}
+              {bulkKeywordProcessing ? 'Processing...' : 'Keyword Categorize All Uncategorized'}
+            </Button>
+            <p className="text-sm text-gray-600 mt-1">
+              Smart categorization using keyword matching only. Free and fast!
+            </p>
           </div>
-          
-          <TabsContent value="transactions" className="mt-0">
-            {/* Import Summary (conditionally rendered) */}
-            {showImportSummary && (
-              <div className="mb-6">
-                <ImportSummary 
-                  importedCount={importedCount}
-                  categories={categories}
-                  onClose={() => setShowImportSummary(false)}
-                />
-              </div>
-            )}
-          
-            {/* Transaction Filters */}
-            <TransactionFilters
-              filters={filters}
+
+          {loading ? (
+            <div className="flex items-center justify-center h-32">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+              <span className="ml-2 text-gray-600">Loading transactions...</span>
+            </div>
+          ) : (
+            <TransactionList
+              transactions={transactions}
               categories={categories}
               tags={tags}
               bankAccounts={bankAccounts}
               creditCards={creditCards}
-              onFilterChange={handleFilterChange}
-              onApplyFilters={applyFilters}
-              showOrderOptions={true}
+              onDeleteTransaction={handleDeleteTransaction}
+              onEditTransaction={handleEditTransaction}
+              onBulkCategorize={handleBulkCategorizeTransactions as any}
+              onBulkTag={handleBulkTagTransactions as any}
+              onBulkDelete={handleBulkDeleteTransactions as any}
             />
-            
-            {/* Bulk Keyword Categorization */}
-            <div className="mb-4">
-              <Button
-                onClick={handleBulkKeywordCategorize}
-                disabled={bulkKeywordProcessing}
-                className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700"
-              >
-                {bulkKeywordProcessing ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Brain className="h-4 w-4" />
-                )}
-                {bulkKeywordProcessing ? 'Processing...' : 'Keyword Categorize All Uncategorized'}
-              </Button>
-              <p className="text-sm text-gray-600 mt-1">
-                Smart categorization using keyword matching only. Free and fast!
-              </p>
-            </div>
-            
-            {loading ? (
-              <div className="flex items-center justify-center h-32">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-                <span className="ml-2 text-gray-600">Loading transactions...</span>
-              </div>
-            ) : (
-              <TransactionList
-                transactions={transactions}
-                categories={categories}
-                tags={tags}
-                bankAccounts={bankAccounts}
-                creditCards={creditCards}
-                onDeleteTransaction={handleDeleteTransaction}
-                onEditTransaction={handleEditTransaction}
-                onBulkCategorize={handleBulkCategorizeTransactions as any}
-                onBulkTag={handleBulkTagTransactions as any}
-                onBulkDelete={handleBulkDeleteTransactions as any}
-              />
-            )}
-          </TabsContent>
-          
-          <TabsContent value="add" className="mt-0">
-            <Card className="w-full max-w-3xl mx-auto">
-              <AddTransactionForm 
-                onAddTransaction={handleAddOrUpdateTransaction} 
-                initialData={currentTransaction}
-                categories={categories}
-                tags={tags}
-                bankAccounts={bankAccounts}
-                creditCards={creditCards}
-                onCancel={handleCancelEdit}
-              />
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="import" className="mt-0">
-            <Card className="w-full max-w-3xl mx-auto">
-              <ImportTransactionsForm
-                onImportComplete={handleImportComplete}
-                categories={categories}
-              />
-            </Card>
-          </TabsContent>
+          )}
+        </TabsContent>
 
-          <TabsContent value="duplicates" className="mt-0">
-            <DuplicatesPanel />
-          </TabsContent>
-        </Tabs>
-        
-        {error && (
-          <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
-            {error}
-          </div>
-        )}
-      </div>
-    </div>
+        <TabsContent value="add" className="mt-0">
+          <Card className="w-full max-w-3xl mx-auto">
+            <AddTransactionForm
+              onAddTransaction={handleAddOrUpdateTransaction}
+              initialData={currentTransaction}
+              categories={categories}
+              tags={tags}
+              bankAccounts={bankAccounts}
+              creditCards={creditCards}
+              onCancel={handleCancelEdit}
+            />
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="import" className="mt-0">
+          <Card className="w-full max-w-3xl mx-auto">
+            <ImportTransactionsForm
+              onImportComplete={handleImportComplete}
+              categories={categories}
+            />
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="duplicates" className="mt-0">
+          <DuplicatesPanel />
+        </TabsContent>
+      </Tabs>
+
+      {error && (
+        <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
+          {error}
+        </div>
+      )}
+    </PageLayout>
   );
 }

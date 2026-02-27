@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Activity, Download, Filter } from "lucide-react";
+import PageLayout from "@/components/layout/PageLayout";
 import { toast } from "react-hot-toast";
 import {
   Select,
@@ -113,20 +114,13 @@ export default function PaymentActivitiesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      {/* Page Header */}
-      <div className="max-w-7xl mx-auto mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <Activity className="h-8 w-8 text-blue-500" />
-          <h1 className="text-3xl font-bold text-gray-800">Payment Activities</h1>
-        </div>
-        <p className="text-gray-600 max-w-3xl">
-          View and reconcile payment activities from your payment service accounts with bank transactions.
-        </p>
-      </div>
-
+    <PageLayout
+      title="Payment Activities"
+      description="View and reconcile payment activities from your payment service accounts with bank transactions."
+      icon={Activity}
+    >
       {/* Payment Account Selector */}
-      <div className="max-w-7xl mx-auto mb-6">
+      <div className="mb-6">
         <Card className="p-4">
           <div className="flex items-center gap-4 flex-wrap">
             <div className="flex-1 min-w-[200px]">
@@ -168,7 +162,7 @@ export default function PaymentActivitiesPage() {
 
       {/* Filters */}
       {selectedAccountId && (
-        <div className="max-w-7xl mx-auto mb-6">
+        <div className="mb-6">
           <PaymentActivityFilters
             filters={filters}
             onFiltersChange={setFilters}
@@ -180,7 +174,7 @@ export default function PaymentActivitiesPage() {
 
       {/* Activities List with Tabs */}
       {selectedAccountId && (
-        <div className="max-w-7xl mx-auto">
+        <div>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList>
               <TabsTrigger value="all" className="flex items-center gap-1">
@@ -217,11 +211,9 @@ export default function PaymentActivitiesPage() {
       )}
 
       {!selectedAccountId && !accountsLoading && (
-        <div className="max-w-7xl mx-auto">
-          <Card className="p-8 text-center">
-            <p className="text-gray-500">Please select a payment account to view activities.</p>
-          </Card>
-        </div>
+        <Card className="p-8 text-center">
+          <p className="text-gray-500">Please select a payment account to view activities.</p>
+        </Card>
       )}
 
       {/* Reconciliation Dialog */}
@@ -231,6 +223,6 @@ export default function PaymentActivitiesPage() {
         paymentActivity={selectedActivity}
         onReconciled={handleReconciliationComplete}
       />
-    </div>
+    </PageLayout>
   );
 }

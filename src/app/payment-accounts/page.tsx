@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loader2, CreditCard, PlusCircle, X, Link } from "lucide-react";
+import PageLayout from "@/components/layout/PageLayout";
 import { toast } from "react-hot-toast";
 
 export default function PaymentAccountsPage() {
@@ -105,96 +106,86 @@ export default function PaymentAccountsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      {/* Page Header */}
-      <div className="max-w-7xl mx-auto mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <CreditCard className="h-8 w-8 text-blue-500" />
-          <h1 className="text-3xl font-bold text-gray-800">Payment Accounts</h1>
-        </div>
-        <p className="text-gray-600 max-w-3xl">
-          Manage your payment service accounts (PayPal, Klarna, etc.) and reconcile payment activities with transactions.
-        </p>
-      </div>
+    <PageLayout
+      title="Payment Accounts"
+      description="Manage your payment service accounts (PayPal, Klarna, etc.) and reconcile payment activities with transactions."
+      icon={CreditCard}
+    >
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="flex justify-between items-center mb-4">
+          <TabsList>
+            <TabsTrigger value="list" className="flex items-center gap-1">
+              <CreditCard className="h-4 w-4" />
+              Accounts
+            </TabsTrigger>
+            <TabsTrigger value="add" className="flex items-center gap-1">
+              <PlusCircle className="h-4 w-4" />
+              {currentAccountData ? "Edit Account" : "Add Account"}
+            </TabsTrigger>
+          </TabsList>
 
-      {/* Main Content with Tabs */}
-      <div className="max-w-7xl mx-auto">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="flex justify-between items-center mb-4">
-            <TabsList>
-              <TabsTrigger value="list" className="flex items-center gap-1">
-                <CreditCard className="h-4 w-4" />
-                Accounts
-              </TabsTrigger>
-              <TabsTrigger value="add" className="flex items-center gap-1">
-                <PlusCircle className="h-4 w-4" />
-                {currentAccountData ? "Edit Account" : "Add Account"}
-              </TabsTrigger>
-            </TabsList>
-
-            <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowGocardlessDialog(true)}
+              className="flex items-center gap-1"
+              disabled={paymentAccounts.length === 0}
+            >
+              <Link className="h-4 w-4" />
+              Connect to GoCardless
+            </Button>
+            {currentAccountData && (
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setShowGocardlessDialog(true)}
+                onClick={handleCancelEdit}
                 className="flex items-center gap-1"
-                disabled={paymentAccounts.length === 0}
               >
-                <Link className="h-4 w-4" />
-                Connect to GoCardless
+                <X className="h-4 w-4" />
+                Cancel Edit
               </Button>
-              {currentAccountData && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCancelEdit}
-                  className="flex items-center gap-1"
-                >
-                  <X className="h-4 w-4" />
-                  Cancel Edit
-                </Button>
-              )}
-            </div>
-          </div>
-
-          <TabsContent value="list" className="mt-0">
-            {isLoading ? (
-              <div className="flex items-center justify-center h-32">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-                <span className="ml-2 text-gray-600">Loading payment accounts...</span>
-              </div>
-            ) : (
-              <PaymentAccountList
-                paymentAccounts={paymentAccounts}
-                onEdit={handleEditAccount}
-                onDelete={handleDeleteAccount}
-                onAccountUpdated={fetchPaymentAccounts}
-                onReconnect={() => {
-                  // Open GoCardless dialog for reconnection
-                  setShowGocardlessDialog(true);
-                }}
-              />
             )}
-          </TabsContent>
-
-          <TabsContent value="add" className="mt-0">
-            <Card className="w-full max-w-3xl mx-auto">
-              <PaymentAccountForm
-                onSubmit={handleSubmitAccount}
-                initialData={currentAccountData}
-                isEditMode={!!currentAccountData}
-                onCancel={handleCancelEdit}
-              />
-            </Card>
-          </TabsContent>
-        </Tabs>
-
-        {error && (
-          <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
-            {error}
           </div>
-        )}
-      </div>
+        </div>
+
+        <TabsContent value="list" className="mt-0">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-32">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+              <span className="ml-2 text-gray-600">Loading payment accounts...</span>
+            </div>
+          ) : (
+            <PaymentAccountList
+              paymentAccounts={paymentAccounts}
+              onEdit={handleEditAccount}
+              onDelete={handleDeleteAccount}
+              onAccountUpdated={fetchPaymentAccounts}
+              onReconnect={() => {
+                // Open GoCardless dialog for reconnection
+                setShowGocardlessDialog(true);
+              }}
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent value="add" className="mt-0">
+          <Card className="w-full max-w-3xl mx-auto">
+            <PaymentAccountForm
+              onSubmit={handleSubmitAccount}
+              initialData={currentAccountData}
+              isEditMode={!!currentAccountData}
+              onCancel={handleCancelEdit}
+            />
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {error && (
+        <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
+          {error}
+        </div>
+      )}
 
       {/* GoCardless Integration Dialog */}
       <PaymentGocardlessIntegrationDialog
@@ -203,6 +194,6 @@ export default function PaymentAccountsPage() {
         paymentAccounts={paymentAccounts}
         onAccountsUpdated={fetchPaymentAccounts}
       />
-    </div>
+    </PageLayout>
   );
 }

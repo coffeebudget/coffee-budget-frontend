@@ -25,6 +25,7 @@ import {
   XCircle,
   AlertTriangle,
 } from "lucide-react";
+import PageLayout from "@/components/layout/PageLayout";
 import { toast } from "react-hot-toast";
 import { PaymentActivity } from "@/types/payment-types";
 import { Transaction } from "@/utils/types";
@@ -260,20 +261,13 @@ export default function PaymentReconciliationPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      {/* Page Header */}
-      <div className="max-w-7xl mx-auto mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <ArrowLeftRight className="h-8 w-8 text-blue-500" />
-          <h1 className="text-3xl font-bold text-gray-800">Payment Reconciliation</h1>
-        </div>
-        <p className="text-gray-600 max-w-3xl">
-          Manually match payment activities with bank transactions to reconcile unclear or failed automatic matches.
-        </p>
-      </div>
-
+    <PageLayout
+      title="Payment Reconciliation"
+      description="Manually match payment activities with bank transactions to reconcile unclear or failed automatic matches."
+      icon={ArrowLeftRight}
+    >
       {/* Payment Account Selector */}
-      <div className="max-w-7xl mx-auto mb-6">
+      <div className="mb-6">
         <Card>
           <CardContent className="pt-6">
             <Label className="text-sm font-medium text-gray-700 mb-2 block">
@@ -300,7 +294,7 @@ export default function PaymentReconciliationPage() {
 
       {/* Two-Column Layout */}
       {selectedAccountId && (
-        <div className="max-w-7xl mx-auto">
+        <div>
           {unreconciledActivities.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
@@ -482,6 +476,6 @@ export default function PaymentReconciliationPage() {
           )}
         </div>
       )}
-    </div>
+    </PageLayout>
   );
 }

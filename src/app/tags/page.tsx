@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loader2, TagIcon, PlusCircle, X } from "lucide-react";
+import PageLayout from "@/components/layout/PageLayout";
 
 export default function TagsPage() {
   const { data: session } = useSession();
@@ -84,80 +85,70 @@ export default function TagsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      {/* Page Header */}
-      <div className="max-w-7xl mx-auto mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <TagIcon className="h-8 w-8 text-blue-500" />
-          <h1 className="text-3xl font-bold text-gray-800">Tags</h1>
+    <PageLayout
+      title="Tags"
+      description="Manage your tags to organize and categorize your transactions."
+      icon={TagIcon}
+    >
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="flex justify-between items-center mb-4">
+          <TabsList>
+            <TabsTrigger value="list" className="flex items-center gap-1">
+              <TagIcon className="h-4 w-4" />
+              Tags
+            </TabsTrigger>
+            <TabsTrigger value="add" className="flex items-center gap-1">
+              <PlusCircle className="h-4 w-4" />
+              {currentTag ? "Edit Tag" : "Add Tag"}
+            </TabsTrigger>
+          </TabsList>
+
+          {currentTag && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCancelEdit}
+              className="flex items-center gap-1"
+            >
+              <X className="h-4 w-4" />
+              Cancel Edit
+            </Button>
+          )}
         </div>
-        <p className="text-gray-600 max-w-3xl">
-          Manage your tags to organize and categorize your transactions.
-        </p>
-      </div>
-      
-      {/* Main Content with Tabs */}
-      <div className="max-w-7xl mx-auto">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="flex justify-between items-center mb-4">
-            <TabsList>
-              <TabsTrigger value="list" className="flex items-center gap-1">
-                <TagIcon className="h-4 w-4" />
-                Tags
-              </TabsTrigger>
-              <TabsTrigger value="add" className="flex items-center gap-1">
-                <PlusCircle className="h-4 w-4" />
-                {currentTag ? "Edit Tag" : "Add Tag"}
-              </TabsTrigger>
-            </TabsList>
-            
-            {currentTag && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleCancelEdit}
-                className="flex items-center gap-1"
-              >
-                <X className="h-4 w-4" />
-                Cancel Edit
-              </Button>
-            )}
-          </div>
-          
-          <TabsContent value="list" className="mt-0">
-            {loading ? (
-              <div className="flex items-center justify-center h-32">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-                <span className="ml-2 text-gray-600">Loading tags...</span>
-              </div>
-            ) : (
-              <TagList 
-                tags={tags} 
-                onDeleteTag={handleDeleteTag} 
-                onUpdateTag={handleUpdateTag}
-                onEditTag={handleEditTag}
-              />
-            )}
-          </TabsContent>
-          
-          <TabsContent value="add" className="mt-0">
-            <Card className="w-full max-w-3xl mx-auto">
-              <AddTagForm 
-                onTagAdded={handleAddTag}
-                initialTag={currentTag}
-                onUpdateTag={handleUpdateTag}
-                onCancel={handleCancelEdit}
-              />
-            </Card>
-          </TabsContent>
-        </Tabs>
-        
-        {error && (
-          <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
-            {error}
-          </div>
-        )}
-      </div>
-    </div>
+
+        <TabsContent value="list" className="mt-0">
+          {loading ? (
+            <div className="flex items-center justify-center h-32">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+              <span className="ml-2 text-gray-600">Loading tags...</span>
+            </div>
+          ) : (
+            <TagList
+              tags={tags}
+              onDeleteTag={handleDeleteTag}
+              onUpdateTag={handleUpdateTag}
+              onEditTag={handleEditTag}
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent value="add" className="mt-0">
+          <Card className="w-full max-w-3xl mx-auto">
+            <AddTagForm
+              onTagAdded={handleAddTag}
+              initialTag={currentTag}
+              onUpdateTag={handleUpdateTag}
+              onCancel={handleCancelEdit}
+            />
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {error && (
+        <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-md">
+          {error}
+        </div>
+      )}
+    </PageLayout>
   );
 }

@@ -34,6 +34,7 @@ const mockPlans = [
     name: 'Vacanze',
     icon: '🏖️',
     planType: 'seasonal',
+    purpose: 'sinking_fund',
     status: 'active',
     targetAmount: 3000,
     progressPercent: 40,
@@ -47,6 +48,7 @@ const mockPlans = [
     name: 'Emergency Fund',
     icon: '🛡️',
     planType: 'emergency_fund',
+    purpose: 'sinking_fund',
     status: 'active',
     targetAmount: 10000,
     progressPercent: 60,
@@ -60,12 +62,27 @@ const mockPlans = [
     name: 'Rent',
     icon: '🏠',
     planType: 'fixed_monthly',
+    purpose: 'sinking_fund',
     status: 'active',
     targetAmount: 800,
     progressPercent: 100,
     monthlyContribution: 800,
     fundingStatus: 'funded',
     nextDueDate: '2026-03-01',
+    targetDate: null,
+  },
+  {
+    id: 4,
+    name: 'Groceries',
+    icon: '🛒',
+    planType: 'spending_budget',
+    purpose: 'spending_budget',
+    status: 'active',
+    targetAmount: 500,
+    progressPercent: 70,
+    monthlyContribution: 500,
+    fundingStatus: 'on_track',
+    nextDueDate: '2026-04-01',
     targetDate: null,
   },
 ];
@@ -91,15 +108,18 @@ describe('SavingsProgressTable', () => {
     expect(screen.getByText(/No active savings plans/)).toBeInTheDocument();
   });
 
-  it('should filter out fixed_monthly plans', () => {
+  it('should only show sinking_fund plans, filtering out fixed_monthly and spending_budget', () => {
     mockUseExpensePlansWithStatus.mockReturnValue({ data: mockPlans, isLoading: false });
 
     render(<SavingsProgressTable />);
 
-    // Vacanze and Emergency Fund should show, Rent (fixed_monthly) should not
+    // Vacanze and Emergency Fund (sinking_fund) should show
     expect(screen.getByText('Vacanze')).toBeInTheDocument();
     expect(screen.getByText('Emergency Fund')).toBeInTheDocument();
+    // Rent (fixed_monthly) should not
     expect(screen.queryByText('Rent')).not.toBeInTheDocument();
+    // Groceries (spending_budget) should not
+    expect(screen.queryByText('Groceries')).not.toBeInTheDocument();
   });
 
   it('should display overall progress summary', () => {

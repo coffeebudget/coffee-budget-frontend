@@ -49,6 +49,7 @@ export default function SavingsProgressTable() {
       (p) =>
         p.targetAmount > 0 &&
         p.planType !== "fixed_monthly" &&
+        p.purpose === "sinking_fund" &&
         p.status === "active"
     );
   }, [plans]);

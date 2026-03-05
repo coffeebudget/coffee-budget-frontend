@@ -7,6 +7,11 @@ import {
   fetchMonthlySummary,
 } from "@/utils/api";
 
+interface MonthlyStats {
+  totalTransactions: number;
+  topExpenseCategory: { name: string; amount: number } | null;
+}
+
 import FinancialHealthInsights from "./FinancialHealthInsights";
 import CashFlowForecast from "./CashFlowForecast";
 import AIAnalysisCard from "./AIAnalysisCard";
@@ -20,6 +25,7 @@ export default function AnalyticsTab() {
   const [expenseDistribution, setExpenseDistribution] = useState([]);
   const [monthlySummary, setMonthlySummary] = useState([]);
   const [summaryMonths, setSummaryMonths] = useState(12);
+  const [monthlyStats, setMonthlyStats] = useState<MonthlyStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,13 +41,19 @@ export default function AnalyticsTab() {
           .split("T")[0];
         const today = new Date().toISOString().split("T")[0];
 
-        const [distributionData, summaryData] = await Promise.all([
+        const [distributionData, summaryData, statsRes] = await Promise.all([
           fetchExpenseDistribution(token, startOfYear, today),
           fetchMonthlySummary(token, summaryMonths),
+          fetch("/api/dashboard/monthly-statistics"),
         ]);
 
         setExpenseDistribution(distributionData);
         setMonthlySummary(summaryData);
+
+        if (statsRes.ok) {
+          const statsData = await statsRes.json();
+          setMonthlyStats(statsData);
+        }
       } catch (err) {
         console.error(err);
         setError("Failed to load analytics data");
@@ -63,7 +75,7 @@ export default function AnalyticsTab() {
     <div className="space-y-6">
       <FinancialHealthInsights />
       <CashFlowForecast />
-      <AIAnalysisCard totalTransactions={0} hasUncategorized={false} />
+      <AIAnalysisCard totalTransactions={monthlyStats?.totalTransactions ?? 0} />
 
       {loading ? (
         <div className="text-center p-8">Loading analytics data...</div>

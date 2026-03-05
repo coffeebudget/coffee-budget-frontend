@@ -45,31 +45,25 @@ export default function FinancialHealthInsights({
       setLoading(true);
       setError(null);
 
-      const [statsRes, summaryRes] = await Promise.all([
-        fetch("/api/dashboard/monthly-statistics"),
-        fetch("/api/dashboard/monthly-summary?months=2"),
-      ]);
+      const statsRes = await fetch("/api/dashboard/monthly-statistics");
 
-      if (!statsRes.ok || !summaryRes.ok) {
+      if (!statsRes.ok) {
         throw new Error("Failed to fetch data");
       }
 
       const statsData = await statsRes.json();
-      const summaryData = await summaryRes.json();
 
-      const currentMonth = summaryData[summaryData.length - 1] || {
-        income: 0,
-        expenses: 0,
-      };
-      const netFlow = currentMonth.income - currentMonth.expenses;
+      const totalIncome = Number(statsData.totalIncome || 0);
+      const totalExpenses = Number(statsData.totalExpenses || 0);
+      const netFlow = totalIncome - totalExpenses;
       const savingsRate =
-        currentMonth.income > 0
-          ? (netFlow / currentMonth.income) * 100
+        totalIncome > 0
+          ? (netFlow / totalIncome) * 100
           : 0;
 
       setData({
-        monthlyIncome: currentMonth.income,
-        monthlyExpenses: currentMonth.expenses,
+        monthlyIncome: totalIncome,
+        monthlyExpenses: totalExpenses,
         netFlow,
         savingsRate,
         topExpenseCategory: statsData.topExpenseCategory
@@ -77,10 +71,8 @@ export default function FinancialHealthInsights({
               name: statsData.topExpenseCategory.name,
               amount: statsData.topExpenseCategory.amount,
               percentage:
-                currentMonth.expenses > 0
-                  ? (statsData.topExpenseCategory.amount /
-                      currentMonth.expenses) *
-                    100
+                totalExpenses > 0
+                  ? (statsData.topExpenseCategory.amount / totalExpenses) * 100
                   : 0,
             }
           : null,

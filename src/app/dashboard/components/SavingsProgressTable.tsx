@@ -177,7 +177,7 @@ export default function SavingsProgressTable() {
             <TableRow>
               <SortableHeader field="name">Plan</SortableHeader>
               <SortableHeader field="saved" className="text-right">
-                Saved
+                Accumulated
               </SortableHeader>
               <SortableHeader
                 field="target"

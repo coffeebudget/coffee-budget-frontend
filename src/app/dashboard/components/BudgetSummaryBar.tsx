@@ -50,7 +50,7 @@ export default function BudgetSummaryBar() {
           </div>
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wide">
-              Obligations
+              Monthly Commitments
             </p>
             <p className="text-lg font-semibold text-slate-700">
               {formatCurrency(obligations)}
@@ -67,7 +67,7 @@ export default function BudgetSummaryBar() {
         </div>
         {available < 0 && (
           <p className="text-xs text-red-600 text-center mt-2">
-            ⚠ Budget deficit: planned expenses exceed income by{" "}
+            ⚠ Budget deficit: monthly commitments exceed guaranteed income by{" "}
             {formatCurrency(Math.abs(available))}
           </p>
         )}

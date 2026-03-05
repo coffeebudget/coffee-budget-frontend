@@ -54,7 +54,7 @@ describe('BudgetSummaryBar', () => {
     render(<BudgetSummaryBar />);
 
     expect(screen.getByText('Income')).toBeInTheDocument();
-    expect(screen.getByText('Obligations')).toBeInTheDocument();
+    expect(screen.getByText('Monthly Commitments')).toBeInTheDocument();
     expect(screen.getByText('Available')).toBeInTheDocument();
     // Available should be 5000 - 3000 = 2000
     expect(screen.getByText(fc(2000))).toBeInTheDocument();

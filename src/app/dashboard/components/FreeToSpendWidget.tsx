@@ -153,21 +153,37 @@ export default function FreeToSpendWidget({ className = "", selectedMonth }: Fre
 
           {/* Progress Bar */}
           <div className="w-full md:w-64">
-            <div className="flex justify-between text-sm text-gray-600 mb-1">
-              <span>Budget remaining</span>
-              <span>{incomePercentage}%</span>
-            </div>
-            <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
-              <div
-                className={`h-full transition-all duration-500 ${
-                  data.status === "comfortable" ? "bg-emerald-500" :
-                  data.status === "moderate" ? "bg-blue-500" :
-                  data.status === "tight" ? "bg-yellow-500" :
-                  "bg-red-500"
-                }`}
-                style={{ width: `${progressPercentage}%` }}
-              />
-            </div>
+            {data.status === "overspent" ? (
+              <>
+                <div className="flex justify-between text-sm text-red-600 mb-1">
+                  <span>Overspent</span>
+                  <span>by {formatCurrency(Math.abs(data.freeToSpend))}</span>
+                </div>
+                <div className="h-4 bg-red-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-red-500 transition-all duration-500"
+                    style={{ width: "100%" }}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex justify-between text-sm text-gray-600 mb-1">
+                  <span>Budget remaining</span>
+                  <span>{incomePercentage}%</span>
+                </div>
+                <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-500 ${
+                      data.status === "comfortable" ? "bg-emerald-500" :
+                      data.status === "moderate" ? "bg-blue-500" :
+                      "bg-yellow-500"
+                    }`}
+                    style={{ width: `${progressPercentage}%` }}
+                  />
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

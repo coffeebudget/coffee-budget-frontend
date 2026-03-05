@@ -107,7 +107,7 @@ export default function AnalyticsTab() {
           {/* Expense Distribution */}
           <div className="bg-white p-4 rounded-lg shadow">
             <h2 className="text-lg font-semibold mb-4">
-              Expense Distribution by Category
+              Expense Distribution by Category (Year to Date)
             </h2>
             <ExpenseDistributionChart data={expenseDistribution} />
           </div>

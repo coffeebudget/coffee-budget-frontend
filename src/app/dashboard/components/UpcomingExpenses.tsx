@@ -22,6 +22,8 @@ function getStatusIcon(status: TimelineEntry["status"]) {
   switch (status) {
     case "funded":
       return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+    case "almost_ready":
+      return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
     case "on_track":
       return <Clock className="h-4 w-4 text-blue-500" />;
     case "behind":
@@ -32,11 +34,13 @@ function getStatusIcon(status: TimelineEntry["status"]) {
 function getStatusBadge(status: TimelineEntry["status"]) {
   const styles: Record<string, string> = {
     funded: "bg-green-100 text-green-700",
+    almost_ready: "bg-emerald-100 text-emerald-700",
     on_track: "bg-blue-100 text-blue-700",
     behind: "bg-red-100 text-red-700",
   };
   const labels: Record<string, string> = {
     funded: "Funded",
+    almost_ready: "Almost Ready",
     on_track: "On Track",
     behind: "Behind",
   };

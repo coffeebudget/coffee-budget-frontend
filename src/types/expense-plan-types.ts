@@ -375,7 +375,7 @@ export interface TimelineEntry {
   planName: string;
   icon: string | null;
   amount: number;
-  status: 'funded' | 'on_track' | 'behind';
+  status: 'funded' | 'almost_ready' | 'on_track' | 'behind';
   monthsAway: number;
 }
 

@@ -178,6 +178,10 @@ export function useCreateExpensePlan() {
       queryClient.invalidateQueries({ queryKey: ['expense-plans'] });
       queryClient.invalidateQueries({ queryKey: ['expense-plans-with-status'] });
       queryClient.invalidateQueries({ queryKey: ['expense-plans-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['expense-plans-coverage'] });
+      queryClient.invalidateQueries({ queryKey: ['expense-plans-account-allocation'] });
+      queryClient.invalidateQueries({ queryKey: ['expense-timeline'] });
+      queryClient.invalidateQueries({ queryKey: ['freeToSpend'] });
       toast.success('Expense plan created successfully');
     },
     onError: (error: Error) => {
@@ -198,6 +202,10 @@ export function useUpdateExpensePlan() {
       queryClient.invalidateQueries({ queryKey: ['expense-plans-with-status'] });
       queryClient.invalidateQueries({ queryKey: ['expense-plan', id] });
       queryClient.invalidateQueries({ queryKey: ['expense-plans-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['expense-plans-coverage'] });
+      queryClient.invalidateQueries({ queryKey: ['expense-plans-account-allocation'] });
+      queryClient.invalidateQueries({ queryKey: ['expense-timeline'] });
+      queryClient.invalidateQueries({ queryKey: ['freeToSpend'] });
       toast.success('Expense plan updated successfully');
     },
     onError: (error: Error) => {
@@ -217,6 +225,10 @@ export function useDeleteExpensePlan() {
       queryClient.invalidateQueries({ queryKey: ['expense-plans'] });
       queryClient.invalidateQueries({ queryKey: ['expense-plans-with-status'] });
       queryClient.invalidateQueries({ queryKey: ['expense-plans-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['expense-plans-coverage'] });
+      queryClient.invalidateQueries({ queryKey: ['expense-plans-account-allocation'] });
+      queryClient.invalidateQueries({ queryKey: ['expense-timeline'] });
+      queryClient.invalidateQueries({ queryKey: ['freeToSpend'] });
       toast.success('Expense plan deleted successfully');
     },
     onError: (error: Error) => {
@@ -241,6 +253,10 @@ export function useAcceptAdjustment() {
       queryClient.invalidateQueries({ queryKey: ['expense-plans-with-status'] });
       queryClient.invalidateQueries({ queryKey: ['expense-plan', planId] });
       queryClient.invalidateQueries({ queryKey: ['expense-plans-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['expense-plans-coverage'] });
+      queryClient.invalidateQueries({ queryKey: ['expense-plans-account-allocation'] });
+      queryClient.invalidateQueries({ queryKey: ['expense-timeline'] });
+      queryClient.invalidateQueries({ queryKey: ['freeToSpend'] });
       toast.success('Expense plan adjusted successfully');
     },
     onError: (error: Error) => {
@@ -260,6 +276,10 @@ export function useDismissAdjustment() {
       queryClient.invalidateQueries({ queryKey: ['expense-plans'] });
       queryClient.invalidateQueries({ queryKey: ['expense-plans-with-status'] });
       queryClient.invalidateQueries({ queryKey: ['expense-plan', planId] });
+      queryClient.invalidateQueries({ queryKey: ['expense-plans-coverage'] });
+      queryClient.invalidateQueries({ queryKey: ['expense-plans-account-allocation'] });
+      queryClient.invalidateQueries({ queryKey: ['expense-timeline'] });
+      queryClient.invalidateQueries({ queryKey: ['freeToSpend'] });
       toast.success('Adjustment dismissed for 30 days');
     },
     onError: (error: Error) => {
@@ -324,6 +344,9 @@ export function useLinkTransaction() {
       queryClient.invalidateQueries({ queryKey: ['transaction-link-suggestions'] });
       // Invalidate linked plans cache so transaction list shows the new link
       queryClient.invalidateQueries({ queryKey: ['linked-plans-by-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['expense-plans-coverage'] });
+      queryClient.invalidateQueries({ queryKey: ['expense-plans-account-allocation'] });
+      queryClient.invalidateQueries({ queryKey: ['freeToSpend'] });
       toast.success('Transaction linked successfully');
     },
     onError: (error: Error) => {
@@ -349,6 +372,9 @@ export function useDeletePayment() {
     onSuccess: (_, { planId }) => {
       queryClient.invalidateQueries({ queryKey: ['expense-plan-payments', planId] });
       queryClient.invalidateQueries({ queryKey: ['expense-plan', planId] });
+      queryClient.invalidateQueries({ queryKey: ['expense-plans-coverage'] });
+      queryClient.invalidateQueries({ queryKey: ['expense-plans-account-allocation'] });
+      queryClient.invalidateQueries({ queryKey: ['freeToSpend'] });
       toast.success('Payment unlinked');
     },
     onError: (error: Error) => {

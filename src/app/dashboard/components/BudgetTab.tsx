@@ -2,6 +2,7 @@
 
 import BudgetSummaryBar from "./BudgetSummaryBar";
 import SavingsProgressTable from "./SavingsProgressTable";
+import SpendingBudgetTracker from "./SpendingBudgetTracker";
 import AccountDistribution from "./AccountDistribution";
 import CoverageMonitorCompact from "./CoverageMonitorCompact";
 import CreditCardsSummary from "./CreditCardsSummary";
@@ -17,6 +18,7 @@ export default function BudgetTab({ selectedMonth }: BudgetTabProps) {
     <div className="space-y-6">
       <BudgetSummaryBar />
       <SavingsProgressTable />
+      <SpendingBudgetTracker />
       <AccountDistribution />
       <CoverageMonitorCompact />
       <CreditCardsSummary />

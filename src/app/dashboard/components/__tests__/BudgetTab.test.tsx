@@ -14,6 +14,12 @@ jest.mock('../SavingsProgressTable', () => {
   };
 });
 
+jest.mock('../SpendingBudgetTracker', () => {
+  return function MockSpendingBudgetTracker() {
+    return <div data-testid="spending-budget-tracker">SpendingBudgetTracker</div>;
+  };
+});
+
 jest.mock('../AccountDistribution', () => {
   return function MockAccountDistribution() {
     return <div data-testid="account-distribution">AccountDistribution</div>;
@@ -35,11 +41,12 @@ jest.mock('../CreditCardsSummary', () => {
 import BudgetTab from '../BudgetTab';
 
 describe('BudgetTab', () => {
-  it('should render all 5 sections', () => {
+  it('should render all 6 sections', () => {
     render(<BudgetTab selectedMonth="2026-02" />);
 
     expect(screen.getByTestId('budget-summary-bar')).toBeInTheDocument();
     expect(screen.getByTestId('savings-progress-table')).toBeInTheDocument();
+    expect(screen.getByTestId('spending-budget-tracker')).toBeInTheDocument();
     expect(screen.getByTestId('account-distribution')).toBeInTheDocument();
     expect(screen.getByTestId('coverage-monitor-compact')).toBeInTheDocument();
     expect(screen.getByTestId('credit-cards-summary')).toBeInTheDocument();
@@ -53,8 +60,9 @@ describe('BudgetTab', () => {
 
     expect(children[0]).toHaveAttribute('data-testid', 'budget-summary-bar');
     expect(children[1]).toHaveAttribute('data-testid', 'savings-progress-table');
-    expect(children[2]).toHaveAttribute('data-testid', 'account-distribution');
-    expect(children[3]).toHaveAttribute('data-testid', 'coverage-monitor-compact');
-    expect(children[4]).toHaveAttribute('data-testid', 'credit-cards-summary');
+    expect(children[2]).toHaveAttribute('data-testid', 'spending-budget-tracker');
+    expect(children[3]).toHaveAttribute('data-testid', 'account-distribution');
+    expect(children[4]).toHaveAttribute('data-testid', 'coverage-monitor-compact');
+    expect(children[5]).toHaveAttribute('data-testid', 'credit-cards-summary');
   });
 });

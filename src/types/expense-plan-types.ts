@@ -518,6 +518,14 @@ export interface AccountAllocationSummary {
   monthlyContributionTotal: number;
   /** Suggested catch-up amount to add */
   suggestedCatchUp: number | null;
+  /** Cash flow simulation results for the month */
+  cashFlow?: {
+    minimumBalance: number;
+    minimumBalanceDay: number;
+    hasShortfall: boolean;
+    shortfallAmount: number;
+    endingBalance: number;
+  };
 }
 
 /**

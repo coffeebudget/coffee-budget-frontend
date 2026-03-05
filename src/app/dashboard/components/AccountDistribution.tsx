@@ -16,7 +16,7 @@ import {
   getAccountHealthStatusColor,
   getAccountHealthStatusIcon,
 } from "@/types/expense-plan-types";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, TrendingDown } from "lucide-react";
 
 function AccountRow({ account }: { account: AccountAllocationSummary }) {
   const [open, setOpen] = useState(false);
@@ -87,6 +87,16 @@ function AccountRow({ account }: { account: AccountAllocationSummary }) {
             account.sinkingFundPlans.length === 0 && (
               <span className="italic">No plans assigned</span>
             )}
+          {account.cashFlow && (
+            <div className={`flex items-center gap-1 mt-1 pt-1 border-t ${account.cashFlow.hasShortfall ? "text-red-600" : "text-muted-foreground"}`}>
+              <TrendingDown className={`h-3 w-3 ${account.cashFlow.hasShortfall ? "text-red-500" : "text-yellow-500"}`} />
+              <span>
+                Lowest balance: {formatCurrency(account.cashFlow.minimumBalance)} (day {account.cashFlow.minimumBalanceDay})
+              </span>
+              <span className="mx-1">·</span>
+              <span>End of month: {formatCurrency(account.cashFlow.endingBalance)}</span>
+            </div>
+          )}
         </div>
       </CollapsibleContent>
     </Collapsible>

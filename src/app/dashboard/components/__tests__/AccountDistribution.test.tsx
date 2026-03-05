@@ -136,6 +136,36 @@ describe('AccountDistribution', () => {
     expect(screen.getByText('Vacanze')).toBeInTheDocument();
   });
 
+  it('should show cash flow info when expanded and cashFlow data exists', () => {
+    const dataWithCashFlow = {
+      ...mockAllocationData,
+      accounts: [
+        {
+          ...mockAllocationData.accounts[0],
+          cashFlow: {
+            minimumBalance: 200,
+            minimumBalanceDay: 5,
+            hasShortfall: false,
+            shortfallAmount: 0,
+            endingBalance: 1500,
+          },
+        },
+      ],
+    };
+
+    mockUseAccountAllocationSummary.mockReturnValue({
+      data: dataWithCashFlow,
+      isLoading: false,
+    });
+
+    render(<AccountDistribution />);
+    fireEvent.click(screen.getByText('BNL'));
+
+    expect(screen.getByText(/Lowest balance/)).toBeInTheDocument();
+    expect(screen.getByText(/day 5/)).toBeInTheDocument();
+    expect(screen.getByText(/End of month/)).toBeInTheDocument();
+  });
+
   it('should show plan statuses in expanded view', () => {
     mockUseAccountAllocationSummary.mockReturnValue({
       data: mockAllocationData,

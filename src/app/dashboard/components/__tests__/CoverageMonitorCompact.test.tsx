@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 
 jest.mock('next-auth/react', () => ({
   useSession: () => ({
@@ -65,7 +65,7 @@ describe('CoverageMonitorCompact', () => {
     mockUseCoverageSummary.mockReturnValue({ data: undefined, isLoading: true });
 
     render(<CoverageMonitorCompact />);
-    expect(screen.getByText('🛡️ 30-Day Coverage')).toBeInTheDocument();
+    expect(screen.getByText('🛡️ Coverage')).toBeInTheDocument();
   });
 
   it('should show empty state', () => {
@@ -101,6 +101,74 @@ describe('CoverageMonitorCompact', () => {
 
     expect(screen.getByText('Shortfall')).toBeInTheDocument();
     expect(screen.getByText('❌')).toBeInTheDocument();
+  });
+
+  it('should show cash flow minimum balance when lower than current', () => {
+    const coverageWithCashFlow = {
+      ...mockCoverageAllCovered,
+      accounts: [
+        {
+          ...mockCoverageAllCovered.accounts[0],
+          cashFlow: {
+            minimumBalance: 200,
+            minimumBalanceDay: 5,
+            hasShortfall: false,
+            shortfallAmount: 0,
+            endingBalance: 1500,
+          },
+        },
+      ],
+    };
+
+    mockUseCoverageSummary.mockReturnValue({
+      data: coverageWithCashFlow,
+      isLoading: false,
+    });
+
+    render(<CoverageMonitorCompact />);
+
+    expect(screen.getByText(/Lowest balance/)).toBeInTheDocument();
+    expect(screen.getByText(/day 5/)).toBeInTheDocument();
+  });
+
+  it('should not show cash flow info when minimum equals current balance', () => {
+    const coverageWithCashFlow = {
+      ...mockCoverageAllCovered,
+      accounts: [
+        {
+          ...mockCoverageAllCovered.accounts[0],
+          cashFlow: {
+            minimumBalance: 4462,
+            minimumBalanceDay: 0,
+            hasShortfall: false,
+            shortfallAmount: 0,
+            endingBalance: 4462,
+          },
+        },
+      ],
+    };
+
+    mockUseCoverageSummary.mockReturnValue({
+      data: coverageWithCashFlow,
+      isLoading: false,
+    });
+
+    render(<CoverageMonitorCompact />);
+
+    expect(screen.queryByText(/Lowest balance/)).not.toBeInTheDocument();
+  });
+
+  it('should have a period selector', () => {
+    mockUseCoverageSummary.mockReturnValue({
+      data: mockCoverageAllCovered,
+      isLoading: false,
+    });
+
+    render(<CoverageMonitorCompact />);
+
+    const selector = screen.getByRole('combobox');
+    expect(selector).toBeInTheDocument();
+    expect(selector).toHaveValue('next_30_days');
   });
 
   it('should show unassigned plans warning', () => {

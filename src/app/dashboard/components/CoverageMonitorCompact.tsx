@@ -90,7 +90,12 @@ export default function CoverageMonitorCompact() {
         </div>
       </CardHeader>
       <CardContent className="pt-0 space-y-1">
-        {coverage.accounts.map((account) => (
+        {coverage.accounts.map((account) => {
+          // Prefer cash flow ending balance over lump-sum projected balance
+          const endBalance = account.cashFlow?.endingBalance ?? account.projectedBalance;
+          const isNegative = endBalance < 0;
+
+          return (
           <div key={account.accountId}>
             <div
               className={`flex items-center gap-2 text-sm py-1 ${
@@ -109,10 +114,8 @@ export default function CoverageMonitorCompact() {
               </span>
               <span className="hidden sm:inline text-muted-foreground">→</span>
               <span className={account.hasShortfall ? "font-semibold" : ""}>
-                {account.hasShortfall ? "−" : "+"}{" "}
-                {formatCurrency(
-                  Math.abs(account.projectedBalance)
-                )}
+                {isNegative ? "−" : "+"}{" "}
+                {formatCurrency(Math.abs(endBalance))}
               </span>
               <span>{account.hasShortfall ? "❌" : "✅"}</span>
             </div>
@@ -125,7 +128,8 @@ export default function CoverageMonitorCompact() {
               </div>
             )}
           </div>
-        ))}
+          );
+        })}
 
         {coverage.unassignedPlans.count > 0 && (
           <div className="flex items-center gap-2 text-xs text-yellow-600 mt-2 pt-2 border-t">

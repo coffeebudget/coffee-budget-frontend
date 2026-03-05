@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { formatCurrency } from '@/utils/format';
 
 jest.mock('next-auth/react', () => ({
   useSession: () => ({
@@ -156,6 +157,38 @@ describe('CoverageMonitorCompact', () => {
     render(<CoverageMonitorCompact />);
 
     expect(screen.queryByText(/Lowest balance/)).not.toBeInTheDocument();
+  });
+
+  it('should prefer cashFlow.endingBalance over projectedBalance', () => {
+    const coverageWithCashFlow = {
+      ...mockCoverageAllCovered,
+      accounts: [
+        {
+          ...mockCoverageAllCovered.accounts[0],
+          projectedBalance: 464, // lump-sum
+          cashFlow: {
+            minimumBalance: 200,
+            minimumBalanceDay: 5,
+            hasShortfall: false,
+            shortfallAmount: 0,
+            endingBalance: 1500, // cash flow says higher
+          },
+        },
+      ],
+    };
+
+    mockUseCoverageSummary.mockReturnValue({
+      data: coverageWithCashFlow,
+      isLoading: false,
+    });
+
+    render(<CoverageMonitorCompact />);
+
+    // Should show 1500 (cashFlow.endingBalance), not 464 (projectedBalance)
+    const fc = (amount: number) =>
+      formatCurrency(amount).replace(/\u00A0/g, ' ');
+    expect(screen.getByText(fc(1500), { exact: false })).toBeInTheDocument();
+    expect(screen.queryByText(fc(464), { exact: false })).not.toBeInTheDocument();
   });
 
   it('should have a period selector', () => {

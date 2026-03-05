@@ -295,6 +295,13 @@ export interface AccountCoverage {
   hasShortfall: boolean;
   shortfallAmount: number;
   plansAtRisk: PlanAtRisk[];
+  cashFlow?: {
+    minimumBalance: number;
+    minimumBalanceDay: number;
+    hasShortfall: boolean;
+    shortfallAmount: number;
+    endingBalance: number;
+  };
 }
 
 /**

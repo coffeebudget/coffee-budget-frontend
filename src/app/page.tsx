@@ -93,6 +93,23 @@ export default function Home() {
         .anim-fade { animation: fadeIn 1s ease-out 1s both; }
         .scroll-bounce { animation: float 2.5s ease-in-out infinite; }
 
+        .float-card-1 { animation: fadeInUp 0.8s ease-out 0.5s both, floatCard1 3s ease-in-out 1.3s infinite; }
+        .float-card-2 { animation: fadeInUp 0.8s ease-out 0.7s both, floatCard2 3.5s ease-in-out 1.5s infinite; }
+        .float-card-3 { animation: fadeInUp 0.8s ease-out 0.9s both, floatCard3 4s ease-in-out 1.7s infinite; }
+
+        @keyframes floatCard1 {
+          0%, 100% { transform: translateY(0) rotate(-2deg); }
+          50% { transform: translateY(-6px) rotate(-2deg); }
+        }
+        @keyframes floatCard2 {
+          0%, 100% { transform: translateY(0) rotate(1deg); }
+          50% { transform: translateY(-5px) rotate(1deg); }
+        }
+        @keyframes floatCard3 {
+          0%, 100% { transform: translateY(0) rotate(-1deg); }
+          50% { transform: translateY(-4px) rotate(-1deg); }
+        }
+
         .feature-card {
           transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
@@ -168,7 +185,8 @@ export default function Home() {
           }}
         />
 
-        <div className="relative z-10 max-w-5xl mx-auto px-6 sm:px-10 py-20 w-full">
+        <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-10 py-20 w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div>
           {/* Coffee icon */}
           <div className="anim-1 mb-10">
             <div
@@ -268,6 +286,103 @@ export default function Home() {
                 {label}
               </span>
             ))}
+          </div>
+          </div>
+
+          {/* Floating cards - visible on lg+ */}
+          <div className="hidden lg:flex relative h-[500px]">
+            {/* Card 1: Free to Spend */}
+            <div
+              className="float-card-1 absolute top-4 right-0 w-56 rounded-xl p-5"
+              style={{
+                backgroundColor: "var(--coffee-800)",
+                border: "1px solid var(--primary-alpha-15)",
+                boxShadow: "0 8px 32px rgba(28, 18, 16, 0.3)",
+                transform: "rotate(-2deg)",
+              }}
+            >
+              <p className="text-xs font-medium mb-2" style={{ color: "var(--coffee-300)" }}>
+                Free to Spend
+              </p>
+              <p className="text-2xl font-bold mb-3" style={{ color: "var(--coffee-100)" }}>
+                €1,245
+              </p>
+              <div
+                className="w-full h-1.5 rounded-full overflow-hidden"
+                style={{ backgroundColor: "var(--primary-alpha-10)" }}
+              >
+                <div
+                  className="h-full rounded-full"
+                  style={{ width: "68%", backgroundColor: "var(--success)" }}
+                />
+              </div>
+            </div>
+
+            {/* Card 2: Envelope Budget */}
+            <div
+              className="float-card-2 absolute top-36 right-16 w-56 rounded-xl p-5"
+              style={{
+                backgroundColor: "var(--coffee-800)",
+                border: "1px solid var(--primary-alpha-15)",
+                boxShadow: "0 8px 32px rgba(28, 18, 16, 0.3)",
+                transform: "rotate(1deg)",
+              }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm">🛒</span>
+                <p className="text-xs font-medium" style={{ color: "var(--coffee-300)" }}>
+                  Groceries
+                </p>
+              </div>
+              <p className="text-lg font-bold mb-3" style={{ color: "var(--coffee-100)" }}>
+                €245{" "}
+                <span className="text-sm font-normal" style={{ color: "var(--coffee-300)" }}>
+                  / €400
+                </span>
+              </p>
+              <div
+                className="w-full h-1.5 rounded-full overflow-hidden"
+                style={{ backgroundColor: "var(--primary-alpha-10)" }}
+              >
+                <div
+                  className="h-full rounded-full"
+                  style={{ width: "61%", backgroundColor: "hsl(var(--primary))" }}
+                />
+              </div>
+            </div>
+
+            {/* Card 3: Savings Goal */}
+            <div
+              className="float-card-3 absolute top-72 right-4 w-56 rounded-xl p-5"
+              style={{
+                backgroundColor: "var(--coffee-800)",
+                border: "1px solid var(--primary-alpha-15)",
+                boxShadow: "0 8px 32px rgba(28, 18, 16, 0.3)",
+                transform: "rotate(-1deg)",
+              }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm">🏖️</span>
+                <p className="text-xs font-medium" style={{ color: "var(--coffee-300)" }}>
+                  Vacation Fund
+                </p>
+              </div>
+              <p className="text-lg font-bold mb-3" style={{ color: "var(--coffee-100)" }}>
+                €1,800{" "}
+                <span className="text-sm font-normal" style={{ color: "var(--coffee-300)" }}>
+                  / €3,000
+                </span>
+              </p>
+              <div
+                className="w-full h-1.5 rounded-full overflow-hidden"
+                style={{ backgroundColor: "var(--primary-alpha-10)" }}
+              >
+                <div
+                  className="h-full rounded-full"
+                  style={{ width: "60%", backgroundColor: "hsl(var(--primary))" }}
+                />
+              </div>
+            </div>
           </div>
         </div>
 

@@ -185,7 +185,7 @@ export default function Home() {
           }}
         />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-10 py-20 w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div className="relative z-10 max-w-6xl mx-auto px-6 sm:px-10 py-20 w-full grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-center">
           <div>
           {/* Coffee icon */}
           <div className="anim-1 mb-10">
@@ -293,7 +293,7 @@ export default function Home() {
           <div className="hidden lg:flex relative h-[500px]">
             {/* Card 1: Free to Spend */}
             <div
-              className="float-card-1 absolute top-4 right-0 w-56 rounded-xl p-5"
+              className="float-card-1 absolute top-4 left-8 w-56 rounded-xl p-5"
               style={{
                 backgroundColor: "var(--coffee-800)",
                 border: "1px solid var(--primary-alpha-15)",
@@ -320,7 +320,7 @@ export default function Home() {
 
             {/* Card 2: Envelope Budget */}
             <div
-              className="float-card-2 absolute top-36 right-16 w-56 rounded-xl p-5"
+              className="float-card-2 absolute top-36 left-20 w-56 rounded-xl p-5"
               style={{
                 backgroundColor: "var(--coffee-800)",
                 border: "1px solid var(--primary-alpha-15)",
@@ -353,7 +353,7 @@ export default function Home() {
 
             {/* Card 3: Savings Goal */}
             <div
-              className="float-card-3 absolute top-72 right-4 w-56 rounded-xl p-5"
+              className="float-card-3 absolute top-72 left-4 w-56 rounded-xl p-5"
               style={{
                 backgroundColor: "var(--coffee-800)",
                 border: "1px solid var(--primary-alpha-15)",

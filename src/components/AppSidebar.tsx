@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
@@ -19,7 +20,6 @@ import {
   Tag,
   Settings,
   ChevronRight,
-  Coffee,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -127,9 +127,13 @@ export default function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild tooltip="Coffee Budget">
               <Link href="/">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <Coffee className="size-4" />
-                </div>
+                <Image
+                  src="/logo-64.png"
+                  alt="Coffee Budget"
+                  width={32}
+                  height={32}
+                  className="size-8 rounded-lg"
+                />
                 <div className="flex flex-col gap-0.5 leading-none">
                   <span className="font-semibold">Coffee Budget</span>
                 </div>

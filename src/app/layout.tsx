@@ -1,7 +1,24 @@
 import { ReactNode } from 'react';
+import { Metadata } from 'next';
 import { DM_Serif_Display, DM_Sans } from 'next/font/google';
 import '@/styles/globals.css'; // Ensure global styles are imported
 import Providers from '@/components/Providers';
+
+export const metadata: Metadata = {
+  title: 'Coffee Budget',
+  description: 'Your finances, brewed to perfection. Envelope budgeting, automatic bank sync, and AI-powered insights.',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
+  openGraph: {
+    title: 'Coffee Budget',
+    description: 'Your finances, brewed to perfection.',
+    images: [{ url: '/icon-512.png', width: 512, height: 512 }],
+  },
+};
 
 const sans = DM_Sans({
   subsets: ['latin'],

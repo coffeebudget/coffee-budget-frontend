@@ -2,6 +2,7 @@
 
 import { useSession, signIn } from "next-auth/react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Wallet,
   Tag,
@@ -119,22 +120,23 @@ export default function Home() {
         }
 
         .copper-btn {
-          background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+          background: var(--coffee-900);
           transition: all 0.3s ease;
         }
         .copper-btn:hover {
-          background: linear-gradient(135deg, var(--primary-light), var(--primary-mid));
-          box-shadow: 0 8px 30px var(--primary-alpha-35);
+          background: var(--coffee-800);
+          box-shadow: 0 8px 30px rgba(28, 18, 16, 0.25);
           transform: translateY(-1px);
         }
 
         .ghost-btn {
           transition: all 0.3s ease;
-          border: 1px solid var(--primary-alpha-30);
+          border: 2px solid var(--coffee-900);
+          color: var(--coffee-900);
         }
         .ghost-btn:hover {
-          border-color: var(--primary-alpha-60);
-          background: var(--primary-alpha-8);
+          background: var(--coffee-900);
+          color: var(--coffee-100);
         }
 
         .step-card {
@@ -162,73 +164,95 @@ export default function Home() {
           background: var(--primary-alpha-15);
           border-color: var(--primary-alpha-30);
         }
+
+        .hero-ring {
+          position: absolute;
+          border-radius: 50%;
+          border: 1px solid rgba(193,127,78,0.08);
+          pointer-events: none;
+        }
       `}</style>
 
-      {/* ── Hero ─────────────────────────────────────────── */}
+      {/* ── Hero (light) ──────────────────────────────────── */}
       <section
         className="relative min-h-screen flex items-center overflow-hidden"
-        style={{ backgroundColor: "var(--coffee-900)" }}
+        style={{
+          background: "linear-gradient(170deg, var(--coffee-50) 0%, var(--coffee-100) 50%, var(--coffee-150) 100%)",
+        }}
       >
-        {/* Subtle radial glow */}
+        {/* Warm radial glows */}
         <div
-          className="absolute top-1/4 -right-32 w-[600px] h-[600px] rounded-full pointer-events-none"
+          className="absolute top-1/4 -right-32 w-[700px] h-[700px] rounded-full pointer-events-none"
           style={{
             background:
-              "radial-gradient(circle, var(--primary-alpha-8) 0%, transparent 70%)",
+              "radial-gradient(circle, rgba(193,127,78,0.12) 0%, rgba(193,127,78,0.04) 40%, transparent 70%)",
           }}
         />
         <div
-          className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full pointer-events-none"
+          className="absolute -bottom-20 -left-20 w-[500px] h-[500px] rounded-full pointer-events-none"
           style={{
             background:
-              "radial-gradient(circle, var(--primary-alpha-4) 0%, transparent 70%)",
+              "radial-gradient(circle, rgba(193,127,78,0.08) 0%, transparent 60%)",
           }}
+        />
+        <div
+          className="absolute top-0 left-1/3 w-[400px] h-[400px] rounded-full pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(139,94,60,0.06) 0%, transparent 60%)",
+          }}
+        />
+        {/* Decorative rings */}
+        <div className="hero-ring" style={{ width: 600, height: 600, top: -200, right: -100 }} />
+        <div className="hero-ring" style={{ width: 400, height: 400, top: -100, right: 0 }} />
+        <div className="hero-ring" style={{ width: 300, height: 300, bottom: -50, left: -80 }} />
+        {/* Warm bottom edge */}
+        <div
+          className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
+          style={{ background: "linear-gradient(90deg, transparent, rgba(193,127,78,0.2), transparent)" }}
         />
 
         <div className="relative z-10 max-w-6xl mx-auto px-6 sm:px-10 py-20 w-full grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-center">
           <div>
-          {/* Coffee icon */}
-          <div className="anim-1 mb-10">
-            <div
-              className="w-14 h-14 rounded-xl flex items-center justify-center"
-              style={{
-                backgroundColor: "var(--primary-alpha-12)",
-                border: "1px solid var(--primary-alpha-20)",
-              }}
-            >
-              <span className="text-2xl" role="img" aria-label="coffee">
-                ☕
-              </span>
+          {/* Brand lockup: logo + title */}
+          <div className="anim-1 flex items-center gap-5 sm:gap-7 mb-10">
+            <Image
+              src="/coffee-cup-logo.png"
+              alt="Coffee Budget"
+              width={120}
+              height={120}
+              className="w-20 h-20 sm:w-24 sm:h-24 md:w-[120px] md:h-[120px] drop-shadow-[0_4px_24px_rgba(193,127,78,0.2)]"
+              priority
+            />
+            <div>
+              <h1
+                className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl leading-[0.95] tracking-tight"
+                style={{ color: "var(--coffee-900)" }}
+              >
+                Coffee
+                <br />
+                Budget
+              </h1>
             </div>
           </div>
 
-          {/* Headline */}
-          <h1
-            className="anim-2 text-5xl sm:text-6xl md:text-7xl lg:text-8xl leading-[0.95] tracking-tight"
-            style={{ color: "var(--coffee-100)" }}
-          >
-            Coffee
-            <br />
-            Budget
-          </h1>
-
           {/* Copper accent line */}
           <div
-            className="anim-3 w-16 h-[2px] my-8"
+            className="anim-2 w-16 h-[2px] my-8"
             style={{ backgroundColor: "hsl(var(--primary))" }}
           />
 
           {/* Tagline */}
           <p
-            className="anim-3 font-serif text-xl sm:text-2xl md:text-[1.65rem] max-w-lg leading-relaxed"
-            style={{ color: "var(--coffee-150)" }}
+            className="anim-2 font-serif text-xl sm:text-2xl md:text-[1.65rem] max-w-lg leading-relaxed"
+            style={{ color: "var(--coffee-700)" }}
           >
             Your finances, brewed to perfection.
           </p>
 
           <p
-            className="anim-4 text-base sm:text-lg mt-5 max-w-md leading-relaxed"
-            style={{ color: "var(--coffee-300)" }}
+            className="anim-3 text-base sm:text-lg mt-5 max-w-md leading-relaxed"
+            style={{ color: "var(--coffee-500)" }}
           >
             Envelope budgeting, automatic bank sync, and AI&#8209;powered
             insights — in a tool that feels as good as your morning
@@ -236,7 +260,7 @@ export default function Home() {
           </p>
 
           {/* CTA */}
-          <div className="anim-5 mt-10 flex flex-col sm:flex-row gap-4">
+          <div className="anim-4 mt-10 flex flex-col sm:flex-row gap-4">
             {isLoggedIn ? (
               <Link
                 href="/dashboard"
@@ -257,7 +281,6 @@ export default function Home() {
                 <a
                   href="#features"
                   className="ghost-btn inline-flex items-center gap-2 px-8 py-3.5 rounded-lg font-medium text-base no-underline"
-                  style={{ color: "var(--coffee-150)" }}
                 >
                   See what&rsquo;s inside
                   <ChevronDown className="w-4 h-4" />
@@ -267,7 +290,7 @@ export default function Home() {
           </div>
 
           {/* Feature pills */}
-          <div className="anim-6 mt-16 flex flex-wrap gap-3">
+          <div className="anim-5 mt-16 flex flex-wrap gap-3">
             {[
               "Envelope budgeting",
               "Open Banking sync",
@@ -279,7 +302,7 @@ export default function Home() {
                 className="pill-tag px-4 py-1.5 rounded-full text-sm font-medium"
                 style={{
                   backgroundColor: "var(--primary-alpha-8)",
-                  color: "var(--coffee-200)",
+                  color: "var(--coffee-700)",
                   border: "1px solid var(--primary-alpha-15)",
                 }}
               >
@@ -295,16 +318,16 @@ export default function Home() {
             <div
               className="float-card-1 absolute top-4 left-8 w-56 rounded-xl p-5"
               style={{
-                backgroundColor: "var(--coffee-800)",
-                border: "1px solid var(--primary-alpha-15)",
-                boxShadow: "0 8px 32px rgba(28, 18, 16, 0.3)",
+                backgroundColor: "var(--coffee-25)",
+                border: "1px solid rgba(193,127,78,0.2)",
+                boxShadow: "0 8px 32px rgba(28, 18, 16, 0.1), 0 2px 8px rgba(193,127,78,0.08)",
                 transform: "rotate(-2deg)",
               }}
             >
-              <p className="text-xs font-medium mb-2" style={{ color: "var(--coffee-300)" }}>
+              <p className="text-xs font-medium mb-2" style={{ color: "var(--coffee-500)" }}>
                 Free to Spend
               </p>
-              <p className="text-2xl font-bold mb-3" style={{ color: "var(--coffee-100)" }}>
+              <p className="text-2xl font-bold mb-3" style={{ color: "var(--coffee-900)" }}>
                 €1,245
               </p>
               <div
@@ -322,21 +345,21 @@ export default function Home() {
             <div
               className="float-card-2 absolute top-36 left-20 w-56 rounded-xl p-5"
               style={{
-                backgroundColor: "var(--coffee-800)",
-                border: "1px solid var(--primary-alpha-15)",
-                boxShadow: "0 8px 32px rgba(28, 18, 16, 0.3)",
+                backgroundColor: "var(--coffee-25)",
+                border: "1px solid rgba(193,127,78,0.2)",
+                boxShadow: "0 8px 32px rgba(28, 18, 16, 0.1), 0 2px 8px rgba(193,127,78,0.08)",
                 transform: "rotate(1deg)",
               }}
             >
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-sm">🛒</span>
-                <p className="text-xs font-medium" style={{ color: "var(--coffee-300)" }}>
+                <p className="text-xs font-medium" style={{ color: "var(--coffee-500)" }}>
                   Groceries
                 </p>
               </div>
-              <p className="text-lg font-bold mb-3" style={{ color: "var(--coffee-100)" }}>
+              <p className="text-lg font-bold mb-3" style={{ color: "var(--coffee-900)" }}>
                 €245{" "}
-                <span className="text-sm font-normal" style={{ color: "var(--coffee-300)" }}>
+                <span className="text-sm font-normal" style={{ color: "var(--coffee-500)" }}>
                   / €400
                 </span>
               </p>
@@ -355,21 +378,21 @@ export default function Home() {
             <div
               className="float-card-3 absolute top-72 left-4 w-56 rounded-xl p-5"
               style={{
-                backgroundColor: "var(--coffee-800)",
-                border: "1px solid var(--primary-alpha-15)",
-                boxShadow: "0 8px 32px rgba(28, 18, 16, 0.3)",
+                backgroundColor: "var(--coffee-25)",
+                border: "1px solid rgba(193,127,78,0.2)",
+                boxShadow: "0 8px 32px rgba(28, 18, 16, 0.1), 0 2px 8px rgba(193,127,78,0.08)",
                 transform: "rotate(-1deg)",
               }}
             >
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-sm">🏖️</span>
-                <p className="text-xs font-medium" style={{ color: "var(--coffee-300)" }}>
+                <p className="text-xs font-medium" style={{ color: "var(--coffee-500)" }}>
                   Vacation Fund
                 </p>
               </div>
-              <p className="text-lg font-bold mb-3" style={{ color: "var(--coffee-100)" }}>
+              <p className="text-lg font-bold mb-3" style={{ color: "var(--coffee-900)" }}>
                 €1,800{" "}
-                <span className="text-sm font-normal" style={{ color: "var(--coffee-300)" }}>
+                <span className="text-sm font-normal" style={{ color: "var(--coffee-500)" }}>
                   / €3,000
                 </span>
               </p>
@@ -392,15 +415,15 @@ export default function Home() {
           className="anim-fade scroll-bounce absolute bottom-10 left-1/2 -translate-x-1/2"
           aria-label="Scroll to features"
         >
-          <ChevronDown className="w-6 h-6" style={{ color: "var(--coffee-500)" }} />
+          <ChevronDown className="w-6 h-6" style={{ color: "var(--coffee-400)" }} />
         </a>
       </section>
 
-      {/* ── Features ─────────────────────────────────────── */}
+      {/* ── Features (dark) ──────────────────────────────── */}
       <section
         id="features"
         className="py-24 sm:py-32 px-6 sm:px-10"
-        style={{ backgroundColor: "var(--coffee-100)" }}
+        style={{ backgroundColor: "var(--coffee-900)" }}
       >
         <div className="max-w-5xl mx-auto">
           <p
@@ -411,13 +434,13 @@ export default function Home() {
           </p>
           <h2
             className="text-3xl sm:text-4xl md:text-5xl mb-6"
-            style={{ color: "var(--coffee-800)" }}
+            style={{ color: "var(--coffee-100)" }}
           >
             What&rsquo;s brewing inside
           </h2>
           <p
             className="text-lg mb-16 max-w-xl leading-relaxed"
-            style={{ color: "var(--coffee-400)" }}
+            style={{ color: "var(--coffee-300)" }}
           >
             Everything you need to understand, organize, and control your
             money — without the complexity of traditional finance apps.
@@ -431,13 +454,13 @@ export default function Home() {
                   key={feature.title}
                   className="feature-card rounded-xl p-7"
                   style={{
-                    backgroundColor: "var(--coffee-25)",
-                    border: "1px solid var(--coffee-900-alpha-6)",
+                    backgroundColor: "var(--coffee-800)",
+                    border: "1px solid var(--primary-alpha-15)",
                   }}
                 >
                   <div
                     className="w-11 h-11 rounded-lg flex items-center justify-center mb-5"
-                    style={{ backgroundColor: "var(--primary-alpha-10)" }}
+                    style={{ backgroundColor: "var(--primary-alpha-15)" }}
                   >
                     <Icon
                       className="w-5 h-5"
@@ -446,13 +469,13 @@ export default function Home() {
                   </div>
                   <h3
                     className="text-lg font-semibold mb-2"
-                    style={{ color: "var(--coffee-800)" }}
+                    style={{ color: "var(--coffee-100)" }}
                   >
                     {feature.title}
                   </h3>
                   <p
                     className="text-[0.94rem] leading-relaxed"
-                    style={{ color: "var(--coffee-400)" }}
+                    style={{ color: "var(--coffee-300)" }}
                   >
                     {feature.desc}
                   </p>
@@ -463,10 +486,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── How it works ─────────────────────────────────── */}
+      {/* ── How it works (light) ─────────────────────────── */}
       <section
         className="py-24 sm:py-32 px-6 sm:px-10"
-        style={{ backgroundColor: "var(--coffee-50)" }}
+        style={{ backgroundColor: "var(--coffee-100)" }}
       >
         <div className="max-w-5xl mx-auto">
           <p
@@ -477,7 +500,7 @@ export default function Home() {
           </p>
           <h2
             className="text-3xl sm:text-4xl md:text-5xl mb-16"
-            style={{ color: "var(--coffee-800)" }}
+            style={{ color: "var(--coffee-900)" }}
           >
             Three sips to clarity
           </h2>
@@ -493,13 +516,13 @@ export default function Home() {
                 </span>
                 <h3
                   className="text-xl font-semibold mb-3"
-                  style={{ color: "var(--coffee-800)" }}
+                  style={{ color: "var(--coffee-900)" }}
                 >
                   {step.title}
                 </h3>
                 <p
                   className="text-[0.94rem] leading-relaxed"
-                  style={{ color: "var(--coffee-400)" }}
+                  style={{ color: "var(--coffee-500)" }}
                 >
                   {step.desc}
                 </p>
